@@ -4,3 +4,8 @@ const EMAILJS_CONFIG = {
   TEMPLATE_ID: "template_3q4kf4r",
 };
 const LOGO_URL = "https://raw.githubusercontent.com/…/felbermayr_logo.png";
+function BaustellenbegehungEmailJS() {
+  // ... dein ganzer Code ...
+}
+export default BaustellenbegehungEmailJS;
+
