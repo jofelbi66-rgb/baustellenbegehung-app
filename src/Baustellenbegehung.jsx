@@ -5,13 +5,13 @@ import autoTable from "jspdf-autotable";
 
 /* ===================== Konfiguration ===================== */
 const EMAILJS_CONFIG = {
-  PUBLIC_KEY: "REPLACE_WITH_YOUR_PUBLIC_KEY",
-  SERVICE_ID: "REPLACE_WITH_YOUR_SERVICE_ID",
-  TEMPLATE_ID: "REPLACE_WITH_YOUR_TEMPLATE_ID",
+  PUBLIC_KEY: "b21Z2RnKpe9VYI79W",
+  SERVICE_ID: "service_f2lezug",
+  TEMPLATE_ID: "template_3q4kf4r",
 };
 
 // Logo für PDF (nur Seite 1). GitHub RAW-URL, z. B. https://raw.githubusercontent.com/<user>/<repo>/main/felbermayr_logo.png
-const LOGO_URL = "REPLACE_WITH_GITHUB_RAW_LOGO_URL";
+const LOGO_URL = "https://github.com/jofelbi66-rgb/Fahrzeugkontrolle/blob/main/felbermayr_logo.png";
 
 /* ===================== Checklisten-Daten ===================== */
 const CATEGORIES = [
