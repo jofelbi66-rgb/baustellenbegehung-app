@@ -1,5 +1,3 @@
-import React from "react";
-import BaustellenbegehungEmailJS from "./Baustellenbegehung.jsx";
 export default function App() {
-  return <BaustellenbegehungEmailJS />;
+  return <div style={{padding:20, fontFamily:"sans-serif"}}>✅ App lädt – Test erfolgreich</div>;
 }
