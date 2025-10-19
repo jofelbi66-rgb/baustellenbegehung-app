@@ -785,51 +785,46 @@ async function onLogoUpload(e) {
                     <div key={i} className={`grid md:grid-cols-6 items-start gap-3 py-3 ${i % 2 === 0 ? "bg-slate-50" : "bg-white"}`}>
                       <div className="md:col-span-3 font-medium">{label}</div>
                       
-{/* === Aktionen pro Checkpunkt ===================================== */}
-{/* 1) Bewertungs-Buttons */}
-<div className="flex gap-2 md:col-span-2 flex-wrap">
-  {RATING_OPTIONS.map((opt) => (
-    <button
-      key={opt.value}
-      type="button"
-      onClick={() => {
-        const next = { ...checklist };
-        const entry = { ...next[cat.key][i], rating: opt.value };
-        next[cat.key] = [...next[cat.key]];
-        next[cat.key][i] = entry;
-        setChecklist(next);
-      }}
-      className={`px-3 py-1 rounded-xl border ${opt.color} ${opt.border}`}
+<>
+  {/* 1) Bewertungs-Buttons */}
+  <div className="flex gap-2 md:col-span-2 flex-wrap">
+    {RATING_OPTIONS.map((opt) => (
+      <button
+        key={opt.value}
+        type="button"
+        onClick={() => {
+          const next = { ...checklist };
+          const entry = { ...next[cat.key][i], rating: opt.value };
+          next[cat.key] = [...next[cat.key]];
+          next[cat.key][i] = entry;
+          setChecklist(next);
+        }}
+        className={`px-3 py-1 rounded-xl border ${opt.color} ${opt.border}`}
+      >
+        {opt.label}
+      </button>
+    ))}
+  </div>
+
+  {/* 2) Kamera + Thumbnails */}
+  <div className="flex items-center gap-2 mt-2">
+    {/* verstecktes Input, wird über Label getriggert */}
+    <input
+      id={`cam-${cat.key}-${i}`}
+      type="file"
+      accept="image/*"
+      capture="environment"
+      onChange={onCapturePhoto(cat.key, i)}
+      className="hidden"
+    />
+    <label
+      htmlFor={`cam-${cat.key}-${i}`}
+      className="px-3 py-1 rounded-xl border cursor-pointer select-none"
     >
-      {opt.label}
-    </button>
-  ))} {/*  <<-- map HIER schließen */}
-</div>
+      📷 Foto aufnehmen
+    </label>
 
-{/* 2) Kamera: öffnet direkt die Rückkamera am Handy */}
-<div className="flex items-center gap-2 mt-2">
-  {/* verstecktes Input, wird über Label getriggert */}
-  <input
-    id={`cam-${cat.key}-${i}`}
-    type="file"
-    accept="image/*"
-    capture="environment"
-    onChange={onCapturePhoto(cat.key, i)}
-    className="hidden"
-  />
-  <label
-    htmlFor={`cam-${cat.key}-${i}`}
-    className="px-3 py-1 rounded-xl border cursor-pointer select-none"
-  >
-    📷 Foto aufnehmen
-  </label>
-</div>
-
-{/* 3) Thumbnails der aufgenommenen Fotos */}
-<div className="flex items-center gap-2 mt-2">
-  {(checklist[cat.key][i].photos || [])
-    .slice(0, 3)
-    .map((p, idx) => (
+    {(checklist[cat.key][i].photos || []).slice(0, 3).map((p, idx) => (
       <img
         key={idx}
         src={p}
@@ -837,8 +832,8 @@ async function onLogoUpload(e) {
         className="h-10 w-10 object-cover rounded border"
       />
     ))}
-</div>
-
+  </div>
+</>
 
                           <button
                             key={opt.value}
