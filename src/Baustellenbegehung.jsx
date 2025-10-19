@@ -508,6 +508,44 @@ setMsg({ type: "ok", text: "E-Mail verschickt (Kurzinfo ohne Berichtstext)." });
   };
 
   /* ===================== UI ===================== */
+// ----------------------
+// Datei -> DataURL (für Logo-Upload)
+// ----------------------
+async function fileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+// ----------------------
+// Eigenes Logo hochladen und verkleinern
+// ----------------------
+async function onLogoUpload(e) {
+  const f = e.target.files?.[0];
+  if (!f) return;
+
+  // Bild laden
+  const img = document.createElement("img");
+  img.src = await fileToDataURL(f);
+  await new Promise((r) => (img.onload = r));
+
+  // moderat verkleinern (max 400px Kantenlänge)
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  const max = 400;
+  const ratio = Math.min(max / img.width, max / img.height, 1);
+  canvas.width = Math.round(img.width * ratio);
+  canvas.height = Math.round(img.height * ratio);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  const data = canvas.toDataURL("image/png", 0.9); // kompakt
+  setLogoSrc(data);
+}
+
+  
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
@@ -537,6 +575,80 @@ setMsg({ type: "ok", text: "E-Mail verschickt (Kurzinfo ohne Berichtstext)." });
               <span className="text-sm text-gray-600">Firma/AG</span>
               <input className="border rounded-xl p-2" value={form.company} onChange={onField("company")} />
             </label>
+{/* ================= Logo-Auswahl ================= */}
+<label className="flex flex-col gap-1 md:col-span-2">
+  <span className="text-sm text-gray-600">Logo für Bericht</span>
+
+  <div className="flex flex-col gap-2">
+    {/* Auswahlmenü */}
+    <div className="flex gap-2 flex-wrap">
+      <select
+        className="border rounded-xl p-2"
+        value={logoChoice}
+        onChange={(e) => {
+          const val = e.target.value;
+          setLogoChoice(val);
+          const preset = DEFAULT_LOGOS.find((l) => l.id === val);
+          if (preset && preset.url) setLogoSrc(preset.url);
+          if (val === "custom") {
+            const stored = localStorage.getItem("app.logoSrc");
+            if (stored) setLogoSrc(stored);
+          }
+        }}
+      >
+        {DEFAULT_LOGOS.map((l) => (
+          <option key={l.id} value={l.id}>
+            {l.label}
+          </option>
+        ))}
+      </select>
+
+      {/* Datei-Upload nur bei "Eigenes Logo" */}
+      {logoChoice === "custom" && (
+        <input
+          type="file"
+          accept="image/*"
+          onChange={onLogoUpload}
+          className="border rounded-xl p-2"
+        />
+      )}
+    </div>
+
+    {/* Logo-Vorschau */}
+    {logoSrc ? (
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-gray-600">Vorschau:</span>
+        <img
+          src={logoSrc}
+          alt="Logo"
+          className="h-10 object-contain border rounded-md bg-white px-2"
+        />
+        <button
+          type="button"
+          className="px-3 py-2 rounded-xl border"
+          onClick={() => {
+            setLogoChoice("felbermayr");
+            setLogoSrc(DEFAULT_LOGOS[0].url);
+          }}
+        >
+          Zurücksetzen
+        </button>
+      </div>
+    ) : (
+      <span className="text-sm text-amber-600">
+        Bitte Logo auswählen oder hochladen.
+      </span>
+    )}
+  </div>
+</label>
+
+
+
+
+
+
+
+            
             <label className="flex flex-col gap-1">
               <span className="text-sm text-gray-600">Datum/Uhrzeit</span>
               <input type="datetime-local" className="border rounded-xl p-2" value={form.date} onChange={onField("date")} />
