@@ -153,6 +153,20 @@ export default function BaustellenbegehungEmailJS() {
   const [msg, setMsg] = useState(null);
   const [busy, setBusy] = useState(false);
 
+// Logo-Auswahl speichern
+const [logoChoice, setLogoChoice] = useState(() =>
+  localStorage.getItem("app.logoChoice") || "felbermayr"
+);
+const [logoSrc, setLogoSrc] = useState(() =>
+  localStorage.getItem("app.logoSrc") || (DEFAULT_LOGOS[0]?.url || "")
+);
+
+// persistieren
+useEffect(() => localStorage.setItem("app.logoChoice", logoChoice), [logoChoice]);
+useEffect(() => logoSrc && localStorage.setItem("app.logoSrc", logoSrc), [logoSrc]);
+
+
+  
   // Geoposition & Reverse Geocoding
   const [coords, setCoords] = useState(null); // {lat, lon, accuracy}
   const [locating, setLocating] = useState(false);
