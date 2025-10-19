@@ -154,6 +154,62 @@ async function resizeImageFromFile(file, maxSize = 1280, quality = 0.8) {
   });
   return recompressImage(img, maxSize, quality);
 }
+// Hilfsfunktion (neue)
+async function toDataUrl(src) {
+  if (!src) return null;
+  if (src.startsWith("data:")) return src;
+  try {
+    const r = await fetch(src, { cache: "no-store" });
+    const b = await r.blob();
+    return await new Promise((res, rej) => {
+      const fr = new FileReader();
+      fr.onload = () => res(fr.result);
+      fr.onerror = rej;
+      fr.readAsDataURL(b);
+    });
+  } catch (e) {
+    console.warn("Bild konnte nicht geladen werden:", src, e);
+    return null;
+  }
+}
+
+export default function BaustellenbegehungEmailJS() {
+  const [form, setForm] = useState(...);
+  const [checklist, setChecklist] = useState(...);
+
+  async function exportPdfWithLimits() {
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 15;
+    let y = margin;
+
+    // 🔹 Logo oben rechts
+    if (logoSrc) {
+      const data = await toDataUrl(logoSrc);
+      if (data) {
+        const fmt = logoSrc.toLowerCase().includes(".jpg") ? "JPEG" : "PNG";
+        const w = 40, h = 12, x = pageW - margin - w;
+        doc.addImage(data, fmt, x, y, w, h, undefined, "FAST");
+      }
+    }
+    y += 16;
+
+    // 🔹 Tabellen, Fotos, Signaturen …
+    // (Rest des Blocks wie oben beschrieben)
+  }
+
+  return (
+    <div>
+      {/* deine App-Oberfläche */}
+      <button onClick={exportPdfWithLimits}>📄 PDF exportieren</button>
+    </div>
+  );
+}
+
+
+
+
 
 function recompressImage(imgOrDataURL, maxSizePx = 1280, quality = 0.8) {
   return new Promise(async (resolve) => {
