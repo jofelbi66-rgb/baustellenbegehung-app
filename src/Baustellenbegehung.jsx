@@ -108,6 +108,32 @@ const RATING_OPTIONS = [
   { value: "defect", label: "Mangel", color: "bg-red-600 text-white", border: "border-red-600" },
   { value: "note", label: "Notiz", color: "bg-yellow-400 text-black", border: "border-yellow-500" },
 ];
+// ==============================================
+// Kamera-Funktion pro Checkpunkt (Foto aufnehmen)
+// ==============================================
+const onCapturePhoto = (catKey, itemIndex) => async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  try {
+    // vorhandene Funktion zum Verkleinern nutzen
+    const dataUrl = await resizeImageFromFile(file, 1280, 0.8);
+
+    setChecklist((prev) => {
+      const next = { ...prev };
+      const entry = { ...next[catKey][itemIndex] };
+      entry.photos = Array.isArray(entry.photos) ? [...entry.photos, dataUrl] : [dataUrl];
+      next[catKey] = [...next[catKey]];
+      next[catKey][itemIndex] = entry;
+      return next;
+    });
+  } catch (err) {
+    console.error("Foto aufnehmen fehlgeschlagen:", err);
+    setMsg?.({ type: "error", text: "Konnte Foto nicht aufnehmen." });
+  } finally {
+    // damit man gleich das nächste Bild machen kann
+    e.target.value = "";
+  }
+};
 
 /* ===================== Hilfsfunktionen ===================== */
 function useNowISOLocal() {
@@ -162,11 +188,36 @@ export default function BaustellenbegehungEmailJS() {
     remarks: "",
   });
 
-  const [checklist, setChecklist] = useState(() => {
-    const init = {};
-    for (const cat of CATEGORIES) init[cat.key] = cat.items.map(() => ({ rating: "ok", note: "" }));
-    return init;
-  });
+ const [checklist, setChecklist] = useState(() => {
+  const init = {};
+  for (const cat of CATEGORIES) init[cat.key] = cat.items.map(() => ({ rating: "ok", note: "", photos: [] }));
+  // Foto direkt mit Kamera aufnehmen (mobil): speichert als verkleinertes DataURL
+const onCapturePhoto = (catKey, itemIndex) => async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  try {
+    // Du hast bereits resizeImageFromFile(f, maxWidth, quality) -> wir nutzen das
+    const dataUrl = await resizeImageFromFile(file, 1280, 0.8);
+    setChecklist(prev => {
+      const next = { ...prev };
+      const entry = { ...next[catKey][itemIndex] };
+      entry.photos = Array.isArray(entry.photos) ? [...entry.photos, dataUrl] : [dataUrl];
+      next[catKey] = [...next[catKey]];
+      next[catKey][itemIndex] = entry;
+      return next;
+    });
+  } catch (err) {
+    console.error("Foto aufnehmen fehlgeschlagen:", err);
+    setMsg?.({ type: "error", text: "Konnte Foto nicht aufnehmen." });
+  } finally {
+    // Eingabeelement zurücksetzen, damit man direkt ein weiteres Foto machen kann
+    e.target.value = "";
+  }
+};
+ 
+  return init;
+});
+
 
   const [images, setImages] = useState([]); // dataURLs
   const [msg, setMsg] = useState(null);
