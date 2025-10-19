@@ -4,14 +4,15 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 // Logos, die in der App auswählbar sind
+// Dropdown-Logos (URLs deiner Logos in /public)
 const DEFAULT_LOGOS = [
-  { id: "felbermayr", label: "Felbermayr", url: `${import.meta.env.BASE_URL}felbermayr_logo.png` },
-  { id: "swietelsky", label: "Swietelsky", url: `${import.meta.env.BASE_URL}swietelsky_logo.png` },
-  { id: "porr", label: "PORR", url: `${import.meta.env.BASE_URL}porr_logo.png` },
-  { id: "strabag", label: "STRABAG", url: `${import.meta.env.BASE_URL}strabag_logo.png` },
-  { id: "hochtief", label: "HOCHTIEF", url: `${import.meta.env.BASE_URL}hochtief_logo.png` },
+  { id: "felbermayr", label: "Felbermayr", url: `${import.meta.env.BASE_URL}felbermayr-logo.png` },
+  { id: "swietelsky", label: "Swietelsky", url: `${import.meta.env.BASE_URL}swietelsky-logo.png` },
+  { id: "porr", label: "PORR", url: `${import.meta.env.BASE_URL}porr-logo.png` },
+  { id: "strabag", label: "STRABAG", url: `${import.meta.env.BASE_URL}strabag-logo.png` },
   { id: "custom", label: "Eigenes Logo (Upload)", url: "" },
 ];
+
 
 
 /* ===================== Konfiguration ===================== */
