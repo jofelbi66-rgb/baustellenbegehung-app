@@ -5,7 +5,7 @@ import autoTable from "jspdf-autotable";
 
 /* ===================== Konfiguration ===================== */
 const EMAILJS_CONFIG = {
-  PUBLIC_KEY: "b21Z2RnKpe9VYI79W",
+  PUBLIC_KEY: "b21Z2RnKpe9VYl79W",
   SERVICE_ID: "service_f2lezug",
   TEMPLATE_ID: "template_3q4kf4r",
 };
