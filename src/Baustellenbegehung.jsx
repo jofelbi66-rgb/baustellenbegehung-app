@@ -786,6 +786,35 @@ async function onLogoUpload(e) {
                       <div className="md:col-span-3 font-medium">{label}</div>
                       <div className="flex gap-2 md:col-span-2 flex-wrap">
                         {RATING_OPTIONS.map((opt) => (
+                      {/* Kamera: öffnet direkt die Rückkamera am Handy */}
+<div className="flex items-center gap-2 mt-2">
+  {/* verstecktes Input, wird über Label getriggert */}
+  <input
+    id={`cam-${cat.key}-${i}`}
+    type="file"
+    accept="image/*"
+    capture="environment"
+    onChange={onCapturePhoto(cat.key, i)}
+    className="hidden"
+  />
+  <label
+    htmlFor={`cam-${cat.key}-${i}`}
+    className="px-3 py-1 rounded-xl border cursor-pointer select-none"
+  >
+    📷 Foto aufnehmen
+  </label>
+
+  {/* kleine Thumbnails (max. 3) */}
+  {(checklist[cat.key][i].photos || []).slice(0, 3).map((p, idx) => (
+    <img
+      key={idx}
+      src={p}
+      alt="Foto"
+      className="h-10 w-10 object-cover rounded border"
+    />
+  ))}
+</div>
+
                           <button
                             key={opt.value}
                             type="button"
