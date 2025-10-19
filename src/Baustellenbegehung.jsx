@@ -616,7 +616,7 @@ async function onLogoUpload(e) {
                 </button>
               </div>
             </label>
-          <label className="flex flex-col gap-1">
+ <label className="flex flex-col gap-1">
   <span className="text-sm text-gray-600">Firma/AG</span>
   <input
     className="border rounded-xl p-2"
@@ -628,9 +628,9 @@ async function onLogoUpload(e) {
   />
 </label>
 
+
  
-                />
-            </label>
+              
 {/* ================= Logo-Auswahl ================= */}
 <label className="flex flex-col gap-1 md:col-span-2">
   <span className="text-sm text-gray-600">Logo für Bericht</span>
