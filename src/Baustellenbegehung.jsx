@@ -785,7 +785,8 @@ async function onLogoUpload(e) {
                     <div key={i} className={`grid md:grid-cols-6 items-start gap-3 py-3 ${i % 2 === 0 ? "bg-slate-50" : "bg-white"}`}>
                       <div className="md:col-span-3 font-medium">{label}</div>
                       
-{/* Bewertungsoptionen (OK, Mangel, Notiz) */}
+{/* === Aktionen pro Checkpunkt ===================================== */}
+{/* 1) Bewertungs-Buttons */}
 <div className="flex gap-2 md:col-span-2 flex-wrap">
   {RATING_OPTIONS.map((opt) => (
     <button
@@ -802,10 +803,10 @@ async function onLogoUpload(e) {
     >
       {opt.label}
     </button>
-  ))}  {/* <<< map sauber schließen */}
+  ))} {/*  <<-- map HIER schließen */}
 </div>
 
-{/* Kamera: öffnet direkt die Rückkamera am Handy */}
+{/* 2) Kamera: öffnet direkt die Rückkamera am Handy */}
 <div className="flex items-center gap-2 mt-2">
   {/* verstecktes Input, wird über Label getriggert */}
   <input
@@ -822,17 +823,22 @@ async function onLogoUpload(e) {
   >
     📷 Foto aufnehmen
   </label>
-
-  {/* kleine Thumbnails (max. 3) */}
-  {(checklist[cat.key][i].photos || []).slice(0, 3).map((p, idx) => (
-    <img
-      key={idx}
-      src={p}
-      alt="Foto"
-      className="h-10 w-10 object-cover rounded border"
-    />
-  ))}
 </div>
+
+{/* 3) Thumbnails der aufgenommenen Fotos */}
+<div className="flex items-center gap-2 mt-2">
+  {(checklist[cat.key][i].photos || [])
+    .slice(0, 3)
+    .map((p, idx) => (
+      <img
+        key={idx}
+        src={p}
+        alt="Foto"
+        className="h-10 w-10 object-cover rounded border"
+      />
+    ))}
+</div>
+
 
                           <button
                             key={opt.value}
