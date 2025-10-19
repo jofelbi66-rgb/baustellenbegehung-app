@@ -4,14 +4,33 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 // Logos, die in der App auswählbar sind
-// Dropdown-Logos (URLs deiner Logos in /public)
+// ================== Firmenlogos für Bericht ==================
 const DEFAULT_LOGOS = [
   { id: "felbermayr", label: "Felbermayr", url: `${import.meta.env.BASE_URL}felbermayr-logo.png` },
-  { id: "swietelsky", label: "Swietelsky", url: `${import.meta.env.BASE_URL}swietelsky-logo.png` },
-  { id: "porr", label: "PORR", url: `${import.meta.env.BASE_URL}porr-logo.png` },
-  { id: "strabag", label: "STRABAG", url: `${import.meta.env.BASE_URL}strabag-logo.png` },
-  { id: "custom", label: "Eigenes Logo (Upload)", url: "" },
+  { id: "hagn",       label: "HAGN",       url: `${import.meta.env.BASE_URL}hagn-logo.png` },
+  { id: "domarin",    label: "Domarin",    url: `${import.meta.env.BASE_URL}domarin-logo.png` },
+  { id: "wimmer",     label: "Wimmer",     url: `${import.meta.env.BASE_URL}wimmer-logo.png` },
+  { id: "custom",     label: "Eigenes Logo (Upload)", url: "" },
 ];
+
+// Automatische Zuordnung nach Firmenname (Firma/AG-Feld)
+const FIRM_MATCH = [
+  { re: /felbermayr/i, logoId: "felbermayr" },
+  { re: /hagn/i,       logoId: "hagn" },
+  { re: /domarin/i,    logoId: "domarin" },
+  { re: /wimmer/i,     logoId: "wimmer" },
+];
+
+function autoPickLogoByCompany(companyName) {
+  if (!companyName) return;
+  const hit = FIRM_MATCH.find(m => m.re.test(companyName));
+  if (!hit) return;
+  const preset = DEFAULT_LOGOS.find(l => l.id === hit.logoId);
+  if (!preset) return;
+  setLogoChoice(hit.logoId);
+  setLogoSrc(preset.url);
+}
+
 
 
 
@@ -597,9 +616,20 @@ async function onLogoUpload(e) {
                 </button>
               </div>
             </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-sm text-gray-600">Firma/AG</span>
-              <input className="border rounded-xl p-2" value={form.company} onChange={onField("company")} />
+          <label className="flex flex-col gap-1">
+  <span className="text-sm text-gray-600">Firma/AG</span>
+  <input
+    className="border rounded-xl p-2"
+    value={form.company}
+    onChange={(e) => {
+      onField("company")(e);
+      autoPickLogoByCompany(e.target.value);
+    }}
+  />
+</label>
+
+ 
+                />
             </label>
 {/* ================= Logo-Auswahl ================= */}
 <label className="flex flex-col gap-1 md:col-span-2">
