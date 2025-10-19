@@ -490,24 +490,20 @@ export default function BaustellenbegehungEmailJS() {
     if (err) { setMsg({ type: "error", text: err }); return; }
     setBusy(true); setMsg(null);
     try {
-      emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
-      const templateParams = {
-        project: form.project,
-        location: form.location,
-        company: form.company,
-        date: form.date,
-        inspector: form.inspector,
-        weather: form.weather,
-        remarks: form.remarks,
-        checklist_json: JSON.stringify(checklist),
-        summary_html: buildSummaryHTML(),
-        images_html: buildImagesHTML(),
-      };
-      await emailjs.send(EMAILJS_CONFIG.SERVICE_ID, EMAILJS_CONFIG.TEMPLATE_ID, templateParams);
-      setMsg({ type: "ok", text: "E-Mail erfolgreich versendet." });
-    } catch (error) {
-      console.error(error);
-      setMsg({ type: "error", text: "Senden fehlgeschlagen. Bitte Konfiguration prüfen." });
+emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
+
+await emailjs.send(
+  EMAILJS_CONFIG.SERVICE_ID,
+  EMAILJS_CONFIG.TEMPLATE_ID,
+  {
+    date: form.date,
+    project: form.project,
+    location: form.location,
+    inspector: form.inspector,
+  }
+);
+setMsg({ type: "ok", text: "E-Mail verschickt (Kurzinfo ohne Berichtstext)." });
+    
     } finally { setBusy(false); }
   };
 
