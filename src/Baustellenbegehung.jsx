@@ -784,9 +784,28 @@ async function onLogoUpload(e) {
                   return (
                     <div key={i} className={`grid md:grid-cols-6 items-start gap-3 py-3 ${i % 2 === 0 ? "bg-slate-50" : "bg-white"}`}>
                       <div className="md:col-span-3 font-medium">{label}</div>
-                      <div className="flex gap-2 md:col-span-2 flex-wrap">
-                        {RATING_OPTIONS.map((opt) => (
-                      {/* Kamera: öffnet direkt die Rückkamera am Handy */}
+                      
+{/* Bewertungsoptionen (OK, Mangel, Notiz) */}
+<div className="flex gap-2 md:col-span-2 flex-wrap">
+  {RATING_OPTIONS.map((opt) => (
+    <button
+      key={opt.value}
+      type="button"
+      onClick={() => {
+        const next = { ...checklist };
+        const entry = { ...next[cat.key][i], rating: opt.value };
+        next[cat.key] = [...next[cat.key]];
+        next[cat.key][i] = entry;
+        setChecklist(next);
+      }}
+      className={`px-3 py-1 rounded-xl border ${opt.color} ${opt.border}`}
+    >
+      {opt.label}
+    </button>
+  ))}  {/* <<< map sauber schließen */}
+</div>
+
+{/* Kamera: öffnet direkt die Rückkamera am Handy */}
 <div className="flex items-center gap-2 mt-2">
   {/* verstecktes Input, wird über Label getriggert */}
   <input
