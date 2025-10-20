@@ -535,6 +535,8 @@ async function addPhotosSection(doc, checklist, CATEGORIES) {
     // Originalbilder ggf. weiter komprimieren pro Versuch
     for (const att of attempts) {
       const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      await addLogoTopRight(doc, logoSrc);
+
       const pageW = doc.internal.pageSize.getWidth();
       const margin = 10;
 
@@ -651,6 +653,8 @@ async function addPhotosSection(doc, checklist, CATEGORIES) {
       const sizeMB = blob.size / (1024 * 1024);
       if (sizeMB <= 1.0) {
         const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
+       await addPhotosSection(doc, checklist, CATEGORIES);
+ 
         doc.save(`Begehung_${safeName}.pdf`);
         return true;
       }
