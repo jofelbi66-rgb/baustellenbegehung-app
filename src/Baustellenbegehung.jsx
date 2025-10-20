@@ -812,7 +812,59 @@ async function onLogoUpload(e) {
   setLogoSrc(data);
 }
 
-  
+  const exportPdfQuick = async () => {
+  try {
+    const margin = 15;
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+
+    // Logo proportional oben rechts (falls logoSrc gesetzt ist)
+    const toDataUrl = async (src) => {
+      if (!src) return null;
+      if (src.startsWith("data:")) return src;
+      const r = await fetch(src, { cache: "no-store" });
+      const b = await r.blob();
+      return await new Promise((res, rej) => {
+        const fr = new FileReader();
+        fr.onload = () => res(fr.result);
+        fr.onerror = rej;
+        fr.readAsDataURL(b);
+      });
+    };
+
+    if (logoSrc) {
+      const data = await toDataUrl(logoSrc);
+      if (data) {
+        const img = new Image();
+        img.src = data;
+        await new Promise((r) => (img.onload = r));
+        const maxW = 40, maxH = 14;
+        const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
+        const w = Math.max(1, img.naturalWidth * scale);
+        const h = Math.max(1, img.naturalHeight * scale);
+        const x = pageW - margin - w;
+        const y = margin;
+        const isJpg = /\.jpe?g($|\?)/i.test(logoSrc);
+        doc.addImage(data, isJpg ? "JPEG" : "PNG", x, y, w, h, undefined, "FAST");
+      }
+    }
+
+    let y = margin + 18; // etwas Abstand unter dem Logo
+    doc.setFont("helvetica", "bold"); doc.setFontSize(18);
+    doc.text("Baustellenbegehung (Kurztest)", margin, y); y += 8;
+
+    doc.setFont("helvetica", "normal"); doc.setFontSize(11);
+    doc.text(`Ort: ${form.location || "-"}`, margin, y); y += 6;
+    doc.text(`Datum: ${new Date(form.date).toLocaleString()}`, margin, y); y += 6;
+    doc.text(`Ersteller: ${form.inspector || "-"}`, margin, y); y += 6;
+
+    doc.save("bericht-test.pdf");
+  } catch (err) {
+    console.error("PDF-Fehler:", err);
+    alert("PDF konnte nicht erzeugt werden. Details in der Konsole.");
+  }
+};
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
