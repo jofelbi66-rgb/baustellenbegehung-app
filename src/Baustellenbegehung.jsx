@@ -528,12 +528,10 @@ async function addPhotosSection(doc, checklist, CATEGORIES) {
   };
 
   const drawHeader = (doc, pageW, margin) => {
-    doc.setFontSize(9);
-    const ort = form.location || "-";
-    const datum = form.date || new Date().toLocaleString();
-    const ersteller = form.inspector || "-";
-    const headerText = `Ort: ${ort}   |   Datum: ${datum}   |   Ersteller: ${ersteller}`;
-    doc.text(headerText, margin, 10);
+    // Header deaktiviert
+  return;
+};
+
   };
   const drawFooter = (doc, pageW, margin, page, total) => {
     const footerTextLeft = "Empfänger: EHS Felbermayr Deutschland GmbH";
