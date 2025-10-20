@@ -381,6 +381,102 @@ useEffect(() => logoSrc && localStorage.setItem("app.logoSrc", logoSrc), [logoSr
     return blocks.join("");
   };
 
+// URL/DataURL -> DataURL umwandeln (für Logos aus /public und Kamera-Fotos)
+async function toDataUrl(src) {
+  if (!src) return null;
+  if (src.startsWith("data:")) return src;
+  try {
+    const r = await fetch(src, { cache: "no-store" });
+    const b = await r.blob();
+    return await new Promise((res, rej) => {
+      const fr = new FileReader();
+      fr.onload = () => res(fr.result);
+      fr.onerror = rej;
+      fr.readAsDataURL(b);
+    });
+  } catch (e) {
+    console.warn("Bild laden fehlgeschlagen:", src, e);
+    return null;
+  }
+}
+
+// Logo nur auf Seite 1 oben rechts einblenden – berührt dein Layout nicht
+async function addLogoTopRight(doc, logoSrc) {
+  if (!logoSrc) return;
+  const data = await toDataUrl(logoSrc);
+  if (!data) return;
+  const pageW = doc.internal.pageSize.getWidth();
+  const margin = 15;
+  const w = 40, h = 12;
+  const x = pageW - margin - w;
+  const y = margin;
+  const isJpg = /\.jpe?g($|\?)/i.test(logoSrc);
+  doc.addImage(data, isJpg ? "JPEG" : "PNG", x, y, w, h, undefined, "FAST");
+}
+
+// Fotos als eigene Schluss-Sektion (neue Seiten nach Bedarf)
+async function addPhotosSection(doc, checklist, CATEGORIES) {
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const margin = 15;
+
+  // Prüfen, ob überhaupt Fotos existieren
+  const hasAny = CATEGORIES.some(cat =>
+    (checklist[cat.key] || []).some(r => (r.photos || []).length)
+  );
+  if (!hasAny) return;
+
+  // neue Seite für den Fototeil anhängen
+  doc.addPage();
+  let y = margin;
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(14);
+  doc.text("Fotos", margin, y); y += 6;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+
+  const gap = 6;
+  const cellW = (pageW - 2 * margin - gap) / 2;
+  const cellH = 50;
+
+  function ensure(h) {
+    if (y + h > pageH - margin) { doc.addPage(); y = margin; }
+  }
+
+  for (const cat of CATEGORIES) {
+    const rows = checklist[cat.key] || [];
+    for (let i = 0; i < rows.length; i++) {
+      const photos = rows[i]?.photos || [];
+      if (!photos.length) continue;
+
+      ensure(10);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+      doc.text(`${cat.title} – ${cat.items[i]}`, margin, y);
+      y += 4;
+      doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+
+      for (let p = 0; p < photos.length; p++) {
+        const col = p % 2;
+        if (col === 0) ensure(cellH + 8);
+
+        const px = margin + col * (cellW + gap);
+        const py = y;
+        const data = await toDataUrl(photos[p]);
+        if (data) {
+          doc.addImage(data, "PNG", px, py, cellW, cellH, undefined, "FAST");
+        }
+        doc.setDrawColor(200); doc.rect(px, py, cellW, cellH);
+        doc.setFontSize(8); doc.text(`#${p + 1}`, px + 2, py + cellH + 4);
+
+        if (col === 1) y += cellH + 8; // Zeilenumbruch nach 2 Bildern
+      }
+      if (photos.length % 2 === 1) y += cellH + 8; // letzte Einzelfoto-Zeile abschließen
+    }
+  }
+}
+
+
+
+  
   /* ---------- PDF / Header-Footer / Logo & Tabellen ---------- */
   const dataURLFromURL = async (url) => {
     try {
