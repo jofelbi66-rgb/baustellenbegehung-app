@@ -401,18 +401,41 @@ async function toDataUrl(src) {
 }
 
 // Logo nur auf Seite 1 oben rechts einblenden – berührt dein Layout nicht
-async function addLogoTopRight(doc, logoSrc) {
-  if (!logoSrc) return;
+// Ersetzt die alte addLogoTopRight: setzt das Logo proportional oben rechts
+async function addLogoTopRight(doc, logoSrc, margin = 15) {
+  if (!logoSrc) return 0;
+
+  // vorhandene Hilfsfunktion toDataUrl nutzen – falls bei dir anders heißt, bitte anpassen
   const data = await toDataUrl(logoSrc);
-  if (!data) return;
+  if (!data) return 0;
+
+  // natürliche Größe ermitteln
+  const img = new Image();
+  img.src = data;
+  await new Promise((res) => (img.onload = res));
+
   const pageW = doc.internal.pageSize.getWidth();
-  const margin = 15;
-  const w = 40, h = 12;
+
+  // Rahmen, in den das Logo hineinpasst (kannst du bei Bedarf ändern)
+  const maxW = 40;   // mm
+  const maxH = 14;   // mm
+
+  // Maßstab berechnen – Verhältnis bleibt erhalten (keine Verzerrung)
+  const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
+  const w = Math.max(1, img.naturalWidth * scale);
+  const h = Math.max(1, img.naturalHeight * scale);
+
   const x = pageW - margin - w;
   const y = margin;
+
+  // Format bestimmen
   const isJpg = /\.jpe?g($|\?)/i.test(logoSrc);
   doc.addImage(data, isJpg ? "JPEG" : "PNG", x, y, w, h, undefined, "FAST");
+
+  // Wir geben die tatsächlich belegte Höhe zurück, damit du darunter Abstand setzen kannst
+  return h;
 }
+
 
 // Fotos als eigene Schluss-Sektion (neue Seiten nach Bedarf)
 async function addPhotosSection(doc, checklist, CATEGORIES) {
@@ -540,17 +563,18 @@ async function addPhotosSection(doc, checklist, CATEGORIES) {
       const pageW = doc.internal.pageSize.getWidth();
       const margin = 10;
 
-      // Kopf + Logo nur auf Seite 1
-      drawHeader(doc, pageW, margin);
-      if (LOGO_URL && LOGO_URL.startsWith("http")) {
-        const logoData = await dataURLFromURL(LOGO_URL);
-        if (logoData) {
-          try {
-            const logoW = 40, logoH = 12, x = pageW - margin - logoW;
-            doc.addImage(logoData, "PNG", x, 10, logoW, logoH, undefined, "FAST");
-          } catch {}
-        }
-      }
+    // Kopf + Logo nur auf Seite 1
+drawHeader(doc, pageW, margin);
+if (LOGO_URL && LOGO_URL.startsWith("http")) {
+  const logoData = await dataURLFromURL(LOGO_URL);
+  if (logoData) {
+    try {
+      const logoW = 40, logoH = 12, x = pageW - margin - logoW;
+      doc.addImage(logoData, "PNG", x, 10, logoW, logoH, undefined, "FAST");
+    } catch {}
+  }
+}
+
 
       // Titel
       const titleY = 40;
