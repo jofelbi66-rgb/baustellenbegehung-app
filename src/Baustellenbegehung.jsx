@@ -563,17 +563,10 @@ async function addPhotosSection(doc, checklist, CATEGORIES) {
       const pageW = doc.internal.pageSize.getWidth();
       const margin = 10;
 
-    // Kopf + Logo nur auf Seite 1
-drawHeader(doc, pageW, margin);
-if (LOGO_URL && LOGO_URL.startsWith("http")) {
-  const logoData = await dataURLFromURL(LOGO_URL);
-  if (logoData) {
-    try {
-      const logoW = 40, logoH = 12, x = pageW - margin - logoW;
-      doc.addImage(logoData, "PNG", x, 10, logoW, logoH, undefined, "FAST");
-    } catch {}
-  }
-}
+// --- Kopfzeile entfernt ---
+// Logo wird bereits oben rechts über addLogoTopRight eingefügt.
+// drawHeader() nicht mehr aufrufen.
+
 
 
       // Titel
