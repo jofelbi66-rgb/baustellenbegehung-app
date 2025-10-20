@@ -582,15 +582,22 @@ const drawHeader = () => {};
         ["Bemerkungen", form.remarks || "-"],
       ];
 
-      autoTable(doc, {
-        startY: titleY + 8,
-        styles: { fontSize: 10, cellPadding: 2 },
-        head: [["Feld", "Wert"]],
-        body: meta,
-        theme: "grid",
-        headStyles: { fillColor: [248, 250, 252], textColor: 0, lineWidth: 0.1 },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-      });
+      // y sollte der aktuelle Startpunkt *unter* dem Logo sein.
+// Falls du kein y nutzt, ersetze startY unten durch deinen Wert (z. B. 30–40).
+autoTable(doc, {
+  startY: y,                                 // beginnt unter dem Logo
+  margin: { left: 15, right: 15 },           // wie dein margin
+  head: [["Kategorie", "Punkt", "Status", "Notiz"]],
+  body: checklistRows,                        // deine vorbereitete Liste
+  theme: "grid",
+  styles: { fontSize: 10, cellPadding: 2 },
+  headStyles: { fillColor: [230, 230, 230] }, // Kopf hellgrau
+  alternateRowStyles: { fillColor: [245, 245, 245] } // Zebra
+});
+
+// danach y neu setzen, falls du weiter unten noch zeichnest:
+y = autoTable.previous.finalY + 8;
+
 
       // Checkliste mit Zebra
       const rows = buildChecklistRows();
