@@ -461,7 +461,7 @@ async function addPhotosSection(doc, checklist, CATEGORIES) {
   const cellW = (pageW - 2 * margin - gap) / 2;
   const cellH = 50;
 
-  function ensure(h) {
+  function ensureSpace(h) {
     if (y + h > pageH - margin) { doc.addPage(); y = margin; }
   }
 
@@ -674,7 +674,58 @@ y = autoTable.previous.finalY + 8;
       if (sizeMB <= 1.0) {
         const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
        await addPhotosSection(doc, checklist, CATEGORIES);
- 
+// --- Unterschriftenblock: immer sichtbar am Seitenende ---
+const SIGN_H = 40;          // Höhe der Unterschriftsfelder
+const GAP    = 10;          // Abstand zwischen den Feldern
+const boxW   = (pageW - 2 * margin - GAP) / 2;
+
+// Falls oberhalb schon Inhalt steht: reicht der Platz noch?
+// (nur relevant, wenn du mit 'y' arbeitest)
+if (typeof y === "number") {
+  // Wir brauchen unten noch SIGN_H + 8 mm Luft
+  if (y + SIGN_H + 8 > pageH - margin) {
+    doc.addPage();
+    y = margin;
+  }
+}
+
+// Position fest von unten berechnen (damit garantiert sichtbar)
+const baseY = pageH - margin - SIGN_H;
+
+// Box 1 (links)
+doc.setFontSize(10);
+doc.rect(margin, baseY, boxW, SIGN_H);
+doc.text("Unterschrift Bauleitung / EHS", margin + 2, baseY + 6);
+
+// Box 2 (rechts)
+doc.rect(margin + boxW + GAP, baseY, boxW, SIGN_H);
+doc.text("Unterschrift Auftragnehmer", margin + boxW + GAP + 2, baseY + 6);
+
+// Kleine Fußzeile über dem Seitenrand
+doc.setFontSize(8);
+doc.setTextColor(120);
+doc.text(
+  `Ort, Datum: ${form.location || "-"}, ${new Date(form.date).toLocaleDateString()}`,
+  margin,
+  pageH - margin - 2
+);
+doc.setTextColor(0);  // Farbe zurücksetzen
+
+const total = doc.getNumberOfPages();
+for (let i = 1; i <= total; i++) {
+  doc.setPage(i);
+  doc.setFontSize(8);
+  doc.setTextColor(120);
+  doc.text(
+    `Seite ${i} / ${total}`,
+    pageW - margin,
+    pageH - 6,
+    { align: "right" }
+  );
+}
+doc.setTextColor(0);
+        
+        
         doc.save(`Begehung_${safeName}.pdf`);
         return true;
       }
