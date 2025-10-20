@@ -527,6 +527,9 @@ async function addPhotosSection(doc, checklist, CATEGORIES) {
     return rows;
   };
 
+  // Header endgültig deaktiviert
+const drawHeader = () => {};
+
  
   const drawFooter = (doc, pageW, margin, page, total) => {
     const footerTextLeft = "Empfänger: EHS Felbermayr Deutschland GmbH";
