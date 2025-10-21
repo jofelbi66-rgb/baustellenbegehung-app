@@ -907,13 +907,12 @@ const exportPdfQuick = async () => {
   >
     📄 PDF speichern
   </button>
-</div>
-      </form>            {/* Form schließen */}
-
-    </div>               {/* .max-w-5xl mx-auto schließen */}
-  </div>                 {/* .min-h-screen … schließen */}
-);                       {/* return schließen */}
-}                        {/* Funktionsende */}
+      </button>
+    </form> {/* Form schließen */}
+  </div>   {/* .max-w-5xl mx-auto schließen */}
+</div>     {/* .min-h-screen schließen */}
+); // return schließen
+} // Funktionsende
 
 
 
