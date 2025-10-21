@@ -859,36 +859,9 @@ await addLogoTopRight(doc, logoSrc, pageW, margin);
 }; 
 
     // Logo proportional oben rechts (falls logoSrc gesetzt ist)
-    const toDataUrl = async (src) => {
-      if (!src) return null;
-      if (src.startsWith("data:")) return src;
-      const r = await fetch(src, { cache: "no-store" });
-      const b = await r.blob();
-      return await new Promise((res, rej) => {
-        const fr = new FileReader();
-        fr.onload = () => res(fr.result);
-        fr.onerror = rej;
-        fr.readAsDataURL(b);
-      });
-    };
+   
 
-    if (logoSrc) {
-      const data = await toDataUrl(logoSrc);
-      if (data) {
-        const img = new Image();
-        img.src = data;
-        await new Promise((r) => (img.onload = r));
-        const maxW = 40, maxH = 14;
-        const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
-        const w = Math.max(1, img.naturalWidth * scale);
-        const h = Math.max(1, img.naturalHeight * scale);
-        const x = pageW - margin - w;
-        const y = margin;
-        const isJpg = /\.jpe?g($|\?)/i.test(logoSrc);
-        doc.addImage(data, isJpg ? "JPEG" : "PNG", x, y, w, h, undefined, "FAST");
-      }
-    }
-
+    
     let y = margin + 18; // etwas Abstand unter dem Logo
     doc.setFont("helvetica", "bold"); doc.setFontSize(18);
     doc.text("Baustellenbegehung (Kurztest)", margin, y); y += 8;
