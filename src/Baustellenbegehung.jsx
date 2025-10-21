@@ -940,9 +940,7 @@ const exportPdfQuick = async () => {
  
 
   
-
-           
- <label className="flex flex-col gap-1">
+<label className="flex flex-col gap-1">
   <span className="text-sm text-gray-600">Firma/AG</span>
   <input
     className="border rounded-xl p-2"
@@ -953,6 +951,9 @@ const exportPdfQuick = async () => {
     }}
   />
 </label>
+
+           
+
 
 
  
