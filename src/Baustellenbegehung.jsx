@@ -852,7 +852,7 @@ await addLogoTopRight(doc, logoSrc, pageW, margin);
     doc.text("Test", 15, 20);
     doc.save("test.pdf");
     console.log("[PDF] saved");
-  } catch (e) {
+   catch (e) {
     console.error("[PDF] error", e);
     alert("PDF Fehler – Details in Konsole");
   }
@@ -871,12 +871,13 @@ await addLogoTopRight(doc, logoSrc, pageW, margin);
     doc.text(`Datum: ${new Date(form.date).toLocaleString()}`, margin, y); y += 6;
     doc.text(`Ersteller: ${form.inspector || "-"}`, margin, y); y += 6;
 
-    doc.save("bericht-test.pdf");
-  } catch (err) {
-    console.error("PDF-Fehler:", err);
-    alert("PDF konnte nicht erzeugt werden. Details in der Konsole.");
-  }
+ doc.save("bericht-test.pdf");
+ catch (err) {
+  console.error("PDF-Fehler:", err);
+  alert("PDF konnte nicht erzeugt werden. Details in der Konsole.");
+}
 };
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
