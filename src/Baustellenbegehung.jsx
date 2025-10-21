@@ -892,19 +892,52 @@ const exportPdfQuick = async () => {
       </header>
 
       <form onSubmit={onSubmit} className="space-y-6">
-        {/* Stammdaten */}
-        <section className="grid md:grid-cols-2 gap-4 bg-white p-4 rounded-2xl shadow">
-          <h2 className="md:col-span-2 text-lg font-semibold">Stammdaten</h2>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm text-gray-600">Projekt *</span>
-            <input
-              className="border rounded-xl p-2"
-              value={form.project}
-              onChange={onField("project")}
-              placeholder="z. B. Schleusenmodernisierung XY"
-            />
-          </label>
-        </section>
+       {/* Stammdaten */}
+<section className="grid md:grid-cols-2 gap-4 bg-white p-4 rounded-2xl shadow">
+  <h2 className="md:col-span-2 text-lg font-semibold">Stammdaten</h2>
+
+  <label className="flex flex-col gap-1">
+    <span className="text-sm text-gray-600">Projekt *</span>
+    <input
+      className="border rounded-xl p-2"
+      value={form.project}
+      onChange={onField("project")}
+      placeholder="z. B. Schleusenmodernisierung XY"
+    />
+  </label>
+
+  <label className="flex flex-col gap-1">
+    <span className="text-sm text-gray-600">Firma/AG</span>
+    <input
+      className="border rounded-xl p-2"
+      value={form.company}
+      onChange={(e) => {
+        onField("company")(e);
+        autoPickLogoByCompany(e.target.value);
+      }}
+    />
+  </label>
+
+  <label className="flex flex-col gap-1">
+    <span className="text-sm text-gray-600">Wetter</span>
+    <input
+      className="border rounded-xl p-2"
+      value={form.weather}
+      onChange={onField("weather")}
+    />
+  </label>
+
+  <label className="md:col-span-2 flex flex-col gap-1">
+    <span className="text-sm text-gray-600">Allgemeine Bemerkungen</span>
+    <textarea
+      className="border rounded-xl p-2"
+      rows={3}
+      value={form.remarks}
+      onChange={onField("remarks")}
+    />
+  </label>
+</section>
+ 
 
         {/* PDF speichern */}
         <div className="mt-3">
