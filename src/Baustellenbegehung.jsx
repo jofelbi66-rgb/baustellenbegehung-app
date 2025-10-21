@@ -873,7 +873,7 @@ const exportPdfQuick = async () => {
     doc.text(`Ersteller: ${form.inspector || "-"}`, margin, y); y += 6;
 
  doc.save("bericht-test.pdf");
- catch (err) {
+} catch (err) {
   console.error("PDF-Fehler:", err);
   alert("PDF konnte nicht erzeugt werden. Details in der Konsole.");
 }
