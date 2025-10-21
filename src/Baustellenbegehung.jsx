@@ -841,23 +841,24 @@ async function addLogoTopRight(doc, logoSrc, pageW, margin) {
   doc.addImage(data, isJpg ? "JPEG" : "PNG", x, y, w, h, undefined, "FAST");
   return h;
 }
-
-  const exportPdfQuick = async () => {
-   console.log("[PDF] start"); 
+const exportPdfQuick = async () => {
+  console.log("[PDF] start");
   try {
-   const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
-const margin = 15;
-await addLogoTopRight(doc, logoSrc, pageW, margin);
+    const margin = 15;
+
+    await addLogoTopRight(doc, logoSrc, pageW, margin);
     doc.text("Test", 15, 20);
     doc.save("test.pdf");
     console.log("[PDF] saved");
-   catch (e) {
+  } catch (e) {
     console.error("[PDF] error", e);
     alert("PDF Fehler – Details in Konsole");
   }
-}; 
+};
 
+ 
     // Logo proportional oben rechts (falls logoSrc gesetzt ist)
    
 
