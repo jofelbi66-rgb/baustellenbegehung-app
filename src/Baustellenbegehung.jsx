@@ -337,7 +337,7 @@ useEffect(() => logoSrc && localStorage.setItem("app.logoSrc", logoSrc), [logoSr
     console.error("PDF-Fehler:", err);
     alert("PDF konnte nicht erzeugt werden. Details in der Konsole.");
   }
-};
+
 
   
   // ---------- Unterschrift (Signaturfeld) ----------
