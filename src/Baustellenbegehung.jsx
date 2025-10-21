@@ -944,14 +944,15 @@ async function onLogoUpload(e) {
                 </button>
                 </div>
               
- 
-  <button
+ <button
   type="button"
   onClick={exportPdfQuick}
   className="px-3 py-2 rounded-xl border"
 >
   📄 PDF speichern
 </button>
+
+  
 
             </label>
  <label className="flex flex-col gap-1">
