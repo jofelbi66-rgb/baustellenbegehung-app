@@ -953,6 +953,23 @@ async function onLogoUpload(e) {
               <span className="text-sm text-gray-600">Projekt *</span>
               <input className="border rounded-xl p-2" value={form.project} onChange={onField("project")} placeholder="z.B. Schleusenmodernisierung XY"/>
             </label>
+
+</label>   {/* <- dieses schließende Label zuerst */}
+
+<div className="mt-3">
+  <button
+    type="button"
+    onClick={exportPdfQuick}
+    className="px-3 py-2 rounded-xl border"
+  >
+    📄 PDF speichern
+  </button>
+</div>
+
+
+
+
+            
             <label className="flex flex-col gap-1">
               <span className="text-sm text-gray-600">Ort *</span>
               <div className="flex gap-2">
@@ -962,13 +979,7 @@ async function onLogoUpload(e) {
                 </button>
                 </div>
               
- <button
-  type="button"
-  onClick={exportPdfQuick}
-  className="px-3 py-2 rounded-xl border"
->
-  📄 PDF speichern
-</button>
+ 
 
   
 
