@@ -862,7 +862,7 @@ const exportPdfQuick = async () => {
     // Logo proportional oben rechts (falls logoSrc gesetzt ist)
    
 
-    
+    try {
     let y = margin + 18; // etwas Abstand unter dem Logo
     doc.setFont("helvetica", "bold"); doc.setFontSize(18);
     doc.text("Baustellenbegehung (Kurztest)", margin, y); y += 8;
