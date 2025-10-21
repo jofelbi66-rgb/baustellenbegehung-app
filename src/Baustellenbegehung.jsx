@@ -879,40 +879,49 @@ const exportPdfQuick = async () => {
 
 
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-5xl mx-auto">
-        <header className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold">Baustellenbegehung – Variante A (EmailJS)</h1>
-          <p className="text-gray-600 mt-1">Einfache Web-App zur Dokumentation, mit GPS-Ortung, Unterschrift, Fotos, PDF-Export (≤1 MB) & E-Mail.</p>
-        </header>
+ return (
+  <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="max-w-5xl mx-auto">
+      <header className="mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold">
+          Baustellenbegehung – Variante A (EmailJS)
+        </h1>
+        <p className="text-gray-600 mt-1">
+          Einfache Web-App zur Dokumentation, mit GPS-Ortung, Unterschrift, Fotos, PDF-Export (≤1 MB) & E-Mail.
+        </p>
+      </header>
 
-        <form onSubmit={onSubmit} className="space-y-6">
-          {/* Stammdaten */}
-          <section className="grid md:grid-cols-2 gap-4 bg-white p-4 rounded-2xl shadow">
-            <h2 className="md:col-span-2 text-lg font-semibold">Stammdaten</h2>
-            <label className="flex flex-col gap-1">
-              <span className="text-sm text-gray-600">Projekt *</span>
-              <input className="border rounded-xl p-2" value={form.project} onChange={onField("project")} placeholder="z.B. Schleusenmodernisierung XY"/>
-            </label>
-</section>
+      <form onSubmit={onSubmit} className="space-y-6">
+        {/* Stammdaten */}
+        <section className="grid md:grid-cols-2 gap-4 bg-white p-4 rounded-2xl shadow">
+          <h2 className="md:col-span-2 text-lg font-semibold">Stammdaten</h2>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-gray-600">Projekt *</span>
+            <input
+              className="border rounded-xl p-2"
+              value={form.project}
+              onChange={onField("project")}
+              placeholder="z. B. Schleusenmodernisierung XY"
+            />
+          </label>
+        </section>
 
-
-
-      <div className="mt-3">
-        <button
-          type="button"
-          onClick={exportPdfQuick}
-          className="px-3 py-2 rounded-xl border"
-        >
-          📄 PDF speichern
-        </button>
-      </div>
-    </form>
+        {/* PDF speichern */}
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={exportPdfQuick}
+            className="px-3 py-2 rounded-xl border"
+          >
+            📄 PDF speichern
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 );
 }
+
       
 
 
