@@ -304,11 +304,20 @@ useEffect(() => logoSrc && localStorage.setItem("app.logoSrc", logoSrc), [logoSr
     }
   };
 
-  const exportPdfQuick = async () => {
+ 
+const exportPdfQuick = () => {
   try {
-    const margin = 15;
     const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const pageW = doc.internal.pageSize.getWidth();
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("PDF-Test: funktioniert ✅", 15, 20);
+    doc.save("test.pdf");
+  } catch (e) {
+    console.error("PDF-Fehler:", e);
+    alert("PDF konnte nicht erzeugt werden (Konsole prüfen).");
+  }
+};
+
 
     // Logo proportional oben rechts (falls logoSrc gesetzt ist)
     const toDataUrl = async (src) => {
