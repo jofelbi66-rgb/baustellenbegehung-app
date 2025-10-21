@@ -305,20 +305,7 @@ useEffect(() => logoSrc && localStorage.setItem("app.logoSrc", logoSrc), [logoSr
   };
 
  
-const exportPdfQuick = () => {
-console.log("[PDF] start");  
-  try {
-    const doc = new jsPDF({ unit: "mm", format: "a4" });
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("PDF-Test: funktioniert ✅", 15, 20);
-    doc.save("test.pdf");
-  } catch (e) {
-   console.error("[PDF] error", e);
-    alert("PDF Fehler – Details in Konsole"); 
-    
-  }
-};
+
 
 
     // Logo proportional oben rechts (falls logoSrc gesetzt ist)
@@ -335,23 +322,7 @@ console.log("[PDF] start");
       });
     };
 
-    if (logoSrc) {
-      const data = await toDataUrl(logoSrc);
-      if (data) {
-        const img = new Image();
-        img.src = data;
-        await new Promise((r) => (img.onload = r));
-        const maxW = 40, maxH = 14;
-        const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
-        const w = Math.max(1, img.naturalWidth * scale);
-        const h = Math.max(1, img.naturalHeight * scale);
-        const x = pageW - margin - w;
-        const y = margin;
-        const isJpg = /\.jpe?g($|\?)/i.test(logoSrc);
-        doc.addImage(data, isJpg ? "JPEG" : "PNG", x, y, w, h, undefined, "FAST");
-      }
-    }
-
+   
     let y = margin + 18; // etwas Abstand unter dem Logo
     doc.setFont("helvetica", "bold"); doc.setFontSize(18);
     doc.text("Baustellenbegehung (Kurztest)", margin, y); y += 8;
@@ -877,10 +848,36 @@ async function onLogoUpload(e) {
   setLogoSrc(data);
 }
 
+ // ===================== Logo rechts oben =====================
+async function addLogoTopRight(doc, logoSrc, pageW, margin) {
+  if (!logoSrc) return 0;
+
+  const data = await toDataUrl(logoSrc);
+  if (!data) return 0;
+
+  const img = new Image();
+  img.src = data;
+  await new Promise((r) => (img.onload = r));
+
+  const maxW = 40, maxH = 14;
+  const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
+  const w = Math.max(1, img.naturalWidth * scale);
+  const h = Math.max(1, img.naturalHeight * scale);
+  const x = pageW - margin - w;
+  const y = margin;
+  const isJpg = /\.jpe?g($|\?)/i.test(logoSrc);
+
+  doc.addImage(data, isJpg ? "JPEG" : "PNG", x, y, w, h, undefined, "FAST");
+  return h;
+}
+
   const exportPdfQuick = async () => {
    console.log("[PDF] start"); 
   try {
    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+const margin = 15;
+await addLogoTopRight(doc, logoSrc, pageW, margin);
     doc.text("Test", 15, 20);
     doc.save("test.pdf");
     console.log("[PDF] saved");
