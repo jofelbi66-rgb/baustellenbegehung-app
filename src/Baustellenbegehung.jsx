@@ -899,15 +899,15 @@ const exportPdfQuick = async () => {
 
 
 
-<div className="mt-3">
-  <button
-    type="button"
-    onClick={exportPdfQuick}
-    className="px-3 py-2 rounded-xl border"
-  >
-    📄 PDF speichern
-  </button>
-      </button>
+      <div className="mt-3">
+        <button
+          type="button"
+          onClick={exportPdfQuick}
+          className="px-3 py-2 rounded-xl border"
+        >
+          📄 PDF speichern
+        </button>
+      </div>
     </form> {/* Form schließen */}
   </div>   {/* .max-w-5xl mx-auto schließen */}
 </div>     {/* .min-h-screen schließen */}
