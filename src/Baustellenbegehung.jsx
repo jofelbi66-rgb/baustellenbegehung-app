@@ -876,8 +876,7 @@ const exportPdfQuick = async () => {
 } catch (err) {
   console.error("PDF-Fehler:", err);
   alert("PDF konnte nicht erzeugt werden. Details in der Konsole.");
-}
-};
+
 
 
   return (
