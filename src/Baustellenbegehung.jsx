@@ -306,6 +306,7 @@ useEffect(() => logoSrc && localStorage.setItem("app.logoSrc", logoSrc), [logoSr
 
  
 const exportPdfQuick = () => {
+console.log("[PDF] start");  
   try {
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     doc.setFont("helvetica", "bold");
@@ -313,8 +314,9 @@ const exportPdfQuick = () => {
     doc.text("PDF-Test: funktioniert ✅", 15, 20);
     doc.save("test.pdf");
   } catch (e) {
-    console.error("PDF-Fehler:", e);
-    alert("PDF konnte nicht erzeugt werden (Konsole prüfen).");
+   console.error("[PDF] error", e);
+    alert("PDF Fehler – Details in Konsole"); 
+    
   }
 };
 
@@ -876,10 +878,17 @@ async function onLogoUpload(e) {
 }
 
   const exportPdfQuick = async () => {
+   console.log("[PDF] start"); 
   try {
-    const margin = 15;
-    const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const pageW = doc.internal.pageSize.getWidth();
+   const doc = new jsPDF({ unit: "mm", format: "a4" });
+    doc.text("Test", 15, 20);
+    doc.save("test.pdf");
+    console.log("[PDF] saved");
+  } catch (e) {
+    console.error("[PDF] error", e);
+    alert("PDF Fehler – Details in Konsole");
+  }
+}; 
 
     // Logo proportional oben rechts (falls logoSrc gesetzt ist)
     const toDataUrl = async (src) => {
