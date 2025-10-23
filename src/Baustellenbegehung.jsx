@@ -1103,11 +1103,18 @@ const exportPdfQuick = async () => {
               <span className="text-sm text-gray-600">Wetter</span>
               <input className="border rounded-xl p-2" value={form.weather} onChange={onField("weather")} />
             </label>
-            <label className="md:col-span-2 flex flex-col gap-1">
-              <span className="text-sm text-gray-600">Allgemeine Bemerkungen</span>
-              <textarea className="border rounded-xl p-2" rows={3} value={form.remarks} onChange={onField("remarks")} />
-            </label>
-          </section>
+             {/* Bemerkungen */}
+  <label className="md:col-span-2 flex flex-col gap-1">
+    <span className="text-sm text-gray-600">Allgemeine Bemerkungen</span>
+    <textarea
+      className="border rounded-xl p-2"
+      rows={3}
+      value={form.remarks}
+      onChange={onField("remarks")}
+    />
+  </label>
+</section>
+
 
           {/* Checkliste mit farbigen Buttons & Zebra-Hintergrund */}
           {CATEGORIES.map((cat) => (
