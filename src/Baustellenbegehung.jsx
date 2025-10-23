@@ -1056,33 +1056,31 @@ const exportPdfQuick = async () => {
       )}
     </div>
 
-    {/* Logo-Vorschau */}
-    {logoSrc ? (
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-gray-600">Vorschau:</span>
-        <img
-          src={logoSrc}
-          alt="Logo"
-          className="h-10 object-contain border rounded-md bg-white px-2"
-        />
-        <button
-          type="button"
-          className="px-3 py-2 rounded-xl border"
-          onClick={() => {
-            setLogoChoice("felbermayr");
-            setLogoSrc(DEFAULT_LOGOS[0].url);
-          }}
-        >
-          Zurücksetzen
-        </button>
-      </div>
-    ) : (
-      <span className="text-sm text-amber-600">
-        Bitte Logo auswählen oder hochladen.
-      </span>
-    )}
+  {/* Logo-Vorschau */}
+{logoSrc ? (
+  <div className="flex items-center gap-3">
+    <span className="text-sm text-gray-600">Vorschau:</span>
+    <img
+      src={logoSrc}
+      alt="Logo"
+      className="h-10 object-contain border rounded-md bg-white px-2"
+    />
+    <button
+      type="button"
+      className="px-3 py-2 rounded-xl border"
+      onClick={() => {
+        setLogoChoice("felbermayr");
+        setLogoSrc(DEFAULT_LOGOS[0].url);
+      }}
+    >
+      Zurücksetzen
+    </button>
   </div>
-</label>
+) : (
+  <span className="text-sm text-amber-600">
+    Bitte Logo auswählen oder hochladen.
+  </span>
+)}
 
 
 
