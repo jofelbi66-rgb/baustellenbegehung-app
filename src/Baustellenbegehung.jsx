@@ -892,10 +892,11 @@ const exportPdfQuick = async () => {
       </header>
 
       <form onSubmit={onSubmit} className="space-y-6">
-       {/* Stammdaten */}
+{/* Stammdaten */}
 <section className="grid md:grid-cols-2 gap-4 bg-white p-4 rounded-2xl shadow">
   <h2 className="md:col-span-2 text-lg font-semibold">Stammdaten</h2>
 
+  {/* Projekt */}
   <label className="flex flex-col gap-1">
     <span className="text-sm text-gray-600">Projekt *</span>
     <input
@@ -906,6 +907,7 @@ const exportPdfQuick = async () => {
     />
   </label>
 
+  {/* Firma / AG */}
   <label className="flex flex-col gap-1">
     <span className="text-sm text-gray-600">Firma/AG</span>
     <input
@@ -918,6 +920,28 @@ const exportPdfQuick = async () => {
     />
   </label>
 
+  {/* Datum / Uhrzeit */}
+  <label className="flex flex-col gap-1">
+    <span className="text-sm text-gray-600">Datum/Uhrzeit</span>
+    <input
+      type="datetime-local"
+      className="border rounded-xl p-2"
+      value={form.date}
+      onChange={onField("date")}
+    />
+  </label>
+
+  {/* Begehende Person */}
+  <label className="flex flex-col gap-1">
+    <span className="text-sm text-gray-600">Begehende Person *</span>
+    <input
+      className="border rounded-xl p-2"
+      value={form.inspector}
+      onChange={onField("inspector")}
+    />
+  </label>
+
+  {/* Wetter */}
   <label className="flex flex-col gap-1">
     <span className="text-sm text-gray-600">Wetter</span>
     <input
@@ -927,6 +951,7 @@ const exportPdfQuick = async () => {
     />
   </label>
 
+  {/* Bemerkungen */}
   <label className="md:col-span-2 flex flex-col gap-1">
     <span className="text-sm text-gray-600">Allgemeine Bemerkungen</span>
     <textarea
@@ -937,6 +962,7 @@ const exportPdfQuick = async () => {
     />
   </label>
 </section>
+
  
 
         {/* PDF speichern */}
