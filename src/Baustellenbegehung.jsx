@@ -1014,10 +1014,7 @@ const exportPdfQuick = async () => {
            
 
 
-
- 
-              
-{/* ================= Logo-Auswahl ================= */}
+{/* =============== Logo-Auswahl =============== */}
 <label className="flex flex-col gap-1 md:col-span-2">
   <span className="text-sm text-gray-600">Logo für Bericht</span>
 
@@ -1030,8 +1027,10 @@ const exportPdfQuick = async () => {
         onChange={(e) => {
           const val = e.target.value;
           setLogoChoice(val);
+
           const preset = DEFAULT_LOGOS.find((l) => l.id === val);
-          if (preset && preset.url) setLogoSrc(preset.url);
+          if (preset?.url) setLogoSrc(preset.url);
+
           if (val === "custom") {
             const stored = localStorage.getItem("app.logoSrc");
             if (stored) setLogoSrc(stored);
@@ -1056,39 +1055,39 @@ const exportPdfQuick = async () => {
       )}
     </div>
 
-  {/* Logo-Vorschau */}
-{logoSrc ? (
-  <div className="flex items-center gap-3">
-    <span className="text-sm text-gray-600">Vorschau:</span>
-    <img
-      src={logoSrc}
-      alt="Logo"
-      className="h-10 object-contain border rounded-md bg-white px-2"
-    />
-    <button
-      type="button"
-      className="px-3 py-2 rounded-xl border"
-      onClick={() => {
-        setLogoChoice("felbermayr");
-        setLogoSrc(DEFAULT_LOGOS[0].url);
-      }}
-    >
-      Zurücksetzen
-    </button>
+    {/* Logo-Vorschau */}
+    {logoSrc ? (
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-gray-600">Vorschau:</span>
+        <img
+          src={logoSrc}
+          alt="Logo"
+          className="h-10 object-contain border rounded-md bg-white px-2"
+        />
+        <button
+          type="button"
+          className="px-3 py-2 rounded-xl border"
+          onClick={() => {
+            setLogoChoice("felbermayr");
+            setLogoSrc(DEFAULT_LOGOS[0].url);
+          }}
+        >
+          Zurücksetzen
+        </button>
+      </div>
+    ) : (
+      <span className="text-sm text-amber-600">
+        Bitte Logo auswählen oder hochladen.
+      </span>
+    )}
   </div>
-) : (
-  <span className="text-sm text-amber-600">
-    Bitte Logo auswählen oder hochladen.
-  </span>
-)}
+</label>
+
+ 
+              
 
 
-
-
-
-
-
-            
+        
             <label className="flex flex-col gap-1">
               <span className="text-sm text-gray-600">Datum/Uhrzeit</span>
               <input type="datetime-local" className="border rounded-xl p-2" value={form.date} onChange={onField("date")} />
