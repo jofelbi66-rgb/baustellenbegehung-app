@@ -304,13 +304,6 @@ useEffect(() => logoSrc && localStorage.setItem("app.logoSrc", logoSrc), [logoSr
     }
   };
 
- 
-
-
-
-   
-
-  
   // ---------- Unterschrift (Signaturfeld) ----------
   const sigCanvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -819,50 +812,43 @@ async function onLogoUpload(e) {
   setLogoSrc(data);
 }
 
- // ===================== Logo rechts oben =====================
-async function addLogoTopRight(doc, logoSrc, pageW, margin) {
-  if (!logoSrc) return 0;
-
-  const data = await toDataUrl(logoSrc);
-  if (!data) return 0;
-
-  const img = new Image();
-  img.src = data;
-  await new Promise((r) => (img.onload = r));
-
-  const maxW = 40, maxH = 14;
-  const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
-  const w = Math.max(1, img.naturalWidth * scale);
-  const h = Math.max(1, img.naturalHeight * scale);
-  const x = pageW - margin - w;
-  const y = margin;
-  const isJpg = /\.jpe?g($|\?)/i.test(logoSrc);
-
-  doc.addImage(data, isJpg ? "JPEG" : "PNG", x, y, w, h, undefined, "FAST");
-  return h;
-}
-const exportPdfQuick = async () => {
-  console.log("[PDF] start");
+  const exportPdfQuick = async () => {
   try {
+    const margin = 15;
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
-    const margin = 15;
 
-    await addLogoTopRight(doc, logoSrc, pageW, margin);
-    doc.text("Test", 15, 20);
-    doc.save("test.pdf");
-    console.log("[PDF] saved");
-  } catch (e) {
-    console.error("[PDF] error", e);
-    alert("PDF Fehler – Details in Konsole");
-  }
-};
-
- 
     // Logo proportional oben rechts (falls logoSrc gesetzt ist)
-   
+    const toDataUrl = async (src) => {
+      if (!src) return null;
+      if (src.startsWith("data:")) return src;
+      const r = await fetch(src, { cache: "no-store" });
+      const b = await r.blob();
+      return await new Promise((res, rej) => {
+        const fr = new FileReader();
+        fr.onload = () => res(fr.result);
+        fr.onerror = rej;
+        fr.readAsDataURL(b);
+      });
+    };
 
-    try {
+    if (logoSrc) {
+      const data = await toDataUrl(logoSrc);
+      if (data) {
+        const img = new Image();
+        img.src = data;
+        await new Promise((r) => (img.onload = r));
+        const maxW = 40, maxH = 14;
+        const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
+        const w = Math.max(1, img.naturalWidth * scale);
+        const h = Math.max(1, img.naturalHeight * scale);
+        const x = pageW - margin - w;
+        const y = margin;
+        const isJpg = /\.jpe?g($|\?)/i.test(logoSrc);
+        doc.addImage(data, isJpg ? "JPEG" : "PNG", x, y, w, h, undefined, "FAST");
+      }
+    }
+
     let y = margin + 18; // etwas Abstand unter dem Logo
     doc.setFont("helvetica", "bold"); doc.setFontSize(18);
     doc.text("Baustellenbegehung (Kurztest)", margin, y); y += 8;
@@ -872,121 +858,29 @@ const exportPdfQuick = async () => {
     doc.text(`Datum: ${new Date(form.date).toLocaleString()}`, margin, y); y += 6;
     doc.text(`Ersteller: ${form.inspector || "-"}`, margin, y); y += 6;
 
- doc.save("bericht-test.pdf");
-} catch (err) {
-  console.error("PDF-Fehler:", err);
-  alert("PDF konnte nicht erzeugt werden. Details in der Konsole.");
+    doc.save("bericht-test.pdf");
+  } catch (err) {
+    console.error("PDF-Fehler:", err);
+    alert("PDF konnte nicht erzeugt werden. Details in der Konsole.");
+  }
+};
 
+  return (
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-5xl mx-auto">
+        <header className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold">Baustellenbegehung – Variante A (EmailJS)</h1>
+          <p className="text-gray-600 mt-1">Einfache Web-App zur Dokumentation, mit GPS-Ortung, Unterschrift, Fotos, PDF-Export (≤1 MB) & E-Mail.</p>
+        </header>
 
-
- return (
-  <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-    <div className="max-w-5xl mx-auto">
-      <header className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold">
-          Baustellenbegehung – Variante A (EmailJS)
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Einfache Web-App zur Dokumentation, mit GPS-Ortung, Unterschrift, Fotos, PDF-Export (≤1 MB) & E-Mail.
-        </p>
-      </header>
-
-      <form onSubmit={onSubmit} className="space-y-6">
-{/* Stammdaten */}
-<section className="grid md:grid-cols-2 gap-4 bg-white p-4 rounded-2xl shadow">
-  <h2 className="md:col-span-2 text-lg font-semibold">Stammdaten</h2>
-
-  {/* Projekt */}
-  <label className="flex flex-col gap-1">
-    <span className="text-sm text-gray-600">Projekt *</span>
-    <input
-      className="border rounded-xl p-2"
-      value={form.project}
-      onChange={onField("project")}
-      placeholder="z. B. Schleusenmodernisierung XY"
-    />
-  </label>
-
-  {/* Firma / AG */}
-  <label className="flex flex-col gap-1">
-    <span className="text-sm text-gray-600">Firma/AG</span>
-    <input
-      className="border rounded-xl p-2"
-      value={form.company}
-      onChange={(e) => {
-        onField("company")(e);
-        autoPickLogoByCompany(e.target.value);
-      }}
-    />
-  </label>
-
-  {/* Datum / Uhrzeit */}
-  <label className="flex flex-col gap-1">
-    <span className="text-sm text-gray-600">Datum/Uhrzeit</span>
-    <input
-      type="datetime-local"
-      className="border rounded-xl p-2"
-      value={form.date}
-      onChange={onField("date")}
-    />
-  </label>
-
-  {/* Begehende Person */}
-  <label className="flex flex-col gap-1">
-    <span className="text-sm text-gray-600">Begehende Person *</span>
-    <input
-      className="border rounded-xl p-2"
-      value={form.inspector}
-      onChange={onField("inspector")}
-    />
-  </label>
-
-  {/* Wetter */}
-  <label className="flex flex-col gap-1">
-    <span className="text-sm text-gray-600">Wetter</span>
-    <input
-      className="border rounded-xl p-2"
-      value={form.weather}
-      onChange={onField("weather")}
-    />
-  </label>
-
-  {/* Bemerkungen */}
-  <label className="md:col-span-2 flex flex-col gap-1">
-    <span className="text-sm text-gray-600">Allgemeine Bemerkungen</span>
-    <textarea
-      className="border rounded-xl p-2"
-      rows={3}
-      value={form.remarks}
-      onChange={onField("remarks")}
-    />
-  </label>
-</section>
-
- 
-
-        {/* PDF speichern */}
-        <div className="mt-3">
-          <button
-            type="button"
-            onClick={exportPdfQuick}
-            className="px-3 py-2 rounded-xl border"
-          >
-            📄 PDF speichern
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-);
-}
-
-      
-
-
-
-
-            
+        <form onSubmit={onSubmit} className="space-y-6">
+          {/* Stammdaten */}
+          <section className="grid md:grid-cols-2 gap-4 bg-white p-4 rounded-2xl shadow">
+            <h2 className="md:col-span-2 text-lg font-semibold">Stammdaten</h2>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm text-gray-600">Projekt *</span>
+              <input className="border rounded-xl p-2" value={form.project} onChange={onField("project")} placeholder="z.B. Schleusenmodernisierung XY"/>
+            </label>
             <label className="flex flex-col gap-1">
               <span className="text-sm text-gray-600">Ort *</span>
               <div className="flex gap-2">
@@ -994,12 +888,9 @@ const exportPdfQuick = async () => {
                 <button type="button" onClick={onLocate} className="px-3 py-2 rounded-xl border whitespace-nowrap" disabled={locating}>
                   {locating ? "Ermittle…" : "Standort übernehmen"}
                 </button>
-                </div>
-              
- 
-
-  
-<label className="flex flex-col gap-1">
+              </div>
+            </label>
+ <label className="flex flex-col gap-1">
   <span className="text-sm text-gray-600">Firma/AG</span>
   <input
     className="border rounded-xl p-2"
@@ -1011,10 +902,10 @@ const exportPdfQuick = async () => {
   />
 </label>
 
-           
 
-
-{/* =============== Logo-Auswahl =============== */}
+ 
+              
+{/* ================= Logo-Auswahl ================= */}
 <label className="flex flex-col gap-1 md:col-span-2">
   <span className="text-sm text-gray-600">Logo für Bericht</span>
 
@@ -1027,10 +918,8 @@ const exportPdfQuick = async () => {
         onChange={(e) => {
           const val = e.target.value;
           setLogoChoice(val);
-
           const preset = DEFAULT_LOGOS.find((l) => l.id === val);
-          if (preset?.url) setLogoSrc(preset.url);
-
+          if (preset && preset.url) setLogoSrc(preset.url);
           if (val === "custom") {
             const stored = localStorage.getItem("app.logoSrc");
             if (stored) setLogoSrc(stored);
@@ -1083,11 +972,13 @@ const exportPdfQuick = async () => {
   </div>
 </label>
 
- 
-              
 
 
-        
+
+
+
+
+            
             <label className="flex flex-col gap-1">
               <span className="text-sm text-gray-600">Datum/Uhrzeit</span>
               <input type="datetime-local" className="border rounded-xl p-2" value={form.date} onChange={onField("date")} />
@@ -1100,18 +991,11 @@ const exportPdfQuick = async () => {
               <span className="text-sm text-gray-600">Wetter</span>
               <input className="border rounded-xl p-2" value={form.weather} onChange={onField("weather")} />
             </label>
-             {/* Bemerkungen */}
-  <label className="md:col-span-2 flex flex-col gap-1">
-    <span className="text-sm text-gray-600">Allgemeine Bemerkungen</span>
-    <textarea
-      className="border rounded-xl p-2"
-      rows={3}
-      value={form.remarks}
-      onChange={onField("remarks")}
-    />
-  </label>
-</section>
-
+            <label className="md:col-span-2 flex flex-col gap-1">
+              <span className="text-sm text-gray-600">Allgemeine Bemerkungen</span>
+              <textarea className="border rounded-xl p-2" rows={3} value={form.remarks} onChange={onField("remarks")} />
+            </label>
+          </section>
 
           {/* Checkliste mit farbigen Buttons & Zebra-Hintergrund */}
           {CATEGORIES.map((cat) => (
@@ -1272,4 +1156,4 @@ const exportPdfQuick = async () => {
       </div>
     </div>
   );
-  }
+}
