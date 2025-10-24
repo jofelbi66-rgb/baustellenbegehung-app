@@ -29,16 +29,6 @@ const [logoSrc, setLogoSrc] = useState(() =>
   localStorage.getItem("app.logoSrc") || (DEFAULT_LOGOS[0]?.url || "")
 );
 
-// Automatische Zuordnung nach Firmenname (Firma/AG-Feld)
-function autoPickLogoByCompany(companyName) {
-  if (!companyName) return;
-  const hit = FIRM_MATCH.find((m) => m.re.test(companyName));
-  if (!hit) return;
-  const preset = DEFAULT_LOGOS.find((l) => l.id === hit.logoId);
-  if (!preset) return;
-  setLogoChoice(hit.logoId);
-  setLogoSrc(preset.url);
-}
 
 
 
@@ -221,6 +211,18 @@ const [logoSrc, setLogoSrc] = useState(() =>
   localStorage.getItem("app.logoSrc") || (DEFAULT_LOGOS[0]?.url || "")
 );
 
+// Automatische Zuordnung nach Firmenname (Firma/AG-Feld)
+function autoPickLogoByCompany(companyName) {
+  if (!companyName) return;
+  const hit = FIRM_MATCH.find((m) => m.re.test(companyName));
+  if (!hit) return;
+  const preset = DEFAULT_LOGOS.find((l) => l.id === hit.logoId);
+  if (!preset) return;
+  setLogoChoice(hit.logoId);
+  setLogoSrc(preset.url);
+}
+
+  
 // persistieren
 useEffect(() => localStorage.setItem("app.logoChoice", logoChoice), [logoChoice]);
 useEffect(() => logoSrc && localStorage.setItem("app.logoSrc", logoSrc), [logoSrc]);
