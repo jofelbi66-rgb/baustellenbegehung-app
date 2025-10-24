@@ -848,6 +848,56 @@ async function onLogoUpload(e) {
     alert("PDF konnte nicht erzeugt werden. Details in der Konsole.");
   }
 };
+// ... deine bisherigen States und Funktionen (z. B. onCapturePhoto, resizeImageFromFile usw.)
+
+// === einfache PDF-Erzeugung ===
+const exportPdfSimple = async () => {
+  const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+  const pageW = doc.internal.pageSize.getWidth();
+  const margin = 15;
+
+  doc.setFontSize(16);
+  doc.text("Baustellenbegehung – Bericht", pageW / 2, 20, { align: "center" });
+
+  autoTable(doc, {
+    head: [["Feld", "Wert"]],
+    body: [
+      ["Projekt", form.project || "-"],
+      ["Ort", form.location || "-"],
+      ["Firma/AG", form.company || "-"],
+      ["Datum/Uhrzeit", form.date || "-"],
+      ["Begehende Person", form.inspector || "-"],
+      ["Wetter", form.weather || "-"],
+      ["Bemerkungen", form.remarks || "-"],
+    ],
+    margin: { left: margin, right: margin, top: 26 },
+    styles: { fontSize: 10 },
+  });
+
+  const rows = buildChecklistRows ? buildChecklistRows() : [];
+  autoTable(doc, {
+    head: [["Kategorie", "Prüfpunkt", "Bewertung", "Notiz"]],
+    body: rows,
+    startY: (doc.lastAutoTable?.finalY || 26) + 6,
+    margin: { left: margin, right: margin },
+    styles: { fontSize: 9 },
+  });
+
+  let y = (doc.lastAutoTable?.finalY || 26) + 10;
+  if (signatureDataURL) {
+    doc.text("Unterschrift", margin, y);
+    y += 4;
+    doc.addImage(signatureDataURL, "PNG", margin, y, 60, 20);
+  }
+
+  const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
+  doc.save(`Begehung_${safeName}.pdf`);
+};
+
+// === ab hier beginnt dein UI ===
+return (
+  <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    ...
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
