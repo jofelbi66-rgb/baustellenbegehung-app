@@ -21,15 +21,25 @@ const FIRM_MATCH = [
   { re: /wimmer/i,     logoId: "wimmer" },
 ];
 
+// Logo-Auswahl speichern
+const [logoChoice, setLogoChoice] = useState(() =>
+  localStorage.getItem("app.logoChoice") || "felbermayr"
+);
+const [logoSrc, setLogoSrc] = useState(() =>
+  localStorage.getItem("app.logoSrc") || (DEFAULT_LOGOS[0]?.url || "")
+);
+
+// Automatische Zuordnung nach Firmenname (Firma/AG-Feld)
 function autoPickLogoByCompany(companyName) {
   if (!companyName) return;
-  const hit = FIRM_MATCH.find(m => m.re.test(companyName));
+  const hit = FIRM_MATCH.find((m) => m.re.test(companyName));
   if (!hit) return;
-  const preset = DEFAULT_LOGOS.find(l => l.id === hit.logoId);
+  const preset = DEFAULT_LOGOS.find((l) => l.id === hit.logoId);
   if (!preset) return;
   setLogoChoice(hit.logoId);
   setLogoSrc(preset.url);
 }
+
 
 
 
@@ -111,29 +121,6 @@ const RATING_OPTIONS = [
 // ==============================================
 // Kamera-Funktion pro Checkpunkt (Foto aufnehmen)
 // ==============================================
-const onCapturePhoto = (catKey, itemIndex) => async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  try {
-    // vorhandene Funktion zum Verkleinern nutzen
-    const dataUrl = await resizeImageFromFile(file, 1280, 0.8);
-
-    setChecklist((prev) => {
-      const next = { ...prev };
-      const entry = { ...next[catKey][itemIndex] };
-      entry.photos = Array.isArray(entry.photos) ? [...entry.photos, dataUrl] : [dataUrl];
-      next[catKey] = [...next[catKey]];
-      next[catKey][itemIndex] = entry;
-      return next;
-    });
-  } catch (err) {
-    console.error("Foto aufnehmen fehlgeschlagen:", err);
-    setMsg?.({ type: "error", text: "Konnte Foto nicht aufnehmen." });
-  } finally {
-    // damit man gleich das nächste Bild machen kann
-    e.target.value = "";
-  }
-};
 
 /* ===================== Hilfsfunktionen ===================== */
 function useNowISOLocal() {
@@ -191,17 +178,27 @@ export default function BaustellenbegehungEmailJS() {
  const [checklist, setChecklist] = useState(() => {
   const init = {};
   for (const cat of CATEGORIES) init[cat.key] = cat.items.map(() => ({ rating: "ok", note: "", photos: [] }));
-  // Foto direkt mit Kamera aufnehmen (mobil): speichert als verkleinertes DataURL
+
+  }
+  return init;
+});
+
+
+  const [images, setImages] = useState([]); // dataURLs
+  const [msg, setMsg] = useState(null);
+  const [busy, setBusy] = useState(false);
+// Kamera-Funktion pro Checkpunkt (Foto aufnehmen)
 const onCapturePhoto = (catKey, itemIndex) => async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
   try {
-    // Du hast bereits resizeImageFromFile(f, maxWidth, quality) -> wir nutzen das
     const dataUrl = await resizeImageFromFile(file, 1280, 0.8);
-    setChecklist(prev => {
+    setChecklist((prev) => {
       const next = { ...prev };
       const entry = { ...next[catKey][itemIndex] };
-      entry.photos = Array.isArray(entry.photos) ? [...entry.photos, dataUrl] : [dataUrl];
+      entry.photos = Array.isArray(entry.photos)
+        ? [...entry.photos, dataUrl]
+        : [dataUrl];
       next[catKey] = [...next[catKey]];
       next[catKey][itemIndex] = entry;
       return next;
@@ -210,18 +207,10 @@ const onCapturePhoto = (catKey, itemIndex) => async (e) => {
     console.error("Foto aufnehmen fehlgeschlagen:", err);
     setMsg?.({ type: "error", text: "Konnte Foto nicht aufnehmen." });
   } finally {
-    // Eingabeelement zurücksetzen, damit man direkt ein weiteres Foto machen kann
     e.target.value = "";
   }
 };
- 
-  return init;
-});
 
-
-  const [images, setImages] = useState([]); // dataURLs
-  const [msg, setMsg] = useState(null);
-  const [busy, setBusy] = useState(false);
 
 // Logo-Auswahl speichern
 const [logoChoice, setLogoChoice] = useState(() =>
