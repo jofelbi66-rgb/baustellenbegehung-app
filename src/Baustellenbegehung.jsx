@@ -175,13 +175,14 @@ export default function BaustellenbegehungEmailJS() {
     remarks: "",
   });
 
- const [checklist, setChecklist] = useState(() => {
+const [checklist, setChecklist] = useState(() => {
   const init = {};
-  for (const cat of CATEGORIES) init[cat.key] = cat.items.map(() => ({ rating: "ok", note: "", photos: [] }));
-
+  for (const cat of CATEGORIES) {
+    init[cat.key] = cat.items.map(() => ({ rating: "ok", note: "", photos: [] }));
   }
   return init;
 });
+
 
 
   const [images, setImages] = useState([]); // dataURLs
