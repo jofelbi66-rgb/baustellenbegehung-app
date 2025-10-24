@@ -1131,9 +1131,14 @@ async function onLogoUpload(e) {
             <button type="submit" disabled={busy} className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60">
               {busy ? "Sende…" : "Begehung per E-Mail senden"}
             </button>
-            <button type="button" onClick={exportPdfWithLimits} className="px-5 py-3 rounded-2xl border">
-              PDF-Bericht speichern (≤1 MB)
-            </button>
+           <button
+  type="button"
+  onClick={exportPdfSimple}
+  className="px-5 py-3 rounded-2xl border"
+>
+  PDF-Bericht speichern
+</button>
+
             <span className="text-gray-500 text-sm">E-Mail via EmailJS oder lokale PDF-Ablage. Logo nur auf Seite 1.</span>
           </div>
         </form>
