@@ -21,14 +21,6 @@ const FIRM_MATCH = [
   { re: /wimmer/i,     logoId: "wimmer" },
 ];
 
-// Logo-Auswahl speichern
-const [logoChoice, setLogoChoice] = useState(() =>
-  localStorage.getItem("app.logoChoice") || "felbermayr"
-);
-const [logoSrc, setLogoSrc] = useState(() =>
-  localStorage.getItem("app.logoSrc") || (DEFAULT_LOGOS[0]?.url || "")
-);
-
 
 
 
