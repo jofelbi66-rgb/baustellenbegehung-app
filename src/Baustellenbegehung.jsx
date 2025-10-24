@@ -897,10 +897,6 @@ const exportPdfSimple = async () => {
 // === ab hier beginnt dein UI ===
 return (
   <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-    ...
-
-  return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         <header className="mb-6">
           <h1 className="text-2xl md:text-3xl font-bold">Baustellenbegehung – Variante A (EmailJS)</h1>
