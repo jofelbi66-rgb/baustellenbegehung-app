@@ -1012,7 +1012,7 @@ return (
   <input
     className="border rounded-xl p-2 flex-1"
     value={ccEmail}
-    onChange={(e) => setCcEmail(e.target.value)}
+    onChange={(e) => setCCEmail(e.target.value)}
     placeholder="z.B. joachim@firma.de"
   />
   <span className="text-xs text-gray-500 md:w-56">
