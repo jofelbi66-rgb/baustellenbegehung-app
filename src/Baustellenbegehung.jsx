@@ -893,6 +893,8 @@ const exportPdfSimple = async () => {
   }
 
   const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
+  await addPhotosSection(doc, checklist, CATEGORIES);
+
   doc.save(`Begehung_${safeName}.pdf`);
 };
 
