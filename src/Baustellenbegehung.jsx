@@ -1233,6 +1233,12 @@ return (
  {cat.items.map((label, i) => {
   const row =
     checklist?.[cat.key]?.[i] || { rating: "ok", note: "", photos: [] };
+const hasRating = !!row.rating;
+const hasNote = !!(row.note || "").trim();
+const hasPhoto = Array.isArray(row.photos) && row.photos.length > 0;
+const isOpen = hasRating || hasNote || hasPhoto;
+
+if (showOnlyOpen && !isOpen) return null;
 
   return (
     <div
