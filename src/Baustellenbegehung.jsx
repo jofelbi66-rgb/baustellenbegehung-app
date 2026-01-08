@@ -524,13 +524,7 @@ doc.addImage(data, fmt, px, py, cellW, cellH, undefined, "FAST");
 const drawHeader = () => {};
 
  
-  const drawFooter = (doc, pageW, margin, page, total) => {
-    const footerTextLeft = "Empfänger: EHS Felbermayr Deutschland GmbH";
-    const footerTextRight = `Seite ${page}/${total}`;
-    doc.setFontSize(8);
-    doc.text(footerTextLeft, margin, 287);
-    doc.text(footerTextRight, pageW - margin, 287, { align: "right" });
-  };
+ 
 
   // PDF Generator mit Größenlimit (≈1 MB)
   const exportPdfWithLimits = async () => {
