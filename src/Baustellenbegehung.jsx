@@ -469,7 +469,9 @@ async function addPhotosSection(doc, checklist, CATEGORIES) {
         const py = y;
         const data = await toDataUrl(photos[p]);
         if (data) {
-          doc.addImage(data, "PNG", px, py, cellW, cellH, undefined, "FAST");
+         const fmt = data.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
+doc.addImage(data, fmt, px, py, cellW, cellH, undefined, "FAST");
+ 
         }
         doc.setDrawColor(200); doc.rect(px, py, cellW, cellH);
         doc.setFontSize(8); doc.text(`#${p + 1}`, px + 2, py + cellH + 4);
