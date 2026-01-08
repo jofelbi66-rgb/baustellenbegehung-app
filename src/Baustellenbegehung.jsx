@@ -847,6 +847,46 @@ async function onLogoUpload(e) {
     alert("PDF konnte nicht erzeugt werden. Details in der Konsole.");
   }
 };
+ const drawFooter = (doc, page, total, margin = 15) => {
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+
+  const dateStr = form.date ? new Date(form.date).toLocaleDateString() : "-";
+  const inspector = form.inspector || "-";
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+
+  doc.text(`${dateStr} · ${inspector}`, margin, pageH - 6);
+  doc.text(`Seite ${page} von ${total}`, pageW - margin, pageH - 6, { align: "right" });
+};
+
+const drawSignatureBlockOnFirstPage = (doc, margin = 15) => {
+  const pageH = doc.internal.pageSize.getHeight();
+
+  // Platz unten reservieren (Unterschrift + Fußzeile)
+  const boxW = 80;
+  const boxH = 18;
+  const footerLineY = pageH - 6;
+  const y = footerLineY - 10 - boxH; // 10mm Abstand zur Fußzeile
+
+  doc.setPage(1);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("Unterschrift", margin, y - 3);
+
+  // Rahmenbox (immer sichtbar)
+  doc.setDrawColor(180);
+  doc.rect(margin, y, boxW, boxH);
+
+  // Signaturbild (falls vorhanden) in die Box einpassen
+  if (signatureDataURL) {
+    doc.addImage(signatureDataURL, "PNG", margin + 2, y + 2, boxW - 4, boxH - 4, undefined, "FAST");
+  }
+};
+ 
+
  const sendPdfToMail = async () => {
   // PDF erzeugen (Report)
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
@@ -880,7 +920,8 @@ async function onLogoUpload(e) {
     head: [["Kategorie", "Prüfpunkt", "Bewertung", "Notiz"]],
     body: rows,
     startY: (doc.lastAutoTable?.finalY || startY + 10) + 6,
-    margin: { left: margin, right: margin },
+    margin: { left: margin, right: margin, bottom: 45 },
+
     styles: { fontSize: 9, cellPadding: 2 },
     theme: "grid",
   });
@@ -891,8 +932,17 @@ async function onLogoUpload(e) {
     y += 4;
     doc.addImage(signatureDataURL, "PNG", margin, y, 60, 20, undefined, "FAST");
   }
+// Unterschrift immer auf Seite 1 unten einzeichnen
+drawSignatureBlockOnFirstPage(doc, margin);
 
   await addPhotosSection(doc, checklist, CATEGORIES);
+   // Footer auf alle Seiten: Datum · Begeher | Seite x von y
+const total = doc.internal.getNumberOfPages();
+for (let p = 1; p <= total; p++) {
+  doc.setPage(p);
+  drawFooter(doc, p, total, margin);
+}
+
 
   const dataUri = doc.output("datauristring");
   const pdfBase64 = dataUri.split(",")[1];
