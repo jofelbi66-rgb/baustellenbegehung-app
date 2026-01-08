@@ -1183,7 +1183,12 @@ return (
                 next[cat.key] = arr;
                 setChecklist(next);
               }}
-              className={`px-3 py-1 rounded-xl border ${opt.color} ${opt.border}`}
+            className={`px-3 py-1 rounded-xl border transition
+  ${row.rating === opt.value
+    ? `${opt.color} ${opt.border}`
+    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+  }`}
+
             >
               {opt.label}
             </button>
