@@ -64,6 +64,21 @@ const CATEGORIES = [
     ],
   },
   {
+  key: "psa",
+  title: "Persönliche Schutzausrüstung",
+  items: [
+    "Sicherheitsschuhe getragen",
+    "Schutzhelm getragen (wo erforderlich)",
+    "Warnweste / Warnkleidung getragen (wo erforderlich)",
+    "Handschutz passend zur Tätigkeit",
+    "Augenschutz vorhanden und genutzt (wo erforderlich)",
+    "Gehörschutz vorhanden und genutzt (wo erforderlich)",
+    "Atemschutz vorhanden und genutzt (wo erforderlich)",
+    "PSAgA korrekt genutzt (wo erforderlich)",
+  ],
+},
+
+  {
     key: "hebezeuge",
     title: "Hebezeuge & Hublifte",
     items: [
