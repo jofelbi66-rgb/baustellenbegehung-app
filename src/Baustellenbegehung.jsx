@@ -1251,125 +1251,110 @@ return (
           </section>
 
           {/* Checkliste mit farbigen Buttons & Zebra-Hintergrund */}
-          {CATEGORIES.map((cat) => (
-            <section key={cat.key} className="bg-white p-4 rounded-2xl shadow">
-           <button
-  type="button"
-  onClick={() => setOpenCats((s) => ({ ...s, [cat.key]: !s[cat.key] }))}
-  className="w-full flex items-center justify-between text-left mb-3"
->
-  <span className="text-lg font-semibold">{cat.title}</span>
-  <span className="text-sm text-gray-500">{openCats[cat.key] ? "−" : "+"}</span>
-</button>
-
-              {openCats[cat.key] && (
-
-              <div className="divide-y">
- {cat.items.map((label, i) => {
-  const row =
-    checklist?.[cat.key]?.[i] || { rating: "ok", note: "", photos: [] };
-const hasRating = !!row.rating;
-const hasNote = !!(row.note || "").trim();
-const hasPhoto = Array.isArray(row.photos) && row.photos.length > 0;
-const isOpen = hasRating || hasNote || hasPhoto;
-
-if (showOnlyOpen && !isOpen) return null;
-
-  return (
-    <div
-      key={i}
-      className={`grid md:grid-cols-6 items-start gap-3 py-3 ${
-        i % 2 === 0 ? "bg-slate-50" : "bg-white"
-      }`}
+{CATEGORIES.map((cat) => (
+  <section key={cat.key} className="bg-white p-4 rounded-2xl shadow">
+    <button
+      type="button"
+      onClick={() => setOpenCats((s) => ({ ...s, [cat.key]: !s[cat.key] }))}
+      className="w-full flex items-center justify-between text-left mb-3"
     >
-      {/* Punkt-Text */}
-      <div className="md:col-span-3 font-medium">{label}</div>
+      <span className="text-lg font-semibold">{cat.title}</span>
+      <span className="text-sm text-gray-500">{openCats?.[cat.key] ? "−" : "+"}</span>
+    </button>
 
-      {/* rechte Spalte: Aktionen */}
-      <div className="md:col-span-3 space-y-2">
+    {openCats?.[cat.key] && (
+      <div className="divide-y">
+        {cat.items.map((label, i) => {
+          const row = checklist?.[cat.key]?.[i] || { rating: "", note: "", photos: [] };
 
-        {/* Bewertungs-Buttons */}
-        <div className="flex gap-2 flex-wrap">
-          {RATING_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => {
-                const next = { ...checklist };
-                const arr = [...next[cat.key]];
-                const nextRating = row.rating === opt.value ? "" : opt.value;
-const entry = { ...arr[i], rating: nextRating };
+          const hasRating = !!row.rating;
+          const hasNote = !!(row.note || "").trim();
+          const hasPhoto = Array.isArray(row.photos) && row.photos.length > 0;
+          const isOpen = hasRating || hasNote || hasPhoto;
 
-                arr[i] = entry;
-                next[cat.key] = arr;
-                setChecklist(next);
-              }}
-          className={`px-3 py-1 rounded-xl border transition
-  ${row.rating === opt.value
-    ? `${opt.color} ${opt.border}`
-    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-  }`}
+          if (showOnlyOpen && !isOpen) return null;
 
-
+          return (
+            <div
+              key={i}
+              className={`grid md:grid-cols-6 items-start gap-3 py-3 ${
+                i % 2 === 0 ? "bg-slate-50" : "bg-white"
+              }`}
             >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        )}
+              <div className="md:col-span-3 font-medium">{label}</div>
 
+              <div className="md:col-span-3 space-y-2">
+                <div className="flex gap-2 flex-wrap">
+                  {RATING_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        const next = { ...checklist };
+                        const arr = [...next[cat.key]];
+                        const nextRating = row.rating === opt.value ? "" : opt.value;
+                        arr[i] = { ...arr[i], rating: nextRating };
+                        next[cat.key] = arr;
+                        setChecklist(next);
+                      }}
+                      className={`px-3 py-1 rounded-xl border transition ${
+                        row.rating === opt.value
+                          ? `${opt.color} ${opt.border}`
+                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
 
-        {/* Notizfeld */}
-        <input
-          className="w-full border rounded-xl p-2"
-          placeholder="Notiz…"
-          value={row.note}
-          onChange={(e) => {
-            const next = { ...checklist };
-            const arr = [...next[cat.key]];
-            const entry = { ...arr[i], note: e.target.value };
-            arr[i] = entry;
-            next[cat.key] = arr;
-            setChecklist(next);
-          }}
-        />
+                <input
+                  className="w-full border rounded-xl p-2"
+                  placeholder="Notiz…"
+                  value={row.note}
+                  onChange={(e) => {
+                    const next = { ...checklist };
+                    const arr = [...next[cat.key]];
+                    arr[i] = { ...arr[i], note: e.target.value };
+                    next[cat.key] = arr;
+                    setChecklist(next);
+                  }}
+                />
 
-        {/* Kamera + Thumbnails */}
-        <div className="flex items-center gap-2">
-          {/* unsichtbares Input, wird über Label getriggert */}
-          <input
-            id={`cam-${cat.key}-${i}`}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={onCapturePhoto(cat.key, i)}
-            className="hidden"
-          />
-          <label
-            htmlFor={`cam-${cat.key}-${i}`}
-            className="px-3 py-1 rounded-xl border cursor-pointer select-none"
-          >
-            📷 Foto aufnehmen
-          </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id={`cam-${cat.key}-${i}`}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={onCapturePhoto(cat.key, i)}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor={`cam-${cat.key}-${i}`}
+                    className="px-3 py-1 rounded-xl border cursor-pointer select-none"
+                  >
+                    Foto aufnehmen
+                  </label>
 
-          {/* kleine Vorschaubilder */}
-          {(row.photos || []).slice(0, 3).map((p, idx) => (
-            <img
-              key={idx}
-              src={p}
-              alt="Foto"
-              className="h-10 w-10 object-cover rounded border"
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-})}
-
+                  {(row.photos || []).slice(0, 3).map((p, idx) => (
+                    <img
+                      key={idx}
+                      src={p}
+                      alt="Foto"
+                      className="h-10 w-10 object-cover rounded border"
+                    />
+                  ))}
+                </div>
               </div>
-            </section>
-          ))}
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </section>
+))}
+
 
           {/* Fotos */}
           <section className="bg-white p-4 rounded-2xl shadow">
