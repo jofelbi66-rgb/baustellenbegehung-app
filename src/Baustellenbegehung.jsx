@@ -470,7 +470,9 @@ async function addPhotosSection(doc, checklist, CATEGORIES) {
         const data = await toDataUrl(photos[p]);
         if (data) {
          const fmt = data.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
+const fmt = data.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
 doc.addImage(data, fmt, px, py, cellW, cellH, undefined, "FAST");
+
  
         }
         doc.setDrawColor(200); doc.rect(px, py, cellW, cellH);
