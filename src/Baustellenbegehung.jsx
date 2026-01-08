@@ -855,55 +855,79 @@ async function onLogoUpload(e) {
 // ... deine bisherigen States und Funktionen (z. B. onCapturePhoto, resizeImageFromFile usw.)
 
 // === einfache PDF-Erzeugung ===
-const exportPdfSimple = async () => {
-  const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-  const pageW = doc.internal.pageSize.getWidth();
-  const margin = 15;
-
-  doc.setFontSize(16);
-  doc.text("Baustellenbegehung – Bericht", pageW / 2, 20, { align: "center" });
-
-  autoTable(doc, {
-    head: [["Feld", "Wert"]],
-    body: [
-      ["Projekt", form.project || "-"],
-      ["Ort", form.location || "-"],
-      ["Firma/AG", form.company || "-"],
-      ["Datum/Uhrzeit", form.date || "-"],
-      ["Begehende Person", form.inspector || "-"],
-      ["Wetter", form.weather || "-"],
-      ["Bemerkungen", form.remarks || "-"],
-    ],
-    margin: { left: margin, right: margin, top: 26 },
-    styles: { fontSize: 10 },
-  });
-
-  const rows = buildChecklistRows ? buildChecklistRows() : [];
-  autoTable(doc, {
-    head: [["Kategorie", "Prüfpunkt", "Bewertung", "Notiz"]],
-    body: rows,
-    startY: (doc.lastAutoTable?.finalY || 26) + 6,
-    margin: { left: margin, right: margin },
-    styles: { fontSize: 9 },
-  });
-
-  let y = (doc.lastAutoTable?.finalY || 26) + 10;
-  if (signatureDataURL) {
-    doc.text("Unterschrift", margin, y);
-    y += 4;
-    doc.addImage(signatureDataURL, "PNG", margin, y, 60, 20);
-  }
-
-  const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
+const sharePdf = async () => {
   try {
-  await addPhotosSection(doc, checklist, CATEGORIES);
-} catch (err) {
-  console.error("Fotos konnten nicht ins PDF eingebettet werden:", err);
-}
+    // Erzeuge PDF genauso wie beim Speichern:
+    const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+    const pageW = doc.internal.pageSize.getWidth();
+    const margin = 15;
 
+    const logoH = await addLogoTopRight(doc, logoSrc, margin);
+    const startY = Math.max(margin + logoH + 8, 24);
 
-  doc.save(`Begehung_${safeName}.pdf`);
+    doc.setFontSize(16);
+    doc.text("Baustellenbegehung – Bericht", pageW / 2, startY, { align: "center" });
+
+    autoTable(doc, {
+      head: [["Feld", "Wert"]],
+      body: [
+        ["Projekt", form.project || "-"],
+        ["Ort", form.location || "-"],
+        ["Firma/AG", form.company || "-"],
+        ["Datum/Uhrzeit", form.date || "-"],
+        ["Begehende Person", form.inspector || "-"],
+        ["Wetter", form.weather || "-"],
+        ["Bemerkungen", form.remarks || "-"],
+      ],
+      margin: { left: margin, right: margin, top: startY + 6 },
+      styles: { fontSize: 10 },
+      theme: "grid",
+    });
+
+    const rows = buildChecklistRows();
+    autoTable(doc, {
+      head: [["Kategorie", "Prüfpunkt", "Bewertung", "Notiz"]],
+      body: rows,
+      startY: (doc.lastAutoTable?.finalY || startY + 10) + 6,
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 9 },
+      theme: "grid",
+    });
+
+    // Unterschrift
+    let y = (doc.lastAutoTable?.finalY || startY + 10) + 10;
+    if (signatureDataURL) {
+      doc.text("Unterschrift", margin, y);
+      y += 4;
+      doc.addImage(signatureDataURL, "PNG", margin, y, 60, 20, undefined, "FAST");
+    }
+
+    // Checkpunkt-Fotos
+    await addPhotosSection(doc, checklist, CATEGORIES);
+
+    const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
+    const fileName = `Begehung_${safeName}.pdf`;
+
+    const blob = doc.output("blob");
+    const file = new File([blob], fileName, { type: "application/pdf" });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: "Baustellenbegehung – Bericht",
+        text: "PDF-Bericht im Anhang.",
+        files: [file],
+      });
+    } else {
+      // Fallback: normal speichern
+      doc.save(fileName);
+      alert("Teilen wird von diesem Browser/Gerät nicht unterstützt – PDF wurde gespeichert.");
+    }
+  } catch (err) {
+    console.error("PDF teilen fehlgeschlagen:", err);
+    alert("PDF konnte nicht geteilt werden. Details in der Konsole.");
+  }
 };
+
 
 // === ab hier beginnt dein UI ===
 return (
@@ -1188,13 +1212,14 @@ return (
             <button type="submit" disabled={busy} className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60">
               {busy ? "Sende…" : "Begehung per E-Mail senden"}
             </button>
-           <button
+         <button
   type="button"
-  onClick={exportPdfSimple}
+  onClick={sharePdf}
   className="px-5 py-3 rounded-2xl border"
 >
-  PDF-Bericht speichern
+  PDF teilen (Mail/WhatsApp)
 </button>
+
 
             <span className="text-gray-500 text-sm">E-Mail via EmailJS oder lokale PDF-Ablage. Logo nur auf Seite 1.</span>
           </div>
