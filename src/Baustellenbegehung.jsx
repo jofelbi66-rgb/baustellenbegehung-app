@@ -904,6 +904,8 @@ async function onLogoUpload(e) {
     token: APPS_SCRIPT_TOKEN || "",
     filename,
     pdfBase64,
+    cc: ccEmail || "",
+
     subject: "Baustellenbegehung – Bericht",
     body: "Im Anhang der PDF-Bericht.",
     project: form.project || "",
