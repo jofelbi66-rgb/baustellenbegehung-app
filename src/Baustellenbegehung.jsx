@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
-import emailjs from "@emailjs/browser";
+
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -27,11 +27,7 @@ const FIRM_MATCH = [
 
 
 /* ===================== Konfiguration ===================== */
-const EMAILJS_CONFIG = {
-  PUBLIC_KEY: "b21Z2RnKpe9VYl79W",
-  SERVICE_ID: "service_f2lezug",
-  TEMPLATE_ID: "template_3q4kf4r",
-};
+
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQ4iCoCwQIqLfOFzkq8QHfZfgORdCrag4myM-S8G59zfnH4UeLijBQQsuhLwrmmFLR/exec";
 const APPS_SCRIPT_TOKEN = ""; // nur falls du im Apps Script einen TOKEN gesetzt hast
 
@@ -147,7 +143,7 @@ function recompressImage(imgOrDataURL, maxSizePx = 1280, quality = 0.8) {
 }
 
 /* ===================== Komponente ===================== */
-export default function BaustellenbegehungEmailJS() {
+export default function BaustellenbegehungApp() {
   const now = useNowISOLocal();
   const [form, setForm] = useState({
     project: "",
