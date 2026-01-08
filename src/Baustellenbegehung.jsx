@@ -844,6 +844,80 @@ async function onLogoUpload(e) {
     alert("PDF konnte nicht erzeugt werden. Details in der Konsole.");
   }
 };
+ const sendPdfToMail = async () => {
+  // PDF erzeugen (Report)
+  const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+  const pageW = doc.internal.pageSize.getWidth();
+  const margin = 15;
+
+  const logoH = await addLogoTopRight(doc, logoSrc, margin);
+  const startY = Math.max(margin + logoH + 8, 24);
+
+  doc.setFontSize(16);
+  doc.text("Baustellenbegehung – Bericht", pageW / 2, startY, { align: "center" });
+
+  autoTable(doc, {
+    head: [["Feld", "Wert"]],
+    body: [
+      ["Projekt", form.project || "-"],
+      ["Ort", form.location || "-"],
+      ["Firma/AG", form.company || "-"],
+      ["Datum/Uhrzeit", form.date || "-"],
+      ["Begehende Person", form.inspector || "-"],
+      ["Wetter", form.weather || "-"],
+      ["Bemerkungen", form.remarks || "-"],
+    ],
+    margin: { left: margin, right: margin, top: startY + 6 },
+    styles: { fontSize: 10, cellPadding: 2 },
+    theme: "grid",
+  });
+
+  const rows = buildChecklistRows();
+  autoTable(doc, {
+    head: [["Kategorie", "Prüfpunkt", "Bewertung", "Notiz"]],
+    body: rows,
+    startY: (doc.lastAutoTable?.finalY || startY + 10) + 6,
+    margin: { left: margin, right: margin },
+    styles: { fontSize: 9, cellPadding: 2 },
+    theme: "grid",
+  });
+
+  let y = (doc.lastAutoTable?.finalY || startY + 10) + 10;
+  if (signatureDataURL) {
+    doc.text("Unterschrift", margin, y);
+    y += 4;
+    doc.addImage(signatureDataURL, "PNG", margin, y, 60, 20, undefined, "FAST");
+  }
+
+  await addPhotosSection(doc, checklist, CATEGORIES);
+
+  const dataUri = doc.output("datauristring");
+  const pdfBase64 = dataUri.split(",")[1];
+
+  const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
+  const filename = `Begehung_${safeName}.pdf`;
+
+  const params = new URLSearchParams({
+    token: APPS_SCRIPT_TOKEN || "",
+    filename,
+    pdfBase64,
+    subject: "Baustellenbegehung – Bericht",
+    body: "Im Anhang der PDF-Bericht.",
+    project: form.project || "",
+    location: form.location || "",
+    inspector: form.inspector || "",
+    date: form.date || "",
+  });
+
+  const res = await fetch(APPS_SCRIPT_URL, { method: "POST", body: params });
+  const txt = await res.text();
+  console.log("AppsScript Antwort:", txt);
+
+  if (!res.ok || /^ERROR/i.test(txt) || /^Unauthorized/i.test(txt)) {
+    throw new Error(txt || `HTTP ${res.status}`);
+  }
+};
+ 
 // ... deine bisherigen States und Funktionen (z. B. onCapturePhoto, resizeImageFromFile usw.)
 
 // === einfache PDF-Erzeugung ===
