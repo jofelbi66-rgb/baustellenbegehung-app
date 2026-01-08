@@ -895,7 +895,12 @@ const exportPdfSimple = async () => {
   }
 
   const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
+  try {
   await addPhotosSection(doc, checklist, CATEGORIES);
+} catch (err) {
+  console.error("Fotos konnten nicht ins PDF eingebettet werden:", err);
+}
+
 
   doc.save(`Begehung_${safeName}.pdf`);
 };
