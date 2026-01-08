@@ -455,7 +455,7 @@ async function addPhotosSection(doc, checklist, CATEGORIES) {
       const photos = rows[i]?.photos || [];
       if (!photos.length) continue;
 
-      ensure(10);
+      ensureSpace(10);
       doc.setFont("helvetica", "bold"); doc.setFontSize(11);
       doc.text(`${cat.title} – ${cat.items[i]}`, margin, y);
       y += 4;
