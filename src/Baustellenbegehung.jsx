@@ -182,6 +182,7 @@ const [ccEmail, setCcEmail] = useState(() =>
 useEffect(() => {
   localStorage.setItem("app.ccEmail", ccEmail);
 }, [ccEmail]);
+const [showOnlyOpen, setShowOnlyOpen] = useState(false);
 
 const [checklist, setChecklist] = useState(() => {
   const init = {};
@@ -1083,6 +1084,18 @@ return (
   <span className="text-xs text-gray-500 md:w-56">
     Optional. Lokal gespeichert.
   </span>
+</div>
+<div className="mt-2 flex items-center gap-2">
+  <input
+    id="only-open"
+    type="checkbox"
+    className="h-4 w-4"
+    checked={showOnlyOpen}
+    onChange={(e) => setShowOnlyOpen(e.target.checked)}
+  />
+  <label htmlFor="only-open" className="text-sm text-gray-700">
+    Nur offene Punkte (Mangel / Notiz / Foto) anzeigen
+  </label>
 </div>
 
         
