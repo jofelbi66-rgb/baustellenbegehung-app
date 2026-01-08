@@ -463,7 +463,7 @@ async function addPhotosSection(doc, checklist, CATEGORIES) {
 
       for (let p = 0; p < photos.length; p++) {
         const col = p % 2;
-        if (col === 0) ensure(cellH + 8);
+        if (col === 0) ensureSpace(cellH + 8);
 
         const px = margin + col * (cellW + gap);
         const py = y;
