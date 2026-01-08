@@ -165,7 +165,7 @@ useEffect(() => {
 const [checklist, setChecklist] = useState(() => {
   const init = {};
   for (const cat of CATEGORIES) {
-    init[cat.key] = cat.items.map(() => ({ rating: "ok", note: "", photos: [] }));
+    init[cat.key] = cat.items.map(() => ({ rating: "", note: "", photos: [] }));
   }
   return init;
 });
@@ -1178,16 +1178,19 @@ return (
               onClick={() => {
                 const next = { ...checklist };
                 const arr = [...next[cat.key]];
-                const entry = { ...arr[i], rating: opt.value };
+                const nextRating = row.rating === opt.value ? "" : opt.value;
+const entry = { ...arr[i], rating: nextRating };
+
                 arr[i] = entry;
                 next[cat.key] = arr;
                 setChecklist(next);
               }}
-            className={`px-3 py-1 rounded-xl border transition
+          className={`px-3 py-1 rounded-xl border transition
   ${row.rating === opt.value
     ? `${opt.color} ${opt.border}`
     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
   }`}
+
 
             >
               {opt.label}
