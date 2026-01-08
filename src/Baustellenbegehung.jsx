@@ -32,6 +32,8 @@ const EMAILJS_CONFIG = {
   SERVICE_ID: "service_f2lezug",
   TEMPLATE_ID: "template_3q4kf4r",
 };
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQ4iCoCwQIqLfOFzkq8QHfZfgORdCrag4myM-S8G59zfnH4UeLijBQQsuhLwrmmFLR/exec";
+const APPS_SCRIPT_TOKEN = ""; // nur falls du im Apps Script einen TOKEN gesetzt hast
 
 // Logo für PDF (nur Seite 1). GitHub RAW-URL, z. B. https://raw.githubusercontent.com/<user>/<repo>/main/felbermayr_logo.png
 const LOGO_URL = "https://github.com/jofelbi66-rgb/Fahrzeugkontrolle/blob/main/felbermayr_logo.png";
@@ -745,19 +747,9 @@ doc.setTextColor(0);
     if (err) { setMsg({ type: "error", text: err }); return; }
     setBusy(true); setMsg(null);
     try {
-emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
+await sendPdfToMail();
+setMsg({ type: "ok", text: "E-Mail mit PDF-Anhang wurde versendet." });
 
-await emailjs.send(
-  EMAILJS_CONFIG.SERVICE_ID,
-  EMAILJS_CONFIG.TEMPLATE_ID,
-  {
-    date: form.date,
-    project: form.project,
-    location: form.location,
-    inspector: form.inspector,
-  }
-);
-setMsg({ type: "ok", text: "E-Mail verschickt (Kurzinfo ohne Berichtstext)." });
     
     } finally { setBusy(false); }
   };
@@ -1212,13 +1204,7 @@ return (
             <button type="submit" disabled={busy} className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60">
               {busy ? "Sende…" : "Begehung per E-Mail senden"}
             </button>
-         <button
-  type="button"
-  onClick={sharePdf}
-  className="px-5 py-3 rounded-2xl border"
 >
-  PDF teilen (Mail/WhatsApp)
-</button>
 
 
             <span className="text-gray-500 text-sm">E-Mail via EmailJS oder lokale PDF-Ablage. Logo nur auf Seite 1.</span>
