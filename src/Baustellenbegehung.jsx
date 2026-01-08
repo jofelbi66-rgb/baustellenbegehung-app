@@ -154,14 +154,14 @@ export default function BaustellenbegehungApp() {
     weather: "",
     remarks: "",
   });
-const [ccEmail, setCcEmail] = useState(() =>
+const [ccEmail, setccEmail] = useState(() =>
   localStorage.getItem("app.ccEmail") || ""
 );
 
 useEffect(() => {
   localStorage.setItem("app.ccEmail", ccEmail);
 }, [ccEmail]);
-CC
+
 const [checklist, setChecklist] = useState(() => {
   const init = {};
   for (const cat of CATEGORIES) {
