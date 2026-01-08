@@ -1261,11 +1261,8 @@ return (
   <span className="text-lg font-semibold">{cat.title}</span>
   <span className="text-sm text-gray-500">{openCats[cat.key] ? "−" : "+"}</span>
 </button>
-{openCats[cat.key] && (
-  <div className="divide-y">
-    ... Prüfpunkte ...
-  </div>
-)}
+
+              {openCats[cat.key] && (
 
               <div className="divide-y">
  {cat.items.map((label, i) => {
@@ -1319,6 +1316,8 @@ const entry = { ...arr[i], rating: nextRating };
             </button>
           ))}
         </div>
+        )}
+
 
         {/* Notizfeld */}
         <input
