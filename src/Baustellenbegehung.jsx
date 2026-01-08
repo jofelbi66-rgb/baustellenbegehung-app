@@ -531,16 +531,31 @@ doc.addImage(data, fmt, px, py, cellW, cellH, undefined, "FAST");
   };
 
   const buildChecklistRows = () => {
-    const rows = [];
-    for (const cat of CATEGORIES) {
-      cat.items.forEach((label, i) => {
-        const row = checklist?.[cat.key]?.[i] || { rating: "", note: "" };
-        const ratingMap = { ok: "OK", defect: "Mangel", note: "Notiz" };
-        rows.push([cat.title, label, ratingMap[row.rating] || "", row.note || ""]);
-      });
-    }
-    return rows;
-  };
+  const rows = [];
+  const ratingMap = { ok: "OK", defect: "Mangel", note: "Notiz" };
+
+  for (const cat of CATEGORIES) {
+    cat.items.forEach((label, i) => {
+      const row = checklist?.[cat.key]?.[i] || { rating: "", note: "", photos: [] };
+
+      const hasRating = !!row.rating; // ok/defect/note oder ""
+      const hasNote = !!(row.note || "").trim();
+      const hasPhoto = Array.isArray(row.photos) && row.photos.length > 0;
+
+      // Nur übernehmen, wenn wirklich etwas dokumentiert wurde
+      if (!(hasRating || hasNote || hasPhoto)) return;
+
+      rows.push([
+        cat.title,
+        label,
+        ratingMap[row.rating] || "-", // wenn nur Notiz/Foto ohne Status
+        row.note || "",
+      ]);
+    });
+  }
+
+  return rows;
+};
 
   // Header endgültig deaktiviert
 const drawHeader = () => {};
@@ -931,16 +946,21 @@ const drawSignatureBlockOnFirstPage = (doc, margin = 15) => {
     theme: "grid",
   });
 
-  const rows = buildChecklistRows();
-  autoTable(doc, {
-    head: [["Kategorie", "Prüfpunkt", "Bewertung", "Notiz"]],
-    body: rows,
-    startY: (doc.lastAutoTable?.finalY || startY + 10) + 6,
-    margin: { left: margin, right: margin, bottom: 45 },
+ const rows = buildChecklistRows();
 
-    styles: { fontSize: 9, cellPadding: 2 },
-    theme: "grid",
-  });
+if (rows.length === 0) {
+  rows.push(["-", "Keine Einträge erfasst", "-", "-"]);
+}
+
+autoTable(doc, {
+  head: [["Kategorie", "Prüfpunkt", "Bewertung", "Notiz"]],
+  body: rows,
+  startY: (doc.lastAutoTable?.finalY || startY + 10) + 6,
+  margin: { left: margin, right: margin, bottom: 45 },
+  styles: { fontSize: 9, cellPadding: 2 },
+  theme: "grid",
+});
+
 
   let y = (doc.lastAutoTable?.finalY || startY + 10) + 10;
   if (signatureDataURL) {
