@@ -183,6 +183,11 @@ useEffect(() => {
   localStorage.setItem("app.ccEmail", ccEmail);
 }, [ccEmail]);
 const [showOnlyOpen, setShowOnlyOpen] = useState(false);
+const [openCats, setOpenCats] = useState(() => {
+  const init = {};
+  for (const cat of CATEGORIES) init[cat.key] = false; // alles zu
+  return init;
+});
 
 const [checklist, setChecklist] = useState(() => {
   const init = {};
@@ -1248,7 +1253,20 @@ return (
           {/* Checkliste mit farbigen Buttons & Zebra-Hintergrund */}
           {CATEGORIES.map((cat) => (
             <section key={cat.key} className="bg-white p-4 rounded-2xl shadow">
-              <h2 className="text-lg font-semibold mb-3">{cat.title}</h2>
+           <button
+  type="button"
+  onClick={() => setOpenCats((s) => ({ ...s, [cat.key]: !s[cat.key] }))}
+  className="w-full flex items-center justify-between text-left mb-3"
+>
+  <span className="text-lg font-semibold">{cat.title}</span>
+  <span className="text-sm text-gray-500">{openCats[cat.key] ? "−" : "+"}</span>
+</button>
+{openCats[cat.key] && (
+  <div className="divide-y">
+    ... Prüfpunkte ...
+  </div>
+)}
+
               <div className="divide-y">
  {cat.items.map((label, i) => {
   const row =
