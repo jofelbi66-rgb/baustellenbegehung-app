@@ -104,8 +104,14 @@ const RATING_OPTIONS = [
 
 /* ===================== Hilfsfunktionen ===================== */
 function useNowISOLocal() {
-  return useMemo(() => new Date().toISOString().slice(0, 16), []);
+  return useMemo(() => {
+    const d = new Date();
+    // in lokale Zeit umrechnen (MEZ/MESZ je nach Datum)
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  }, []);
 }
+
 
 async function resizeImageFromFile(file, maxSize = 1280, quality = 0.8) {
   const img = document.createElement("img");
