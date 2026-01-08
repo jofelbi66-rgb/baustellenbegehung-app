@@ -154,7 +154,14 @@ export default function BaustellenbegehungApp() {
     weather: "",
     remarks: "",
   });
+const [ccEmail, setCcEmail] = useState(() =>
+  localStorage.getItem("app.ccEmail") || ""
+);
 
+useEffect(() => {
+  localStorage.setItem("app.ccEmail", ccEmail);
+}, [ccEmail]);
+CC
 const [checklist, setChecklist] = useState(() => {
   const init = {};
   for (const cat of CATEGORIES) {
@@ -998,6 +1005,20 @@ return (
         <header className="mb-6">
           <h1 className="text-2xl md:text-3xl font-bold">Baustellenbegehung – Variante A (EmailJS)</h1>
           <p className="text-gray-600 mt-1">Einfache Web-App zur Dokumentation, mit GPS-Ortung, Unterschrift, Fotos, PDF-Export (≤1 MB) & E-Mail.</p>
+       <div className="mt-3 flex flex-col md:flex-row md:items-center gap-2">
+  <label className="text-sm text-gray-600 md:w-12">CC:</label>
+  <input
+    className="border rounded-xl p-2 flex-1"
+    value={ccEmail}
+    onChange={(e) => setCcEmail(e.target.value)}
+    placeholder="z.B. joachim@firma.de"
+  />
+  <span className="text-xs text-gray-500 md:w-56">
+    Optional. Lokal gespeichert.
+  </span>
+</div>
+
+        
         </header>
 
         <form onSubmit={onSubmit} className="space-y-6">
