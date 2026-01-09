@@ -113,6 +113,10 @@ const RATING_OPTIONS = [
   { value: "defect", label: "Mangel", color: "bg-red-600 text-white", border: "border-red-600" },
   { value: "note", label: "Notiz", color: "bg-yellow-400 text-black", border: "border-yellow-500" },
 ];
+
+// Versionsstand (UI)
+const APP_STAND = "Stand: 01/2026";
+
 // ==============================================
 // Kamera-Funktion pro Checkpunkt (Foto aufnehmen)
 // ==============================================
