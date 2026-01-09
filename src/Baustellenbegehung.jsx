@@ -1428,3 +1428,6 @@ return (
     </div>
   );
 }
+catch (err) {
+  console.error("Fehler im try-Block:", err);
+}
