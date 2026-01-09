@@ -1074,6 +1074,7 @@ try {
       doc.save(fileName);
       alert("Teilen wird von diesem Browser/Gerät nicht unterstützt – PDF wurde gespeichert.");
     }
+}
   } catch (err) {
     console.error("PDF teilen fehlgeschlagen:", err);
     alert("PDF konnte nicht geteilt werden. Details in der Konsole.");
@@ -1427,7 +1428,4 @@ return (
       </div>
     </div>
   );
-}
-catch (err) {
-  console.error("Fehler im try-Block:", err);
 }
