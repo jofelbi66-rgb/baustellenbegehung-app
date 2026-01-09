@@ -130,6 +130,22 @@ function useNowISOLocal() {
     return d.toISOString().slice(0, 16);
   }, []);
 }
+function formatDEDateTime(isoLocal) {
+  if (!isoLocal) return "-";
+
+  // erwartet z.B. "2026-01-09T10:24"
+  const [dPart, tPart = ""] = String(isoLocal).split("T");
+  const [y, m, d] = dPart.split("-").map(Number);
+  const [hh = 0, mm = 0] = tPart.split(":").map(Number);
+
+  // lokal interpretieren (Browser-Zeitzone des Geräts)
+  const dt = new Date(y, (m || 1) - 1, d || 1, hh || 0, mm || 0);
+
+  const pad = (n) => String(n).padStart(2, "0");
+  const tz = dt.getTimezoneOffset() === -60 ? "MEZ" : (dt.getTimezoneOffset() === -120 ? "MESZ" : "");
+
+  return `${pad(d)}.${pad(m)}.${y} ${pad(hh)}:${pad(mm)}${tz ? " " + tz : ""}`;
+}
 
 
 async function resizeImageFromFile(file, maxSize = 1280, quality = 0.8) {
@@ -618,7 +634,8 @@ const drawHeader = () => {};
         ["Projekt", form.project || "-"],
         ["Ort", form.location || "-"],
         ["Firma/AG", form.company || "-"],
-        ["Datum/Uhrzeit", form.date || "-"],
+       ["Datum/Uhrzeit", formatDEDateTime(form.date)],
+
         ["Begehende Person", form.inspector || "-"],
         ["Wetter", form.weather || "-"],
         ["Bemerkungen", form.remarks || "-"],
@@ -643,16 +660,23 @@ y = autoTable.previous.finalY + 8;
 
       // Checkliste mit Zebra
       const rows = buildChecklistRows();
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 6,
-        styles: { fontSize: 9, cellPadding: 2 },
-        head: [["Kategorie", "Prüfpunkt", "Bewertung", "Notiz"]],
-        body: rows,
-        theme: "grid",
-        headStyles: { fillColor: [241, 245, 249], textColor: 0, lineWidth: 0.1 },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: { 0: { cellWidth: 36 }, 1: { cellWidth: 82 }, 2: { cellWidth: 26 }, 3: { cellWidth: 46 } },
-      });
+    autoTable(doc, {
+  head: [["Feld", "Wert"]],
+  body: [
+    ["Projekt", form.project || "-"],
+    ["Ort", form.location || "-"],
+    ["Firma/AG", form.company || "-"],
+    ["Datum/Uhrzeit", formatDEDateTime(form.date)],
+    ["Begehende Person", form.inspector || "-"],
+    ["Wetter", form.weather || "-"],
+    ["Bemerkungen", form.remarks || "-"],
+  ],
+  margin: { left: margin, right: margin, top: startY + 6 },
+  theme: "grid",
+  styles: { fontSize: 10, cellPadding: 2 },
+  alternateRowStyles: { fillColor: [245, 245, 245] }, // Zebra
+});
+
 
       // Unterschrift (falls vorhanden)
       let y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 8 : 50;
@@ -967,10 +991,12 @@ autoTable(doc, {
   head: [["Kategorie", "Prüfpunkt", "Bewertung", "Notiz"]],
   body: rows,
   startY: (doc.lastAutoTable?.finalY || startY + 10) + 6,
-  margin: { left: margin, right: margin, bottom: 45 },
-  styles: { fontSize: 9, cellPadding: 2 },
+  margin: { left: margin, right: margin },
   theme: "grid",
+  styles: { fontSize: 9, cellPadding: 2 },
+  alternateRowStyles: { fillColor: [245, 245, 245] }, // Zebra
 });
+
 
 
   let y = (doc.lastAutoTable?.finalY || startY + 10) + 10;
