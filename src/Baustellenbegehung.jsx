@@ -1256,7 +1256,9 @@ return (
         <img
           src={logoSrc}
           alt="Logo"
-          className="h-10 object-contain border rounded-md bg-white px-2"
+         className={`${logoChoice === "wimmer" ? "h-6 max-w-[120px]" : "h-8 max-w-[140px]"} w-auto object-contain border rounded-md bg-white px-2 shrink-0`}
+
+
         />
         <button
           type="button"
