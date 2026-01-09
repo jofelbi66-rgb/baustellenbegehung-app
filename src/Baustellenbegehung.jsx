@@ -386,82 +386,75 @@ useEffect(() => {
   };
 }, []);
 
+const getPos = (e, canvas) => {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top,
+  };
+};
 
-  const startDraw = (e) => {
+const startDraw = (e) => {
   e.preventDefault();
 
   const canvas = sigCanvasRef.current;
   if (!canvas) return;
 
-  // Pointer festhalten (wichtig auf Mobile)
+  // Pointer festhalten (wichtig für Mobile)
   if (canvas.setPointerCapture && e.pointerId != null) {
     canvas.setPointerCapture(e.pointerId);
   }
 
   const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
   ctx.lineWidth = 2;
   ctx.lineCap = "round";
   ctx.strokeStyle = "#111";
 
-  const rect = canvas.getBoundingClientRect();
- const x = e.clientX - rect.left;
-const y = e.clientY - rect.top;
-
-
-
+  const { x, y } = getPos(e, canvas);
   ctx.beginPath();
   ctx.moveTo(x, y);
+
   isDrawingRef.current = true;
-setIsDrawing(true);
-  
-  
+  setIsDrawing(true);
 };
 
 const drawMove = (e) => {
-if (!isDrawingRef.current) return;
-const scaleX = canvas.width / rect.width;
-const scaleY = canvas.height / rect.height;
-const x = (e.clientX - rect.left) * scaleX;
-const y = (e.clientY - rect.top) * scaleY;
-
-
+  if (!isDrawingRef.current) return;
   e.preventDefault();
 
   const canvas = sigCanvasRef.current;
   if (!canvas) return;
 
   const ctx = canvas.getContext("2d");
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+  if (!ctx) return;
 
+  const { x, y } = getPos(e, canvas);
   ctx.lineTo(x, y);
   ctx.stroke();
 };
 
- const endDraw = (e) => {
+const endDraw = (e) => {
   e?.preventDefault?.();
-isDrawingRef.current = false;
-setIsDrawing(false);
 
+  if (!isDrawingRef.current) return;
+  isDrawingRef.current = false;
   setIsDrawing(false);
+
   const canvas = sigCanvasRef.current;
   if (!canvas) return;
 
   setSignatureDataURL(canvas.toDataURL("image/png"));
+
+  // optional: Pointer wieder freigeben
+  try {
+    if (canvas.releasePointerCapture && e?.pointerId != null) {
+      canvas.releasePointerCapture(e.pointerId);
+    }
+  } catch {}
 };
 
-const clearSignature = () => {
-  isDrawingRef.current = false;
-  setIsDrawing(false);
-
-  const canvas = sigCanvasRef.current; 
-  if (!canvas) return;
-
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  setSignatureDataURL("");
-};
 
   /* ---------- E-Mail HTML ---------- */
   const buildSummaryHTML = () => {
