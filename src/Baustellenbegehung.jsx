@@ -1075,7 +1075,7 @@ try {
       alert("Teilen wird von diesem Browser/Gerät nicht unterstützt – PDF wurde gespeichert.");
     }
 }
-  } catch (err) {
+   catch (err) {
     console.error("PDF teilen fehlgeschlagen:", err);
     alert("PDF konnte nicht geteilt werden. Details in der Konsole.");
   }
