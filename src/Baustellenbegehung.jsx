@@ -1099,12 +1099,23 @@ const sharePdf = async () => {
 return (
   <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
-     <header className="mb-6">
-  <h1 className="text-2xl md:text-3xl font-bold">Baustellenbegehung – Dokumentation</h1>
-  <p className="text-gray-600 mt-1">
-    Digitale Begehungsdokumentation mit Standortermittlung, Checkliste, Fotonachweisen, Unterschrift und automatischem Versand inkl. PDF-Bericht.
-  </p>
+    <header className="mb-6">
+  <div className="flex items-start justify-between gap-4">
+    <div>
+      <h1 className="text-2xl md:text-3xl font-bold">Baustellenbegehung – Dokumentation</h1>
+      <p className="text-gray-600 mt-1">
+        Digitale Begehungsdokumentation mit Standortermittlung, Checkliste, Fotonachweisen, Unterschrift und automatischem Versand inkl. PDF-Bericht.
+      </p>
+    </div>
+
+    <div className="text-right shrink-0">
+      <span className="inline-block text-xs md:text-sm text-gray-500 border rounded-lg px-2 py-1 bg-white">
+        {APP_STAND}
+      </span>
+    </div>
+  </div>
 </header>
+
   
  
          
