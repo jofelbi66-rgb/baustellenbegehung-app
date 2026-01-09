@@ -1055,19 +1055,15 @@ const sharePdf = async () => {
     }
 
     // Checkpunkt-Fotos
-    await addPhotosSection(doc, checklist, CATEGORIES);
-
-    const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
-    const fileName = `Begehung_${safeName}.pdf`;
-// Checkpunkt-Fotos
 await addPhotosSection(doc, checklist, CATEGORIES);
 
-const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
-const fileName = `Begehung_${safeName}.pdf`;
+// WICHTIG: neue Namen, damit keine Doppel-Deklaration mehr entsteht
+const safeNameShare = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
+const fileNameShare = `Begehung_${safeNameShare}.pdf`;
 
 try {
   const blob = doc.output("blob");
-  const file = new File([blob], fileName, { type: "application/pdf" });
+  const file = new File([blob], fileNameShare, { type: "application/pdf" });
 
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     await navigator.share({
@@ -1077,13 +1073,14 @@ try {
     });
   } else {
     // Fallback: normal speichern
-    doc.save(fileName);
+    doc.save(fileNameShare);
     alert("Teilen wird von diesem Browser/Gerät nicht unterstützt – PDF wurde gespeichert.");
   }
 } catch (err) {
   console.error("PDF teilen fehlgeschlagen:", err);
   alert("PDF konnte nicht geteilt werden. Details in der Konsole.");
 }
+
 
 };
 
