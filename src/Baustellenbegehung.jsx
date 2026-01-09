@@ -274,7 +274,7 @@ useEffect(() => logoSrc && localStorage.setItem("app.logoSrc", logoSrc), [logoSr
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     setBusy(true);
-    try {
+    
       const resized = [];
       for (const f of files.slice(0, 12)) {
         const durl = await resizeImageFromFile(f, 1280, 0.8);
@@ -306,7 +306,7 @@ useEffect(() => logoSrc && localStorage.setItem("app.logoSrc", logoSrc), [logoSr
 
   const onLocate = async () => {
     setLocating(true);
-    try {
+    
       const pos = await getBrowserPosition();
       const { latitude: lat, longitude: lon, accuracy } = pos.coords;
       setCoords({ lat, lon, accuracy });
@@ -1062,24 +1062,28 @@ const blob = doc.output("blob");
 const file = new File([blob], fileName, { type: "application/pdf" });
 
 // Teilen (wenn möglich), sonst speichern
-if (navigator.canShare && navigator.canShare({ files: [file] })) {
-  try {
-    await navigator.share({
-      title: "Baustellenbegehung – Bericht",
-      text: "PDF-Bericht im Anhang.",
-      files: [file],
-    });
-  } catch (err) {
-    // Teilen kann auch bei Abbruch/Cancel hier landen
-    console.error("PDF teilen fehlgeschlagen/abgebrochen:", err);
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        title: "Baustellenbegehung – Bericht",
+        text: "PDF-Bericht im Anhang.",
+        files: [file],
+      });
+    } catch (err) {
+      // Teilen kann auch bei Abbruch/Cancel hier landen
+      console.error("PDF teilen fehlgeschlagen/abgebrochen:", err);
+      doc.save(fileName);
+      alert("Teilen abgebrochen/fehlgeschlagen – PDF wurde gespeichert.");
+    }
+  } else {
     doc.save(fileName);
-    alert("Teilen abgebrochen/fehlgeschlagen – PDF wurde gespeichert.");
+    alert("Teilen wird von diesem Browser/Gerät nicht unterstützt – PDF wurde gespeichert.");
   }
-} else {
-  doc.save(fileName);
-  alert("Teilen wird von diesem Browser/Gerät nicht unterstützt – PDF wurde gespeichert.");
-}
 
+} catch (err) {
+  console.error("PDF-Fehler:", err);
+  alert("PDF konnte nicht erstellt werden. Details in der Konsole.");
+}
 };
 
 
