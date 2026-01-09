@@ -965,11 +965,7 @@ autoTable(doc, {
 
 
   let y = (doc.lastAutoTable?.finalY || startY + 10) + 10;
-  if (signatureDataURL) {
-    doc.text("Unterschrift", margin, y);
-    y += 4;
-    doc.addImage(signatureDataURL, "PNG", margin, y, 60, 20, undefined, "FAST");
-  }
+ 
 // Unterschrift immer auf Seite 1 unten einzeichnen
 drawSignatureBlockOnFirstPage(doc, margin);
 
@@ -1056,10 +1052,7 @@ const sharePdf = async () => {
     // Unterschrift
     let y = (doc.lastAutoTable?.finalY || startY + 10) + 10;
     if (signatureDataURL) {
-      doc.text("Unterschrift", margin, y);
-      y += 4;
-      doc.addImage(signatureDataURL, "PNG", margin, y, 60, 20, undefined, "FAST");
-    }
+   
 
     // Checkpunkt-Fotos
     await addPhotosSection(doc, checklist, CATEGORIES);
