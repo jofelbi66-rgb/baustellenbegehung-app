@@ -352,6 +352,8 @@ const onLocate = async () => {
   // ---------- Unterschrift (Signaturfeld) ----------
   const sigCanvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const isDrawingRef = useRef(false);
+
   const [signatureDataURL, setSignatureDataURL] = useState("");
 
   const startDraw = (e) => {
@@ -376,11 +378,16 @@ const onLocate = async () => {
 
   ctx.beginPath();
   ctx.moveTo(x, y);
-  setIsDrawing(true);
+  isDrawingRef.current = true;
+setIsDrawing(true);
+  
+  
 };
 
 const drawMove = (e) => {
-  if (!isDrawing) return;
+if (!isDrawingRef.current) return;
+
+
   e.preventDefault();
 
   const canvas = sigCanvasRef.current;
@@ -397,6 +404,8 @@ const drawMove = (e) => {
 
  const endDraw = (e) => {
   e?.preventDefault?.();
+isDrawingRef.current = false;
+setIsDrawing(false);
 
   setIsDrawing(false);
   const canvas = sigCanvasRef.current;
@@ -405,12 +414,17 @@ const drawMove = (e) => {
   setSignatureDataURL(canvas.toDataURL("image/png"));
 };
 
-  const clearSignature = () => {
-    const canvas = sigCanvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    setSignatureDataURL("");
-  };
+const clearSignature = () => {
+  isDrawingRef.current = false;
+  setIsDrawing(false);
+
+  const canvas = sigCanvasRef.current; 
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  setSignatureDataURL("");
+};
 
   /* ---------- E-Mail HTML ---------- */
   const buildSummaryHTML = () => {
@@ -1464,27 +1478,20 @@ return (
           <section className="bg-white p-4 rounded-2xl shadow">
             <h2 className="text-lg font-semibold mb-3">Unterschrift</h2>
             <div className="space-y-2">
-              <canvas
+<canvas
   ref={sigCanvasRef}
-  width={500}
-  height={120}
   className="border rounded bg-white w-full h-40 touch-none"
+  style={{ touchAction: "none" }}   // wichtig für Mobile
   onPointerDown={startDraw}
   onPointerMove={drawMove}
   onPointerUp={endDraw}
   onPointerCancel={endDraw}
   onPointerLeave={endDraw}
+  onTouchStart={startDraw}          // Fallback
+  onTouchMove={drawMove}
+  onTouchEnd={endDraw}
 />
 
-
-                onMouseDown={startDraw}
-                onMouseMove={drawMove}
-                onMouseUp={endDraw}
-                onMouseLeave={endDraw}
-                onTouchStart={startDraw}
-                onTouchMove={drawMove}
-                onTouchEnd={endDraw}
-              />
               <div className="flex gap-2">
                 <button type="button" onClick={clearSignature} className="px-3 py-2 rounded-xl border">Löschen</button>
                 <span className="text-gray-500 text-sm">Bitte mit Maus/Finger unterschreiben.</span>
