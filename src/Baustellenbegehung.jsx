@@ -1052,33 +1052,39 @@ const sharePdf = async () => {
     // Unterschrift
     let y = (doc.lastAutoTable?.finalY || startY + 10) + 10;
     if (signatureDataURL) {
-   
+    }
 
     // Checkpunkt-Fotos
     await addPhotosSection(doc, checklist, CATEGORIES);
 
     const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
     const fileName = `Begehung_${safeName}.pdf`;
-const blob = doc.output("blob");
-const file = new File([blob], fileName, { type: "application/pdf" });
+// Checkpunkt-Fotos
+await addPhotosSection(doc, checklist, CATEGORIES);
 
-if (navigator.canShare && navigator.canShare({ files: [file] })) {
-  await navigator.share({
-    title: "Baustellenbegehung – Bericht",
-    text: "PDF-Bericht im Anhang.",
-    files: [file],
-  });
-} else {
-  // Fallback: normal speichern
-  doc.save(fileName);
-  alert("Teilen wird von diesem Browser/Gerät nicht unterstützt – PDF wurde gespeichert.");
+const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
+const fileName = `Begehung_${safeName}.pdf`;
+
+try {
+  const blob = doc.output("blob");
+  const file = new File([blob], fileName, { type: "application/pdf" });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    await navigator.share({
+      title: "Baustellenbegehung – Bericht",
+      text: "PDF-Bericht im Anhang.",
+      files: [file],
+    });
+  } else {
+    // Fallback: normal speichern
+    doc.save(fileName);
+    alert("Teilen wird von diesem Browser/Gerät nicht unterstützt – PDF wurde gespeichert.");
+  }
+} catch (err) {
+  console.error("PDF teilen fehlgeschlagen:", err);
+  alert("PDF konnte nicht geteilt werden. Details in der Konsole.");
 }
 
-
-    } catch (err) {
-    console.error("PDF teilen fehlgeschlagen:", err);
-    alert("PDF konnte nicht geteilt werden. Details in der Konsole.");
-  }
 };
 
 
