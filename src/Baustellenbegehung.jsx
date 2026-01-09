@@ -306,25 +306,32 @@ const onPickImages = async (e) => {
     return await res.json();
   };
 
-  const onLocate = async () => {
-    setLocating(true);
-    
-      const pos = await getBrowserPosition();
-      const { latitude: lat, longitude: lon, accuracy } = pos.coords;
-      setCoords({ lat, lon, accuracy });
-      const info = await reverseGeocode(lat, lon);
-      const nice = info?.display_name || `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-      setForm((s) => ({ ...s, location: nice }));
-      setMsg({ type: "ok", text: "Standort übernommen." });
-    } catch (e) {
-      console.error(e);
-      let t = "Standort konnte nicht ermittelt werden.";
-      if (e && e.code === 1) t = "Standort-Berechtigung verweigert.";
-      setMsg({ type: "error", text: t });
-    } finally {
-      setLocating(false);
-    }
-  };
+const onLocate = async () => {
+  setLocating(true);
+
+  try {
+    const pos = await getBrowserPosition();
+    const { latitude: lat, longitude: lon, accuracy } = pos.coords;
+
+    setCoords({ lat, lon, accuracy });
+
+    const info = await reverseGeocode(lat, lon);
+    const nice = info?.display_name || `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+
+    setForm((s) => ({ ...s, location: nice }));
+    setMsg({ type: "ok", text: "Standort übernommen." });
+  } catch (e) {
+    console.error(e);
+
+    let t = "Standort konnte nicht ermittelt werden.";
+    if (e && e.code === 1) t = "Standort-Berechtigung verweigert.";
+
+    setMsg({ type: "error", text: t });
+  } finally {
+    setLocating(false);
+  }
+};
+
 
   // ---------- Unterschrift (Signaturfeld) ----------
   const sigCanvasRef = useRef(null);
