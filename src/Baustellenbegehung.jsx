@@ -438,6 +438,7 @@ const drawMove = (e) => {
 const endDraw = (e) => {
   e?.preventDefault?.();
 
+
   if (!isDrawingRef.current) return;
   isDrawingRef.current = false;
   setIsDrawing(false);
@@ -453,6 +454,18 @@ const endDraw = (e) => {
       canvas.releasePointerCapture(e.pointerId);
     }
   } catch {}
+};
+const clearSignature = () => {
+  const canvas = sigCanvasRef.current;
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  setSignatureDataURL("");
+  isDrawingRef.current = false;
+  setIsDrawing(false);
 };
 
 
