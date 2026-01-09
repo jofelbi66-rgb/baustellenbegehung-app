@@ -1050,32 +1050,36 @@ const sharePdf = async () => {
     });
 
    
-    // Checkpunkt-Fotos
+// Checkpunkt-Fotos
 await addPhotosSection(doc, checklist, CATEGORIES);
 
-// WICHTIG: neue Namen, damit keine Doppel-Deklaration mehr entsteht
-const safeNameShare = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
-const fileNameShare = `Begehung_${safeNameShare}.pdf`;
+// Dateiname
+const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
+const fileName = `Begehung_${safeName}.pdf`;
 
-try {
-  const blob = doc.output("blob");
-  const file = new File([blob], fileNameShare, { type: "application/pdf" });
+// PDF als Datei bauen
+const blob = doc.output("blob");
+const file = new File([blob], fileName, { type: "application/pdf" });
 
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+// Teilen (wenn möglich), sonst speichern
+if (navigator.canShare && navigator.canShare({ files: [file] })) {
+  try {
     await navigator.share({
       title: "Baustellenbegehung – Bericht",
       text: "PDF-Bericht im Anhang.",
       files: [file],
     });
-  } else {
-    // Fallback: normal speichern
-    doc.save(fileNameShare);
-    alert("Teilen wird von diesem Browser/Gerät nicht unterstützt – PDF wurde gespeichert.");
+  } catch (err) {
+    // Teilen kann auch bei Abbruch/Cancel hier landen
+    console.error("PDF teilen fehlgeschlagen/abgebrochen:", err);
+    doc.save(fileName);
+    alert("Teilen abgebrochen/fehlgeschlagen – PDF wurde gespeichert.");
   }
-} catch (err) {
-  console.error("PDF teilen fehlgeschlagen:", err);
-  alert("PDF konnte nicht geteilt werden. Details in der Konsole.");
+} else {
+  doc.save(fileName);
+  alert("Teilen wird von diesem Browser/Gerät nicht unterstützt – PDF wurde gespeichert.");
 }
+
 };
 
 
