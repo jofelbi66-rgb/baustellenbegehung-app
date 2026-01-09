@@ -351,11 +351,13 @@ const onLocate = async () => {
 
 // -------- Unterschrift (Signaturfeld) --------
 const sigCanvasRef = useRef(null);
+const isTouchingRef = useRef(false);
+  
 const [isDrawing, setIsDrawing] = useState(false);
 const isDrawingRef = useRef(false);
 const [signatureDataURL, setSignatureDataURL] = useState("");
 
-// Canvas sauber auf DevicePixelRatio skalieren (wichtig mobil)
+// Canvas intern auf Gerätepixel skalieren (wichtig für Mobile)
 useEffect(() => {
   const canvas = sigCanvasRef.current;
   if (!canvas) return;
@@ -370,17 +372,15 @@ useEffect(() => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // In CSS-Pixeln zeichnen
+    // wieder in CSS-Pixeln zeichnen
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "#111";
   };
 
   setup();
   window.addEventListener("resize", setup);
   return () => window.removeEventListener("resize", setup);
 }, []);
+
 
 const getPos = (e, canvas) => {
   const rect = canvas.getBoundingClientRect();
@@ -393,6 +393,8 @@ const getPos = (e, canvas) => {
 };
 
 const startDraw = (e) => {
+ const isTouchingRef = useRef(false);
+  
   e.preventDefault();
   const canvas = sigCanvasRef.current;
   if (!canvas) return;
@@ -413,7 +415,9 @@ const startDraw = (e) => {
   setIsDrawing(true);
 };
 
-const drawMove = (e) => {
+const drawMove = (e) => {  
+  const isTouchingRef = useRef(false);
+
   if (!isDrawingRef.current) return;
   e.preventDefault();
 
@@ -429,6 +433,8 @@ const drawMove = (e) => {
 };
 
 const endDraw = (e) => {
+  const isTouchingRef = useRef(false);
+
   if (!isDrawingRef.current) return;
   e.preventDefault();
 
