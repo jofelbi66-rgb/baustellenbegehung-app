@@ -270,25 +270,27 @@ useEffect(() => logoSrc && localStorage.setItem("app.logoSrc", logoSrc), [logoSr
     }));
   };
 
-  const onPickImages = async (e) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-    setBusy(true);
-    
-      const resized = [];
-      for (const f of files.slice(0, 12)) {
-        const durl = await resizeImageFromFile(f, 1280, 0.8);
-        resized.push(durl);
-      }
-      setImages((prev) => [...prev, ...resized].slice(0, 24));
-    } catch (err) {
-      console.error(err);
-      setMsg({ type: "error", text: "Bilder konnten nicht verarbeitet werden." });
-    } finally {
-      setBusy(false);
-      e.target.value = "";
+const onPickImages = async (e) => {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  setBusy(true);
+
+  try {
+    const resized = [];
+    for (const f of files.slice(0, 12)) {
+      const durl = await resizeImageFromFile(f, 1280, 0.8);
+      resized.push(durl);
     }
-  };
+    setImages((prev) => [...prev, ...resized].slice(0, 24));
+  } catch (err) {
+    console.error(err);
+    setMsg({ type: "error", text: "Bilder konnten nicht verarbeitet werden." });
+  } finally {
+    setBusy(false);
+    e.target.value = "";
+  }
+};
+
 
   // ---------- Geolocation ----------
   const getBrowserPosition = (opts = { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }) =>
