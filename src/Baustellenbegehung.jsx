@@ -1130,7 +1130,7 @@ return (
 </div>
 
         
-        </header>
+
 
         <form onSubmit={onSubmit} className="space-y-6">
           {/* Stammdaten */}
