@@ -355,28 +355,56 @@ const onLocate = async () => {
   const [signatureDataURL, setSignatureDataURL] = useState("");
 
   const startDraw = (e) => {
-    const canvas = sigCanvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.strokeStyle = "#111";
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-    ctx.beginPath(); ctx.moveTo(x, y);
-    setIsDrawing(true);
-  };
-  const drawMove = (e) => {
-    if (!isDrawing) return; const canvas = sigCanvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-    ctx.lineTo(x, y); ctx.stroke();
-  };
-  const endDraw = () => {
-    setIsDrawing(false);
-    const canvas = sigCanvasRef.current; if (!canvas) return;
-    setSignatureDataURL(canvas.toDataURL("image/png"));
-  };
+  e.preventDefault();
+
+  const canvas = sigCanvasRef.current;
+  if (!canvas) return;
+
+  // Pointer festhalten (wichtig auf Mobile)
+  if (canvas.setPointerCapture && e.pointerId != null) {
+    canvas.setPointerCapture(e.pointerId);
+  }
+
+  const ctx = canvas.getContext("2d");
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#111";
+
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  setIsDrawing(true);
+};
+
+const drawMove = (e) => {
+  if (!isDrawing) return;
+  e.preventDefault();
+
+  const canvas = sigCanvasRef.current;
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  ctx.lineTo(x, y);
+  ctx.stroke();
+};
+
+ const endDraw = (e) => {
+  e?.preventDefault?.();
+
+  setIsDrawing(false);
+  const canvas = sigCanvasRef.current;
+  if (!canvas) return;
+
+  setSignatureDataURL(canvas.toDataURL("image/png"));
+};
+
   const clearSignature = () => {
     const canvas = sigCanvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -1437,10 +1465,18 @@ return (
             <h2 className="text-lg font-semibold mb-3">Unterschrift</h2>
             <div className="space-y-2">
               <canvas
-                ref={sigCanvasRef}
-                width={500}
-                height={120}
-                className="w-full border rounded-xl bg-white"
+  ref={sigCanvasRef}
+  width={500}
+  height={120}
+  className="border rounded bg-white w-full h-40 touch-none"
+  onPointerDown={startDraw}
+  onPointerMove={drawMove}
+  onPointerUp={endDraw}
+  onPointerCancel={endDraw}
+  onPointerLeave={endDraw}
+/>
+
+
                 onMouseDown={startDraw}
                 onMouseMove={drawMove}
                 onMouseUp={endDraw}
