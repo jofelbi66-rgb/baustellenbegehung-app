@@ -355,6 +355,37 @@ const onLocate = async () => {
   const isDrawingRef = useRef(false);
 
   const [signatureDataURL, setSignatureDataURL] = useState("");
+useEffect(() => {
+  const canvas = sigCanvasRef.current;
+  if (!canvas) return;
+
+  const setup = () => {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+
+    // interne Canvas-Pixelgröße passend zur sichtbaren Größe
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+
+    const ctx = canvas.getContext("2d");
+    // wieder in CSS-Pixeln zeichnen
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#111";
+  };
+
+  setup();
+  window.addEventListener("resize", setup);
+  window.addEventListener("orientationchange", setup);
+
+  return () => {
+    window.removeEventListener("resize", setup);
+    window.removeEventListener("orientationchange", setup);
+  };
+}, []);
+
 
   const startDraw = (e) => {
   e.preventDefault();
@@ -373,8 +404,10 @@ const onLocate = async () => {
   ctx.strokeStyle = "#111";
 
   const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+ const x = e.clientX - rect.left;
+const y = e.clientY - rect.top;
+
+
 
   ctx.beginPath();
   ctx.moveTo(x, y);
@@ -386,6 +419,10 @@ setIsDrawing(true);
 
 const drawMove = (e) => {
 if (!isDrawingRef.current) return;
+const scaleX = canvas.width / rect.width;
+const scaleY = canvas.height / rect.height;
+const x = (e.clientX - rect.left) * scaleX;
+const y = (e.clientY - rect.top) * scaleY;
 
 
   e.preventDefault();
@@ -1480,16 +1517,13 @@ return (
             <div className="space-y-2">
 <canvas
   ref={sigCanvasRef}
-  className="border rounded bg-white w-full h-40 touch-none"
+  className="border rounded bg-white w-full h-40"
   style={{ touchAction: "none" }}   // wichtig für Mobile
   onPointerDown={startDraw}
   onPointerMove={drawMove}
   onPointerUp={endDraw}
   onPointerCancel={endDraw}
   onPointerLeave={endDraw}
-  onTouchStart={startDraw}          // Fallback
-  onTouchMove={drawMove}
-  onTouchEnd={endDraw}
 />
 
               <div className="flex gap-2">
