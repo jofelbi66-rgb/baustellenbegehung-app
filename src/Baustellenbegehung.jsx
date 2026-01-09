@@ -647,14 +647,7 @@ y = autoTable.previous.finalY + 8;
 
       // Unterschrift (falls vorhanden)
       let y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 8 : 50;
-      if (signatureDataURL) {
-        doc.setFontSize(12);
-        doc.text("Unterschrift", margin, y);
-        y += 4;
-        // Kleinere Einbettung
-        doc.addImage(signatureDataURL, "PNG", margin, y, 60, 20, undefined, "FAST");
-        y += 24;
-      }
+    
 
       // Fotos (2 pro Zeile Raster) – vorher neu komprimieren auf att.maxPx / att.q
       const pageWmm = pageW, colGap = 6, cols = 2;
