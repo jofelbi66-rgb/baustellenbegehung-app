@@ -971,7 +971,8 @@ const drawSignatureBlockOnFirstPage = (doc, margin = 15) => {
       ["Projekt", form.project || "-"],
       ["Ort", form.location || "-"],
       ["Firma/AG", form.company || "-"],
-      ["Datum/Uhrzeit", form.date || "-"],
+      ["Datum/Uhrzeit", formatDEDateTime(form.date)],
+
       ["Begehende Person", form.inspector || "-"],
       ["Wetter", form.weather || "-"],
       ["Bemerkungen", form.remarks || "-"],
@@ -1064,7 +1065,8 @@ const sharePdf = async () => {
         ["Projekt", form.project || "-"],
         ["Ort", form.location || "-"],
         ["Firma/AG", form.company || "-"],
-        ["Datum/Uhrzeit", form.date || "-"],
+       ["Datum/Uhrzeit", formatDEDateTime(form.date)],
+
         ["Begehende Person", form.inspector || "-"],
         ["Wetter", form.weather || "-"],
         ["Bemerkungen", form.remarks || "-"],
