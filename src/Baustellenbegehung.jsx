@@ -1059,7 +1059,7 @@ const sharePdf = async () => {
 
     const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
     const fileName = `Begehung_${safeName}.pdf`;
-
+try {
     const blob = doc.output("blob");
     const file = new File([blob], fileName, { type: "application/pdf" });
 
