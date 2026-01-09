@@ -349,12 +349,13 @@ const onLocate = async () => {
 };
 
 
-  // ---------- Unterschrift (Signaturfeld) ----------
-  const sigCanvasRef = useRef(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const isDrawingRef = useRef(false);
+// -------- Unterschrift (Signaturfeld) --------
+const sigCanvasRef = useRef(null);
+const [isDrawing, setIsDrawing] = useState(false);
+const isDrawingRef = useRef(false);
+const [signatureDataURL, setSignatureDataURL] = useState("");
 
-  const [signatureDataURL, setSignatureDataURL] = useState("");
+// Canvas sauber auf DevicePixelRatio skalieren (wichtig mobil)
 useEffect(() => {
   const canvas = sigCanvasRef.current;
   if (!canvas) return;
@@ -363,14 +364,14 @@ useEffect(() => {
     const rect = canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
 
-    // interne Canvas-Pixelgröße passend zur sichtbaren Größe
     canvas.width = Math.max(1, Math.round(rect.width * dpr));
     canvas.height = Math.max(1, Math.round(rect.height * dpr));
 
     const ctx = canvas.getContext("2d");
-    // wieder in CSS-Pixeln zeichnen
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (!ctx) return;
 
+    // In CSS-Pixeln zeichnen
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.lineWidth = 2;
     ctx.lineCap = "round";
     ctx.strokeStyle = "#111";
@@ -378,30 +379,21 @@ useEffect(() => {
 
   setup();
   window.addEventListener("resize", setup);
-  window.addEventListener("orientationchange", setup);
-
-  return () => {
-    window.removeEventListener("resize", setup);
-    window.removeEventListener("orientationchange", setup);
-  };
+  return () => window.removeEventListener("resize", setup);
 }, []);
-
 
 const getPos = (e, canvas) => {
   const rect = canvas.getBoundingClientRect();
+  const t = e.touches && e.touches[0] ? e.touches[0] : null;
 
-  const clientX = e.touches?.[0]?.clientX ?? e.clientX;
-  const clientY = e.touches?.[0]?.clientY ?? e.clientY;
+  const clientX = t ? t.clientX : e.clientX;
+  const clientY = t ? t.clientY : e.clientY;
 
-  return {
-    x: clientX - rect.left,
-    y: clientY - rect.top,
-  };
+  return { x: clientX - rect.left, y: clientY - rect.top };
 };
 
 const startDraw = (e) => {
-  e.preventDefault?.();
-
+  e.preventDefault();
   const canvas = sigCanvasRef.current;
   if (!canvas) return;
 
@@ -414,11 +406,6 @@ const startDraw = (e) => {
   if (!ctx) return;
 
   const { x, y } = getPos(e, canvas);
-
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
-  ctx.strokeStyle = "#111";
-
   ctx.beginPath();
   ctx.moveTo(x, y);
 
@@ -428,7 +415,7 @@ const startDraw = (e) => {
 
 const drawMove = (e) => {
   if (!isDrawingRef.current) return;
-  e.preventDefault?.();
+  e.preventDefault();
 
   const canvas = sigCanvasRef.current;
   if (!canvas) return;
@@ -437,15 +424,14 @@ const drawMove = (e) => {
   if (!ctx) return;
 
   const { x, y } = getPos(e, canvas);
-
   ctx.lineTo(x, y);
   ctx.stroke();
 };
 
 const endDraw = (e) => {
-  e.preventDefault?.();
-
   if (!isDrawingRef.current) return;
+  e.preventDefault();
+
   isDrawingRef.current = false;
   setIsDrawing(false);
 
@@ -454,11 +440,24 @@ const endDraw = (e) => {
 
   setSignatureDataURL(canvas.toDataURL("image/png"));
 
-  // optional: Pointer wieder freigeben
-  if (canvas.releasePointerCapture && e?.pointerId != null) {
+  if (canvas.releasePointerCapture && e.pointerId != null) {
     try { canvas.releasePointerCapture(e.pointerId); } catch {}
   }
 };
+
+const clearSignature = () => {
+  const canvas = sigCanvasRef.current;
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  setSignatureDataURL("");
+  isDrawingRef.current = false;
+  setIsDrawing(false);
+};
+
 
 
   /* ---------- E-Mail HTML ---------- */
@@ -1515,14 +1514,18 @@ return (
             <div className="space-y-2">
 <canvas
   ref={sigCanvasRef}
-  className="border rounded bg-white w-full h-40"
-  style={{ touchAction: "none" }}   // wichtig für Mobile
+  className="border rounded bg-white w-full h-40 touch-none"
+  style={{ touchAction: "none" }}
   onPointerDown={startDraw}
   onPointerMove={drawMove}
   onPointerUp={endDraw}
   onPointerCancel={endDraw}
   onPointerLeave={endDraw}
+  onTouchStart={startDraw}
+  onTouchMove={drawMove}
+  onTouchEnd={endDraw}
 />
+
 
               <div className="flex gap-2">
                 <button type="button" onClick={clearSignature} className="px-3 py-2 rounded-xl border">Löschen</button>
