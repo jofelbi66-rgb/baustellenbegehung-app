@@ -1126,13 +1126,15 @@ const file = new File([blob], fileName, { type: "application/pdf" });
 
 // === ab hier beginnt dein UI ===
 return (
-  <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+<div className="min-h-screen bg-gray-50 p-3 md:p-8 overflow-x-hidden">
+
       <div className="max-w-5xl mx-auto">
     <header className="mb-6">
   <div className="flex items-start justify-between gap-4">
     <div>
       <h1 className="text-2xl md:text-3xl font-bold">Baustellenbegehung – Dokumentation</h1>
-      <p className="text-gray-600 mt-1">
+    <p className="text-gray-600 mt-1 text-sm md:text-base break-words">
+
         Digitale Begehungsdokumentation mit Standortermittlung, Checkliste, Fotonachweisen, Unterschrift und automatischem Versand inkl. PDF-Bericht.
       </p>
     </div>
