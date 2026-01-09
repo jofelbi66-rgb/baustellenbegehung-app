@@ -1049,11 +1049,7 @@ const sharePdf = async () => {
       theme: "grid",
     });
 
-    // Unterschrift
-    let y = (doc.lastAutoTable?.finalY || startY + 10) + 10;
-    if (signatureDataURL) {
-    }
-
+   
     // Checkpunkt-Fotos
 await addPhotosSection(doc, checklist, CATEGORIES);
 
@@ -1080,8 +1076,6 @@ try {
   console.error("PDF teilen fehlgeschlagen:", err);
   alert("PDF konnte nicht geteilt werden. Details in der Konsole.");
 }
-
-
 };
 
 
