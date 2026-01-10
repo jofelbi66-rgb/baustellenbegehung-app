@@ -193,6 +193,8 @@ export default function BaustellenbegehungApp() {
   const [inspectorName, setInspectorName] =
   useLocalStorageState("app.inspectorName", "");
 
+const [signatureDataUrl, setSignatureDataUrl] =
+  useLocalStorageState("app.signature_v1", "");
 
   const [form, setForm] = useState({
     project: "",
@@ -479,6 +481,18 @@ const clearSignature = () => {
   isDrawingRef.current = false;
 };
 
+const saveSignature = () => {
+  const canvas = sigCanvasRef.current;
+  if (!canvas) return;
+if (!canvas.width || !canvas.height) return; 
+  
+  try {
+    const dataUrl = canvas.toDataURL("image/png");
+    setSignatureDataUrl(dataUrl);
+  } catch {
+    // falls etwas schief geht, einfach nichts speichern
+  }
+};
 
 
   /* ---------- E-Mail HTML ---------- */
@@ -1539,10 +1553,13 @@ return (
   <h2 className="text-lg font-semibold mb-3">Unterschrift</h2>
 
   <div className="space-y-2">
-  <canvas
+ <canvas
   ref={sigCanvasRef}
   className="border rounded bg-white w-full h-40 block"
+  onPointerUp={saveSignature}
+  onPointerLeave={saveSignature}
 />
+
 
 <div className="flex gap-2 items-center flex-wrap">
   <button
