@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
-import { useLocalStorageState } from "@/hooks/useLocalStorageState";
+import { useLocalStorageState } from "./hooks/useLocalStorageState";
+
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -1569,7 +1570,7 @@ return (
             <button type="submit" disabled={busy} className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60">
               {busy ? "Sende…" : "Begehung per E-Mail senden"}
             </button>
->
+
 
 
             <span className="text-gray-500 text-sm">E-Mail via EmailJS oder lokale PDF-Ablage. Logo nur auf Seite 1.</span>
