@@ -190,7 +190,8 @@ export default function BaustellenbegehungApp() {
 
   // HIER EINFÜGEN:
   const [inspectorName, setInspectorName] =
-    useLocalStorageState<string>("app.inspectorName", "");
+  useLocalStorageState("app.inspectorName", "");
+
 
   const [form, setForm] = useState({
     project: "",
@@ -201,7 +202,8 @@ export default function BaustellenbegehungApp() {
     weather: "",
     remarks: "",
   });
-const updateInspector = (v: string) => {
+const updateInspector = (v) => {
+
   setForm((prev) => ({ ...prev, inspector: v }));
   setInspectorName(v);
 };
