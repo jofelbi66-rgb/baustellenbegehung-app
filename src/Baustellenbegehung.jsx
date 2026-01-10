@@ -1454,6 +1454,9 @@ return (
   value={form.inspector}
   onChange={(e) => updateInspector(e.target.value)}
 />
+<span className="text-xs text-gray-500">
+  Wird lokal auf diesem Gerät gespeichert.
+</span>
 
             </label>
             <label className="flex flex-col gap-1">
@@ -1615,9 +1618,10 @@ return (
   >
     Löschen
   </button>
-  <span className="text-gray-500 text-sm">
-    Bitte mit Finger/Maus unterschreiben.
-  </span>
+ <span className="text-gray-500 text-sm">
+  Bitte mit Finger/Maus unterschreiben. Wird lokal auf diesem Gerät gespeichert (bis „Löschen“).
+</span>
+
 </div>
 
   </div>
