@@ -350,115 +350,118 @@ const onLocate = async () => {
 
 
 // -------- Unterschrift (Signaturfeld) --------
-// ---------- Unterschrift (Signaturfeld) ----------
-const sigCanvasRef = useRef(null);
-const isDrawingRef = useRef(false);
-const [signatureDataURL, setSignatureDataURL] = useState("");
+const sigCanvasRef = React.useRef(null);
+const isDrawingRef = React.useRef(false);
+const [signatureDataURL, setSignatureDataURL] = React.useState("");
 
-// EINZIGE Positionsfunktion (Touch + Pointer + React Synthetic)
-const getCanvasPos = (e, canvas) => {
-  const rect = canvas.getBoundingClientRect();
-  const ne = e?.nativeEvent ?? e; // wichtig bei React
-  const t = ne?.touches?.[0] ?? ne?.changedTouches?.[0];
-
-  const clientX = t ? t.clientX : ne.clientX;
-  const clientY = t ? t.clientY : ne.clientY;
-
-  return { x: clientX - rect.left, y: clientY - rect.top };
-};
-
-// Canvas scharf skalieren (DevicePixelRatio), Koordinaten bleiben in CSS-Pixeln
-useEffect(() => {
+React.useEffect(() => {
   const canvas = sigCanvasRef.current;
   if (!canvas) return;
+
+  // iOS Safari: verhindert Scroll/Zoom-Gesten im Canvas
+  canvas.style.touchAction = "none";
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
 
   const setup = () => {
     const rect = canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
 
+    // Canvas intern auf dpr skalieren, aber in CSS-Pixeln zeichnen
     canvas.width = Math.max(1, Math.round(rect.width * dpr));
     canvas.height = Math.max(1, Math.round(rect.height * dpr));
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Koordinaten in CSS-Pixeln
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
     ctx.lineWidth = 2;
     ctx.lineCap = "round";
-    ctx.lineJoin = "round";
     ctx.strokeStyle = "#111";
+  };
+
+  const getPoint = (ev) => {
+    const rect = canvas.getBoundingClientRect();
+    const p =
+      ev.touches?.[0] ??
+      ev.changedTouches?.[0] ??
+      ev;
+    return { x: p.clientX - rect.left, y: p.clientY - rect.top };
+  };
+
+  const start = (ev) => {
+    ev.preventDefault();
+    setup(); // falls Layout sich geändert hat (Rotation etc.)
+
+    isDrawingRef.current = true;
+    const { x, y } = getPoint(ev);
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+
+    // Pointer capture (wenn PointerEvent)
+    if (ev.pointerId != null && canvas.setPointerCapture) {
+      try { canvas.setPointerCapture(ev.pointerId); } catch {}
+    }
+  };
+
+  const move = (ev) => {
+    if (!isDrawingRef.current) return;
+    ev.preventDefault();
+
+    const { x, y } = getPoint(ev);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const end = (ev) => {
+    if (!isDrawingRef.current) return;
+    ev.preventDefault();
+
+    isDrawingRef.current = false;
+    setSignatureDataURL(canvas.toDataURL("image/png"));
+
+    if (ev.pointerId != null && canvas.releasePointerCapture) {
+      try { canvas.releasePointerCapture(ev.pointerId); } catch {}
+    }
   };
 
   setup();
   window.addEventListener("resize", setup);
-  return () => window.removeEventListener("resize", setup);
+
+  // Native Listener (WICHTIG: passive:false für iOS)
+  canvas.addEventListener("pointerdown", start, { passive: false });
+  canvas.addEventListener("pointermove", move, { passive: false });
+  canvas.addEventListener("pointerup", end, { passive: false });
+  canvas.addEventListener("pointercancel", end, { passive: false });
+
+  canvas.addEventListener("touchstart", start, { passive: false });
+  canvas.addEventListener("touchmove", move, { passive: false });
+  canvas.addEventListener("touchend", end, { passive: false });
+  canvas.addEventListener("touchcancel", end, { passive: false });
+
+  return () => {
+    window.removeEventListener("resize", setup);
+
+    canvas.removeEventListener("pointerdown", start);
+    canvas.removeEventListener("pointermove", move);
+    canvas.removeEventListener("pointerup", end);
+    canvas.removeEventListener("pointercancel", end);
+
+    canvas.removeEventListener("touchstart", start);
+    canvas.removeEventListener("touchmove", move);
+    canvas.removeEventListener("touchend", end);
+    canvas.removeEventListener("touchcancel", end);
+  };
 }, []);
 
-const startDraw = (e) => {
-  e.preventDefault();
-
-  const canvas = sigCanvasRef.current;
-  if (!canvas) return;
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  // iOS/Safari: Pointer festhalten
-  if (canvas.setPointerCapture && e.pointerId != null) {
-    try { canvas.setPointerCapture(e.pointerId); } catch {}
-  }
-
-  const { x, y } = getCanvasPos(e, canvas);
-
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-  isDrawingRef.current = true;
-};
-
-const drawMove = (e) => {
-  if (!isDrawingRef.current) return;
-  e.preventDefault();
-
-  const canvas = sigCanvasRef.current;
-  if (!canvas) return;
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  const { x, y } = getCanvasPos(e, canvas);
-
-  ctx.lineTo(x, y);
-  ctx.stroke();
-};
-
-const endDraw = (e) => {
-  if (!isDrawingRef.current) return;
-  e?.preventDefault?.();
-
-  const canvas = sigCanvasRef.current;
-  if (!canvas) return;
-
-  isDrawingRef.current = false;
-  setSignatureDataURL(canvas.toDataURL("image/png"));
-
-  if (canvas.releasePointerCapture && e?.pointerId != null) {
-    try { canvas.releasePointerCapture(e.pointerId); } catch {}
-  }
-};
-
-// WICHTIG: außerhalb von endDraw (sonst "not defined")
 const clearSignature = () => {
   const canvas = sigCanvasRef.current;
   if (!canvas) return;
-
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  isDrawingRef.current = false;
   setSignatureDataURL("");
+  isDrawingRef.current = false;
 };
 
 
