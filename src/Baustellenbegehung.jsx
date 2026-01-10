@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
+import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -186,15 +187,26 @@ function recompressImage(imgOrDataURL, maxSizePx = 1280, quality = 0.8) {
 /* ===================== Komponente ===================== */
 export default function BaustellenbegehungApp() {
   const now = useNowISOLocal();
+
+  // HIER EINFÜGEN:
+  const [inspectorName, setInspectorName] =
+    useLocalStorageState<string>("app.inspectorName", "");
+
   const [form, setForm] = useState({
     project: "",
     location: "",
     company: "",
     date: now,
-    inspector: "",
+    inspector: inspectorName,   // das ändern wir gleich
     weather: "",
     remarks: "",
   });
+const updateInspector = (v: string) => {
+  setForm((prev) => ({ ...prev, inspector: v }));
+  setInspectorName(v);
+};
+
+  
 const [ccEmail, setCcEmail] = useState(() =>
   localStorage.getItem("app.ccEmail") || ""
 );
@@ -1374,7 +1386,12 @@ return (
             </label>
             <label className="flex flex-col gap-1">
               <span className="text-sm text-gray-600">Begehende Person *</span>
-              <input className="border rounded-xl p-2" value={form.inspector} onChange={onField("inspector")} />
+              <input
+  className="border rounded-xl p-2"
+  value={form.inspector}
+  onChange={(e) => updateInspector(e.target.value)}
+/>
+
             </label>
             <label className="flex flex-col gap-1">
               <span className="text-sm text-gray-600">Wetter</span>
