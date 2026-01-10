@@ -350,14 +350,24 @@ const onLocate = async () => {
 
 
 // -------- Unterschrift (Signaturfeld) --------
+// ---------- Unterschrift (Signaturfeld) ----------
 const sigCanvasRef = useRef(null);
-const isTouchingRef = useRef(false);
-  
-const [isDrawing, setIsDrawing] = useState(false);
 const isDrawingRef = useRef(false);
 const [signatureDataURL, setSignatureDataURL] = useState("");
 
-// Canvas intern auf Gerätepixel skalieren (wichtig für Mobile)
+// EINZIGE Positionsfunktion (Touch + Pointer + React Synthetic)
+const getCanvasPos = (e, canvas) => {
+  const rect = canvas.getBoundingClientRect();
+  const ne = e?.nativeEvent ?? e; // wichtig bei React
+  const t = ne?.touches?.[0] ?? ne?.changedTouches?.[0];
+
+  const clientX = t ? t.clientX : ne.clientX;
+  const clientY = t ? t.clientY : ne.clientY;
+
+  return { x: clientX - rect.left, y: clientY - rect.top };
+};
+
+// Canvas scharf skalieren (DevicePixelRatio), Koordinaten bleiben in CSS-Pixeln
 useEffect(() => {
   const canvas = sigCanvasRef.current;
   if (!canvas) return;
@@ -372,8 +382,13 @@ useEffect(() => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // wieder in CSS-Pixeln zeichnen
+    // Koordinaten in CSS-Pixeln
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#111";
   };
 
   setup();
@@ -381,43 +396,28 @@ useEffect(() => {
   return () => window.removeEventListener("resize", setup);
 }, []);
 
-
-const getPos = (e, canvas) => {
-  const rect = canvas.getBoundingClientRect();
-  const t = e.touches && e.touches[0] ? e.touches[0] : null;
-
-  const clientX = t ? t.clientX : e.clientX;
-  const clientY = t ? t.clientY : e.clientY;
-
-  return { x: clientX - rect.left, y: clientY - rect.top };
-};
-
 const startDraw = (e) => {
- const isTouchingRef = useRef(false);
-  
   e.preventDefault();
+
   const canvas = sigCanvasRef.current;
   if (!canvas) return;
-
-  // Pointer festhalten (hilft auf Mobile)
-  if (canvas.setPointerCapture && e.pointerId != null) {
-    try { canvas.setPointerCapture(e.pointerId); } catch {}
-  }
 
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  const { x, y } = getPos(e, canvas);
+  // iOS/Safari: Pointer festhalten
+  if (canvas.setPointerCapture && e.pointerId != null) {
+    try { canvas.setPointerCapture(e.pointerId); } catch {}
+  }
+
+  const { x, y } = getCanvasPos(e, canvas);
+
   ctx.beginPath();
   ctx.moveTo(x, y);
-
   isDrawingRef.current = true;
-  setIsDrawing(true);
 };
 
-const drawMove = (e) => {  
-  const isTouchingRef = useRef(false);
-
+const drawMove = (e) => {
   if (!isDrawingRef.current) return;
   e.preventDefault();
 
@@ -427,30 +427,28 @@ const drawMove = (e) => {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  const { x, y } = getPos(e, canvas);
+  const { x, y } = getCanvasPos(e, canvas);
+
   ctx.lineTo(x, y);
   ctx.stroke();
 };
 
 const endDraw = (e) => {
-  const isTouchingRef = useRef(false);
-
   if (!isDrawingRef.current) return;
-  e.preventDefault();
-
-  isDrawingRef.current = false;
-  setIsDrawing(false);
+  e?.preventDefault?.();
 
   const canvas = sigCanvasRef.current;
   if (!canvas) return;
 
+  isDrawingRef.current = false;
   setSignatureDataURL(canvas.toDataURL("image/png"));
 
-  if (canvas.releasePointerCapture && e.pointerId != null) {
+  if (canvas.releasePointerCapture && e?.pointerId != null) {
     try { canvas.releasePointerCapture(e.pointerId); } catch {}
   }
 };
 
+// WICHTIG: außerhalb von endDraw (sonst "not defined")
 const clearSignature = () => {
   const canvas = sigCanvasRef.current;
   if (!canvas) return;
@@ -459,9 +457,8 @@ const clearSignature = () => {
   if (!ctx) return;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  setSignatureDataURL("");
   isDrawingRef.current = false;
-  setIsDrawing(false);
+  setSignatureDataURL("");
 };
 
 
@@ -1520,16 +1517,14 @@ return (
             <div className="space-y-2">
 <canvas
   ref={sigCanvasRef}
-  className="border rounded bg-white w-full h-40 touch-none"
+  className="border rounded bg-white w-full h-40"
   style={{ touchAction: "none" }}
   onPointerDown={startDraw}
   onPointerMove={drawMove}
   onPointerUp={endDraw}
   onPointerCancel={endDraw}
-  onPointerLeave={endDraw}
-  onTouchStart={startDraw}
-  onTouchMove={drawMove}
-  onTouchEnd={endDraw}
+  
+  
 />
 
 
