@@ -369,7 +369,10 @@ const onLocate = async () => {
 // -------- Unterschrift (Signaturfeld) --------
 const sigCanvasRef = React.useRef(null);
 const isDrawingRef = React.useRef(false);
-const [signatureDataURL, setSignatureDataURL] = React.useState("");
+const [signatureDataURL, setSignatureDataURL] =
+  useLocalStorageState("app.signature_v1", "");
+
+  
 
 React.useEffect(() => {
   const canvas = sigCanvasRef.current;
@@ -403,6 +406,18 @@ React.useEffect(() => {
       ev;
     return { x: p.clientX - rect.left, y: p.clientY - rect.top };
   };
+// einmal initial setzen (skaliert Canvas)
+setup();
+
+// gespeicherte Unterschrift wiederherstellen (muss NACH setup passieren)
+if (signatureDataURL) {
+  const img = new Image();
+  img.onload = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  };
+  img.src = signatureDataURL;
+}
 
   const start = (ev) => {
     ev.preventDefault();
@@ -440,9 +455,38 @@ React.useEffect(() => {
       try { canvas.releasePointerCapture(ev.pointerId); } catch {}
     }
   };
-
+const handleResize = () => {
   setup();
-  window.addEventListener("resize", setup);
+
+  if (signatureDataURL) {
+    const img = new Image();
+    img.onload = () => {
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    };
+    img.src = signatureDataURL;
+  }
+};
+
+  handleResize();
+  // Restore: gespeicherte Unterschrift nach setup() wieder ins Canvas zeichnen
+if (signatureDataURL) {
+  const img = new Image();
+  img.onload = () => {
+    // In Gerätepixeln arbeiten, damit es mit deinem DPR-Setup sauber bleibt
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  };
+  img.src = signatureDataURL;
+}
+window.addEventListener("resize", handleResize);
+  
 
   // Native Listener (WICHTIG: passive:false für iOS)
   canvas.addEventListener("pointerdown", start, { passive: false });
@@ -456,7 +500,8 @@ React.useEffect(() => {
   canvas.addEventListener("touchcancel", end, { passive: false });
 
   return () => {
-    window.removeEventListener("resize", setup);
+   window.removeEventListener("resize", handleResize);
+
 
     canvas.removeEventListener("pointerdown", start);
     canvas.removeEventListener("pointermove", move);
@@ -468,7 +513,8 @@ React.useEffect(() => {
     canvas.removeEventListener("touchend", end);
     canvas.removeEventListener("touchcancel", end);
   };
-}, []);
+}, [signatureDataURL]);
+
 
 const clearSignature = () => {
   const canvas = sigCanvasRef.current;
