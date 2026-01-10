@@ -1511,29 +1511,60 @@ return (
             )}
           </section>
 
-          {/* Unterschrift */}
-          <section className="bg-white p-4 rounded-2xl shadow">
-            <h2 className="text-lg font-semibold mb-3">Unterschrift</h2>
-            <div className="space-y-2">
-<canvas
-  ref={sigCanvasRef}
-  className="border rounded bg-white w-full h-40"
-  style={{ touchAction: "none" }}
-  onPointerDown={startDraw}
-  onPointerMove={drawMove}
-  onPointerUp={endDraw}
-  onPointerCancel={endDraw}
-  
-  
-/>
+{/* Unterschrift */}
+<section className="bg-white p-4 rounded-2xl shadow">
+  <h2 className="text-lg font-semibold mb-3">Unterschrift</h2>
 
+  <div className="space-y-2">
+    <canvas
+      ref={sigCanvasRef}
+      className="border rounded bg-white w-full h-40 block"
+      style={{
+        touchAction: "none",     // verhindert Scroll/Zoom-Gesten im Canvas (iOS)
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        WebkitTouchCallout: "none",
+      }}
+      onPointerDown={startDraw}
+      onPointerMove={drawMove}
+      onPointerUp={endDraw}
+      onPointerCancel={endDraw}
+      onPointerLeave={endDraw}
 
-              <div className="flex gap-2">
-                <button type="button" onClick={clearSignature} className="px-3 py-2 rounded-xl border">Löschen</button>
-                <span className="text-gray-500 text-sm">Bitte mit Maus/Finger unterschreiben.</span>
-              </div>
-            </div>
-          </section>
+      // iOS-Fallback, falls Pointer Events nicht sauber greifen
+      onTouchStart={(e) => {
+        e.preventDefault();
+        startDraw(e);
+      }}
+      onTouchMove={(e) => {
+        e.preventDefault();
+        drawMove(e);
+      }}
+      onTouchEnd={(e) => {
+        e.preventDefault();
+        endDraw(e);
+      }}
+      onTouchCancel={(e) => {
+        e.preventDefault();
+        endDraw(e);
+      }}
+    />
+
+    <div className="flex gap-2 items-center flex-wrap">
+      <button
+        type="button"
+        onClick={clearSignature}
+        className="px-3 py-2 rounded-xl border"
+      >
+        Löschen
+      </button>
+      <span className="text-gray-500 text-sm">
+        Bitte mit Finger/Maus unterschreiben.
+      </span>
+    </div>
+  </div>
+</section>
+
 
           {/* Meldungen & Aktionen */}
           {msg && (
