@@ -1464,8 +1464,29 @@ return (
               <input className="border rounded-xl p-2" value={form.weather} onChange={onField("weather")} />
             </label>
             <label className="md:col-span-2 flex flex-col gap-1">
-              <span className="text-sm text-gray-600">Allgemeine Bemerkungen</span>
-              <textarea className="border rounded-xl p-2" rows={3} value={form.remarks} onChange={onField("remarks")} />
+<span className="text-sm text-gray-600">
+  Management-Kurzinfo (Mängel & Sofortmaßnahmen)
+</span>
+
+<textarea
+  className="border rounded-xl p-2"
+  rows={6}
+  placeholder={`Anzahl festgestellter Mängel: 0
+
+Sofortmaßnahmen (sofort abgestellt):
+- Beispiel: Absperrung ergänzt / Kabel entfernt / PSA nachgereicht
+
+Offene Mängel (noch zu beheben):
+- Beispiel: Verantwortlich: ___ / Frist: ___`}
+  value={form.remarks}
+  onChange={onField("remarks")}
+/>
+
+<span className="text-xs text-gray-500">
+  Bitte Anzahl der Mängel sowie Sofortmaßnahmen (direkt abgestellt) und offene Punkte kurz zusammenfassen.
+</span>
+
+
             </label>
           </section>
 
