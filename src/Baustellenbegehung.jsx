@@ -811,8 +811,11 @@ autoTable(doc, {
   head: [["Feld", "Wert"]],
   body: meta,
   theme: "grid",
-  styles: { fontSize: 10, cellPadding: 2 },
+  styles: { fontSize: 10, cellPadding: 2, overflow: "linebreak" },
+
   headStyles: { fillColor: [0, 150, 136] },
+  columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: "auto" } },
+
 });
 
 y = autoTable.previous.finalY + 8;
