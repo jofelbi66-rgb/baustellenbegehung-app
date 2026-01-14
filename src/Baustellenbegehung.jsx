@@ -1158,7 +1158,7 @@ const drawSignatureBlockOnFirstPage = (doc, margin = 15) => {
   const startY = Math.max(margin + logoH + 8, 24);
 
   doc.setFontSize(16);
-  doc.text("Baustellenbegehung – Bericht", pageW / 2, startY, { align: "center" });
+  doc.text("Baustellenbegehung – Bericht (DEBUG-AKTIV)", pageW / 2, startY, { align: "center" });
 
   autoTable(doc, {
     head: [["Feld", "Wert"]],
@@ -1171,6 +1171,8 @@ const drawSignatureBlockOnFirstPage = (doc, margin = 15) => {
       ["Begehende Person", form.inspector || "-"],
       ["Wetter", form.weather || "-"],
       ["Bemerkungen", form.remarks || "-"],
+      ["Prüfumfang", "Im Bericht sind alle bewerteten Prüfpunkte aufgeführt. Nicht aufgeführte Punkte wurden nicht dokumentiert."],
+
     ],
     margin: { left: margin, right: margin, top: startY + 6 },
     styles: { fontSize: 10, cellPadding: 2 },
@@ -1189,7 +1191,10 @@ autoTable(doc, {
   startY: (doc.lastAutoTable?.finalY || startY + 10) + 6,
   margin: { left: margin, right: margin },
   theme: "grid",
-  styles: { fontSize: 9, cellPadding: 2 },
+  
+  styles: { fontSize: 10, cellPadding: 2, overflow: "linebreak" },
+columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: "auto" } },
+
   alternateRowStyles: { fillColor: [245, 245, 245] }, // Zebra
 });
 
