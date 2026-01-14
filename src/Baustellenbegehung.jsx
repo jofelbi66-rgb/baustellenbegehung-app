@@ -789,7 +789,8 @@ const drawHeader = () => {};
       // Titel
       const titleY = 40;
       doc.setFontSize(16);
-      doc.text("Baustellenbegehung – Bericht", pageW / 2, titleY, { align: "center" });
+    doc.text("Baustellenbegehung – Bericht (DEBUG-AKTIV)", pageW / 2, titleY, { align: "center" });
+
 
       // Stammdaten
       doc.setFontSize(11);
