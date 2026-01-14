@@ -193,8 +193,11 @@ export default function BaustellenbegehungApp() {
   const [inspectorName, setInspectorName] =
   useLocalStorageState("app.inspectorName", "");
 
-const [signatureDataUrl, setSignatureDataUrl] =
+const [signatureDataURL, setSignatureDataURL] =
   useLocalStorageState("app.signature_v1", "");
+ const [signatureCapturedAt, setSignatureCapturedAt] =
+  useLocalStorageState("app.signatureCapturedAt_v1", "");
+ 
 
   const [form, setForm] = useState({
     project: "",
@@ -524,6 +527,8 @@ const clearSignature = () => {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   setSignatureDataURL("");
+  setSignatureCapturedAt("");
+
   isDrawingRef.current = false;
 };
 
@@ -535,6 +540,10 @@ if (!canvas.width || !canvas.height) return;
   try {
     const dataUrl = canvas.toDataURL("image/png");
     setSignatureDataUrl(dataUrl);
+   setSignatureCapturedAt(
+  new Date().toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })
+);
+
   } catch {
     // falls etwas schief geht, einfach nichts speichern
   }
@@ -796,6 +805,8 @@ const drawHeader = () => {};
         ["Begehende Person", form.inspector || "-"],
         ["Wetter", form.weather || "-"],
         ["Bemerkungen", form.remarks || "-"],
+        ["Prüfumfang", "Im Bericht sind alle bewerteten Prüfpunkte aufgeführt. Nicht aufgeführte Punkte wurden nicht dokumentiert."],
+
       ];
 
       // y sollte der aktuelle Startpunkt *unter* dem Logo sein.
@@ -912,6 +923,13 @@ const baseY = pageH - margin - SIGN_H;
 doc.setFontSize(10);
 doc.rect(margin, baseY, boxW, SIGN_H);
 doc.text("Unterschrift Bauleitung / EHS", margin + 2, baseY + 6);
+if (signatureCapturedAt) {
+  doc.setFontSize(8);
+  doc.setTextColor(120);
+  doc.text(`Unterschrift erfasst am: ${signatureCapturedAt}`, margin + 2, baseY + 12);
+  doc.setTextColor(0);
+  doc.setFontSize(10);
+}
 
 // Box 2 (rechts)
 doc.rect(margin + boxW + GAP, baseY, boxW, SIGN_H);
@@ -1106,6 +1124,13 @@ const drawSignatureBlockOnFirstPage = (doc, margin = 15) => {
   // Signaturbild (falls vorhanden) in die Box einpassen
   if (signatureDataURL) {
     doc.addImage(signatureDataURL, "PNG", margin + 2, y + 2, boxW - 4, boxH - 4, undefined, "FAST");
+    if (signatureCapturedAt) {
+  doc.setFontSize(8);
+  doc.setTextColor(120);
+  doc.text(`Unterschrift erfasst am: ${signatureCapturedAt}`, margin + 2, y + boxH + 4);
+  doc.setTextColor(0);
+}
+
   }
 };
  
