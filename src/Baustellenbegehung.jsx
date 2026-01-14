@@ -369,6 +369,8 @@ const sigCanvasRef = React.useRef(null);
 const isDrawingRef = React.useRef(false);
 const [signatureDataURL, setSignatureDataURL] =
   useLocalStorageState("app.signature_v1", "");
+const [signatureCapturedAt, setSignatureCapturedAt] =
+  useLocalStorageState("app.signatureCapturedAt_v1", "");
 
   
 
