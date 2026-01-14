@@ -1158,7 +1158,7 @@ const drawSignatureBlockOnFirstPage = (doc, margin = 15) => {
   const startY = Math.max(margin + logoH + 8, 24);
 
   doc.setFontSize(16);
-  doc.text("Baustellenbegehung – Bericht (DEBUG-AKTIV)", pageW / 2, startY, { align: "center" });
+doc.text("Baustellenbegehung – Bericht", pageW / 2, startY, { align: "center" });
 
   autoTable(doc, {
     head: [["Feld", "Wert"]],
