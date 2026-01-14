@@ -805,6 +805,17 @@ const drawHeader = () => {};
         ["Prüfumfang", "Im Bericht sind alle bewerteten Prüfpunkte aufgeführt. Nicht aufgeführte Punkte wurden nicht dokumentiert."],
 
       ];
+autoTable(doc, {
+  startY: y,
+  margin: { left: 15, right: 15 },
+  head: [["Feld", "Wert"]],
+  body: meta,
+  theme: "grid",
+  styles: { fontSize: 10, cellPadding: 2 },
+  headStyles: { fillColor: [0, 150, 136] },
+});
+
+y = autoTable.previous.finalY + 8;
 
       // y sollte der aktuelle Startpunkt *unter* dem Logo sein.
 // Falls du kein y nutzt, ersetze startY unten durch deinen Wert (z. B. 30–40).
