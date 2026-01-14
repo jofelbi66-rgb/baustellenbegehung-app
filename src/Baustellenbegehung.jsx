@@ -803,6 +803,7 @@ const drawHeader = () => {};
         ["Wetter", form.weather || "-"],
         ["Bemerkungen", form.remarks || "-"],
         ["Prüfumfang", "Im Bericht sind alle bewerteten Prüfpunkte aufgeführt. Nicht aufgeführte Punkte wurden nicht dokumentiert."],
+["DEBUG", "META-ARRAY IST AKTIV"],
 
       ];
 autoTable(doc, {
