@@ -193,11 +193,6 @@ export default function BaustellenbegehungApp() {
   const [inspectorName, setInspectorName] =
   useLocalStorageState("app.inspectorName", "");
 
-const [signatureDataURL, setSignatureDataURL] =
-  useLocalStorageState("app.signature_v1", "");
- const [signatureCapturedAt, setSignatureCapturedAt] =
-  useLocalStorageState("app.signatureCapturedAt_v1", "");
- 
 
   const [form, setForm] = useState({
     project: "",
