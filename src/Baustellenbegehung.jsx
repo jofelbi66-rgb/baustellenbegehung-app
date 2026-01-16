@@ -223,6 +223,8 @@ const [openCats, setOpenCats] = useState(() => {
   for (const cat of CATEGORIES) init[cat.key] = false; // alles zu
   return init;
 });
+ };
+ 
 export default function BaustellenbegehungApp() {
   const now = useNowISOLocal();
 
