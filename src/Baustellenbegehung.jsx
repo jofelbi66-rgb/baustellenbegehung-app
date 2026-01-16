@@ -967,27 +967,27 @@ if (typeof y === "number") {
     y = margin;
   }
 }
-*/
+
 
 // Position fest von unten berechnen (damit garantiert sichtbar)
-const baseY = pageH - margin - SIGN_H;
+// const baseY = pageH - margin - SIGN_H;
 
 // Box 1 (links)
-doc.setFontSize(10);
-doc.rect(margin, baseY, boxW, SIGN_H);
-doc.text("Unterschrift Bauleitung / EHS", margin + 2, baseY + 6);
-if (signatureCapturedAt) {
-  doc.setFontSize(8);
-  doc.setTextColor(120);
-  doc.text(`Unterschrift erfasst am: ${signatureCapturedAt}`, margin + 2, baseY + 12);
-  doc.setTextColor(0);
-  doc.setFontSize(10);
+//doc.setFontSize(10);
+//doc.rect(margin, baseY, boxW, SIGN_H);
+//doc.text("Unterschrift Bauleitung / EHS", margin + 2, baseY + 6);
+//if (signatureCapturedAt) {
+  //doc.setFontSize(8);
+  //doc.setTextColor(120);
+  //doc.text(`Unterschrift erfasst am: ${signatureCapturedAt}`, margin + 2, baseY + 12);
+  //doc.setTextColor(0);
+  //doc.setFontSize(10);
 }
 
 // Box 2 (rechts)
-doc.rect(margin + boxW + GAP, baseY, boxW, SIGN_H);
-doc.text("Unterschrift Auftragnehmer", margin + boxW + GAP + 2, baseY + 6);
-*/
+//doc.rect(margin + boxW + GAP, baseY, boxW, SIGN_H);
+//doc.text("Unterschrift Auftragnehmer", margin + boxW + GAP + 2, baseY + 6);
+
 
 // Kleine Fußzeile über dem Seitenrand
 doc.setFontSize(8);
