@@ -1049,7 +1049,7 @@ doc.setTextColor(0);
     }
     // Falls alle Versuche > 1 MB sind, letzten trotzdem speichern
     const fallback = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-  const fallback = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+
 fallback.text("Bericht überschreitet 1 MB trotz Kompression.", 10, 10);
 const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
 fallback.save(`Begehung_${safeName}.pdf`);
