@@ -1108,7 +1108,8 @@ return false;
   setMsg(null);
 
   try {
-    await sendPdfToMail();
+   await withUserAction(() => sendPdfToMail());
+ 
     setMsg({ type: "ok", text: "E-Mail mit PDF-Anhang wurde versendet." });
   } catch (error) {
     console.error("E-Mail Versand fehlgeschlagen:", error);
