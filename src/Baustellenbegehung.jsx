@@ -897,9 +897,10 @@ y = sigY + SIGN_H + 12;
   alternateRowStyles: { fillColor: [245, 245, 245] }, // Zebra
 });
 
+let y = (doc.lastAutoTable?.finalY ?? 50) + 8;
 
       // Unterschrift (falls vorhanden)
-      let y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 8 : 50;
+   
     
 
       // Fotos (2 pro Zeile Raster) – vorher neu komprimieren auf att.maxPx / att.q
@@ -954,7 +955,7 @@ y = sigY + SIGN_H + 12;
         const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
        await addPhotosSection(doc, checklist, CATEGORIES);
 // --- Unterschriftenblock: immer sichtbar am Seitenende ---
-const SIGN_H = 40;          // Höhe der Unterschriftsfelder
+const SIGN_H = 30;          // Höhe der Unterschriftsfelder
 const GAP    = 10;          // Abstand zwischen den Feldern
 const boxW   = (pageW - 2 * margin - GAP) / 2;
 
@@ -967,6 +968,33 @@ if (typeof y === "number") {
     y = margin;
   }
 }
+// --- Unterschriftenblock: direkt unterhalb der letzten Tabellenzeile ---
+const baseY = y; // y kommt aus doc.lastAutoTable.finalY + 8 (also "unter der Tabelle")
+
+// Box 1 (links)
+doc.setFontSize(10);
+doc.rect(margin, baseY, boxW, SIGN_H);
+doc.text("Unterschrift Bauleitung / EHS", margin + 2, baseY + 6);
+
+if (signatureCapturedAt) {
+  doc.setFontSize(8);
+  doc.setTextColor(120);
+  doc.text(`Unterschrift erfasst am: ${signatureCapturedAt}`, margin + 2, baseY + 12);
+  doc.setTextColor(0);
+  doc.setFontSize(10);
+}
+
+// Signaturbild (falls vorhanden) in die Box einpassen
+if (signatureDataURL) {
+  doc.addImage(signatureDataURL, "PNG", margin + 2, baseY + 2, boxW - 4, SIGN_H - 4, undefined, "FAST");
+}
+
+// Box 2 (rechts)
+doc.rect(margin + boxW + GAP, baseY, boxW, SIGN_H);
+doc.text("Unterschrift Auftragnehmer", margin + boxW + GAP + 2, baseY + 6);
+
+// WICHTIG: y nach der Unterschrift weiterschieben (damit Fotos darunter beginnen)
+y = baseY + SIGN_H + 8;
 
 
 // Position fest von unten berechnen (damit garantiert sichtbar)
@@ -1021,11 +1049,13 @@ doc.setTextColor(0);
     }
     // Falls alle Versuche > 1 MB sind, letzten trotzdem speichern
     const fallback = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-    fallback.text("Bericht überschreitet 1 MB trotz Kompression.", 10, 10);
-    const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
-    fallback.save(`Begehung_${safeName}.pdf`);
-    return false;
-  };
+  const fallback = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+fallback.text("Bericht überschreitet 1 MB trotz Kompression.", 10, 10);
+const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
+fallback.save(`Begehung_${safeName}.pdf`);
+return false;
+// <- HIER KEINE zusätzliche "}" einfügen
+
 
   const findNoteForPhoto = (index) => {
     // Einfache Heuristik: erste Notiz aus der Checkliste, die zu Bildindex passt (optional erweiterbar)
