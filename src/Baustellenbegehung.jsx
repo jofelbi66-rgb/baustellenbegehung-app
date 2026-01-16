@@ -1358,7 +1358,10 @@ const file = new File([blob], fileName, { type: "application/pdf" });
     alert("Teilen wird von diesem Browser/Gerät nicht unterstützt – PDF wurde gespeichert.");
   }
 
-
+  } catch (err) {
+    console.error("PDF-Fehler:", err);
+    alert("PDF konnte nicht erstellt werden. Details in der Konsole.");
+  }
 };
 
 
