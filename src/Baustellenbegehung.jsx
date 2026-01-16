@@ -941,7 +941,7 @@ y = sigY + SIGN_H + 12;
       }
 
       // Seitenzähler + Fußzeile auf alle Seiten nachträglich
-      const total = doc.internal.getNumberOfPages();
+      doc.internal.getNumberOfPages();
       for (let p = 1; p <= total; p++) {
         doc.setPage(p);
         drawFooter(doc, pageW, margin, p, total);
@@ -1248,7 +1248,7 @@ drawSignatureBlockOnFirstPage(doc, margin);
 
   await addPhotosSection(doc, checklist, CATEGORIES);
    // Footer auf alle Seiten: Datum · Begeher | Seite x von y
-const total = doc.internal.getNumberOfPages();
+doc.internal.getNumberOfPages();
 for (let p = 1; p <= total; p++) {
   doc.setPage(p);
   drawFooter(doc, p, total, margin);
@@ -1751,4 +1751,4 @@ Offene Mängel (noch zu beheben):
       </div>
     </div>
   );
-}
+
