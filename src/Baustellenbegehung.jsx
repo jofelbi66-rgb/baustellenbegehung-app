@@ -223,6 +223,31 @@ const [openCats, setOpenCats] = useState(() => {
   for (const cat of CATEGORIES) init[cat.key] = false; // alles zu
   return init;
 });
+export default function BaustellenbegehungApp() {
+  const now = useNowISOLocal();
+
+  const sigCanvasRef = React.useRef(null);
+  const isDrawingRef = React.useRef(false);
+
+  const [signatureDataURL, setSignatureDataURL] =
+    useLocalStorageState("app.signature_v1", "");
+
+  const [signatureCapturedAt, setSignatureCapturedAt] =
+    useLocalStorageState("app.signatureCapturedAt_v1", "");
+
+  // >>> HIER EINFÜGEN (Gate-Block) <<<
+  const userActionRef = React.useRef(false);
+
+  const withUserAction = async (fn) => {
+    userActionRef.current = true;
+    try {
+      return await fn();
+    } finally {
+      userActionRef.current = false;
+    }
+  };
+
+  // ... danach kommen deine Funktionen wie saveSignature(), sendPdfToMail() usw.
 
 const [checklist, setChecklist] = useState(() => {
   const init = {};
