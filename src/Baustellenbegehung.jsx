@@ -837,6 +837,45 @@ autoTable(doc, {
 
 // danach y neu setzen, falls du weiter unten noch zeichnest:
 y = autoTable.previous.finalY + 8;
+// ================= Unterschrift (dynamisch nach Checkliste) =================
+let sigY = y + 6; // kleiner Abstand nach der Tabelle
+
+const SIG_TITLE_H = 8;
+const SIG_TS_H = signatureCapturedAt ? 6 : 0;
+const SIG_BLOCK_H = SIG_TITLE_H + SIGN_H + SIG_TS_H + 6;
+
+// Wenn nicht genug Platz: neue Seite
+if (sigY + SIG_BLOCK_H > pageH - margin) {
+  doc.addPage();
+  sigY = margin;
+}
+
+// Überschrift
+doc.setFontSize(11);
+doc.setTextColor(0);
+doc.text("Unterschrift", margin, sigY);
+sigY += SIG_TITLE_H;
+
+// Unterschriften-Box
+doc.setFontSize(10);
+doc.rect(margin, sigY, boxW, SIGN_H);
+doc.text("Unterschrift Bauleitung / EHS", margin + 2, sigY + 6);
+
+// Signaturbild (falls vorhanden)
+if (signatureDataURL) {
+  doc.addImage(signatureDataURL, "PNG", margin + 2, sigY + 2, boxW - 4, SIGN_H - 4, undefined, "FAST");
+}
+
+// Zeitstempel unter die Box
+if (signatureCapturedAt) {
+  doc.setFontSize(8);
+  doc.setTextColor(120);
+  doc.text(`Unterschrift erfasst am: ${signatureCapturedAt}`, margin + 2, sigY + SIGN_H + 6);
+  doc.setTextColor(0);
+}
+
+// y unterhalb der Unterschrift weiterführen
+y = sigY + SIGN_H + 12;
 
 
       // Checkliste mit Zebra
@@ -928,6 +967,7 @@ if (typeof y === "number") {
     y = margin;
   }
 }
+*/
 
 // Position fest von unten berechnen (damit garantiert sichtbar)
 const baseY = pageH - margin - SIGN_H;
@@ -947,6 +987,7 @@ if (signatureCapturedAt) {
 // Box 2 (rechts)
 doc.rect(margin + boxW + GAP, baseY, boxW, SIGN_H);
 doc.text("Unterschrift Auftragnehmer", margin + boxW + GAP + 2, baseY + 6);
+*/
 
 // Kleine Fußzeile über dem Seitenrand
 doc.setFontSize(8);
