@@ -1751,4 +1751,4 @@ Offene Mängel (noch zu beheben):
       </div>
     </div>
   );
-
+}
