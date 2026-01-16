@@ -1769,9 +1769,15 @@ Offene Mängel (noch zu beheben):
           )}
 
           <div className="flex items-center gap-3 flex-wrap">
-            <button type="submit" disabled={busy} className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60">
-              {busy ? "Sende…" : "Begehung per E-Mail senden"}
-            </button>
+          <button
+  type="button"
+  onClick={onSubmit}
+  disabled={busy}
+  className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60"
+>
+  {busy ? "Sende…" : "Begehung per E-Mail senden"}
+</button>
+
 
 
 
