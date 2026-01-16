@@ -1069,18 +1069,30 @@ return false;
     return null;
   };
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    const err = validate();
-    if (err) { setMsg({ type: "error", text: err }); return; }
-    setBusy(true); setMsg(null);
-    try {
-await sendPdfToMail();
-setMsg({ type: "ok", text: "E-Mail mit PDF-Anhang wurde versendet." });
+ const onSubmit = async (e) => {
+  // funktioniert sowohl für <form onSubmit> als auch für Button onClick
+  if (e?.preventDefault) e.preventDefault();
 
-    
-    } finally { setBusy(false); }
-  };
+  const err = validate();
+  if (err) {
+    setMsg({ type: "error", text: err });
+    return;
+  }
+
+  setBusy(true);
+  setMsg(null);
+
+  try {
+    await sendPdfToMail();
+    setMsg({ type: "ok", text: "E-Mail mit PDF-Anhang wurde versendet." });
+  } catch (error) {
+    console.error("E-Mail Versand fehlgeschlagen:", error);
+    setMsg({ type: "error", text: "Versand fehlgeschlagen. Details in der Konsole." });
+  } finally {
+    setBusy(false);
+  }
+};
+
 
   /* ===================== UI ===================== */
 // ----------------------
@@ -1447,9 +1459,10 @@ return (
 </div>
 
         
+<form onSubmit={(e) => e.preventDefault()} className="space-y-6">
 
 
-        <form onSubmit={onSubmit} className="space-y-6">
+       
           {/* Stammdaten */}
           <section className="grid md:grid-cols-2 gap-4 bg-white p-4 rounded-2xl shadow">
             <h2 className="md:col-span-2 text-lg font-semibold">Stammdaten</h2>
