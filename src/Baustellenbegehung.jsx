@@ -218,16 +218,11 @@ useEffect(() => {
   localStorage.setItem("app.ccEmail", ccEmail);
 }, [ccEmail]);
 const [showOnlyOpen, setShowOnlyOpen] = useState(false);
-
 const [openCats, setOpenCats] = useState(() => {
   const init = {};
   for (const cat of CATEGORIES) init[cat.key] = false; // alles zu
   return init;
 });
-
- 
-
-  // ... danach kommen deine Funktionen wie saveSignature(), sendPdfToMail() usw.
 
 const [checklist, setChecklist] = useState(() => {
   const init = {};
@@ -842,45 +837,6 @@ autoTable(doc, {
 
 // danach y neu setzen, falls du weiter unten noch zeichnest:
 y = autoTable.previous.finalY + 8;
-// ================= Unterschrift (dynamisch nach Checkliste) =================
-let sigY = y + 6; // kleiner Abstand nach der Tabelle
-
-const SIG_TITLE_H = 8;
-const SIG_TS_H = signatureCapturedAt ? 6 : 0;
-const SIG_BLOCK_H = SIG_TITLE_H + SIGN_H + SIG_TS_H + 6;
-
-// Wenn nicht genug Platz: neue Seite
-if (sigY + SIG_BLOCK_H > pageH - margin) {
-  doc.addPage();
-  sigY = margin;
-}
-
-// Überschrift
-doc.setFontSize(11);
-doc.setTextColor(0);
-doc.text("Unterschrift", margin, sigY);
-sigY += SIG_TITLE_H;
-
-// Unterschriften-Box
-doc.setFontSize(10);
-doc.rect(margin, sigY, boxW, SIGN_H);
-doc.text("Unterschrift Bauleitung / EHS", margin + 2, sigY + 6);
-
-// Signaturbild (falls vorhanden)
-if (signatureDataURL) {
-  doc.addImage(signatureDataURL, "PNG", margin + 2, sigY + 2, boxW - 4, SIGN_H - 4, undefined, "FAST");
-}
-
-// Zeitstempel unter die Box
-if (signatureCapturedAt) {
-  doc.setFontSize(8);
-  doc.setTextColor(120);
-  doc.text(`Unterschrift erfasst am: ${signatureCapturedAt}`, margin + 2, sigY + SIGN_H + 6);
-  doc.setTextColor(0);
-}
-
-// y unterhalb der Unterschrift weiterführen
-y = sigY + SIGN_H + 12;
 
 
       // Checkliste mit Zebra
@@ -902,10 +858,9 @@ y = sigY + SIGN_H + 12;
   alternateRowStyles: { fillColor: [245, 245, 245] }, // Zebra
 });
 
-let y = (doc.lastAutoTable?.finalY ?? 50) + 8;
 
       // Unterschrift (falls vorhanden)
-   
+      let y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 8 : 50;
     
 
       // Fotos (2 pro Zeile Raster) – vorher neu komprimieren auf att.maxPx / att.q
@@ -947,7 +902,7 @@ let y = (doc.lastAutoTable?.finalY ?? 50) + 8;
       }
 
       // Seitenzähler + Fußzeile auf alle Seiten nachträglich
-      doc.internal.getNumberOfPages();
+      const total = doc.internal.getNumberOfPages();
       for (let p = 1; p <= total; p++) {
         doc.setPage(p);
         drawFooter(doc, pageW, margin, p, total);
@@ -960,7 +915,7 @@ let y = (doc.lastAutoTable?.finalY ?? 50) + 8;
         const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
        await addPhotosSection(doc, checklist, CATEGORIES);
 // --- Unterschriftenblock: immer sichtbar am Seitenende ---
-const SIGN_H = 30;          // Höhe der Unterschriftsfelder
+const SIGN_H = 40;          // Höhe der Unterschriftsfelder
 const GAP    = 10;          // Abstand zwischen den Feldern
 const boxW   = (pageW - 2 * margin - GAP) / 2;
 
@@ -973,14 +928,14 @@ if (typeof y === "number") {
     y = margin;
   }
 }
-// --- Unterschriftenblock: direkt unterhalb der letzten Tabellenzeile ---
-const baseY = y; // y kommt aus doc.lastAutoTable.finalY + 8 (also "unter der Tabelle")
+
+// Position fest von unten berechnen (damit garantiert sichtbar)
+const baseY = pageH - margin - SIGN_H;
 
 // Box 1 (links)
 doc.setFontSize(10);
 doc.rect(margin, baseY, boxW, SIGN_H);
 doc.text("Unterschrift Bauleitung / EHS", margin + 2, baseY + 6);
-
 if (signatureCapturedAt) {
   doc.setFontSize(8);
   doc.setTextColor(120);
@@ -989,38 +944,9 @@ if (signatureCapturedAt) {
   doc.setFontSize(10);
 }
 
-// Signaturbild (falls vorhanden) in die Box einpassen
-if (signatureDataURL) {
-  doc.addImage(signatureDataURL, "PNG", margin + 2, baseY + 2, boxW - 4, SIGN_H - 4, undefined, "FAST");
-}
-
 // Box 2 (rechts)
 doc.rect(margin + boxW + GAP, baseY, boxW, SIGN_H);
 doc.text("Unterschrift Auftragnehmer", margin + boxW + GAP + 2, baseY + 6);
-
-// WICHTIG: y nach der Unterschrift weiterschieben (damit Fotos darunter beginnen)
-y = baseY + SIGN_H + 8;
-
-
-// Position fest von unten berechnen (damit garantiert sichtbar)
-// const baseY = pageH - margin - SIGN_H;
-
-// Box 1 (links)
-//doc.setFontSize(10);
-//doc.rect(margin, baseY, boxW, SIGN_H);
-//doc.text("Unterschrift Bauleitung / EHS", margin + 2, baseY + 6);
-//if (signatureCapturedAt) {
-  //doc.setFontSize(8);
-  //doc.setTextColor(120);
-  //doc.text(`Unterschrift erfasst am: ${signatureCapturedAt}`, margin + 2, baseY + 12);
-  //doc.setTextColor(0);
-  //doc.setFontSize(10);
-}
-
-// Box 2 (rechts)
-//doc.rect(margin + boxW + GAP, baseY, boxW, SIGN_H);
-//doc.text("Unterschrift Auftragnehmer", margin + boxW + GAP + 2, baseY + 6);
-
 
 // Kleine Fußzeile über dem Seitenrand
 doc.setFontSize(8);
@@ -1047,15 +973,18 @@ for (let i = 1; i <= total; i++) {
 doc.setTextColor(0);
         
         
-// --- TEMP: Autodownload deaktiviert (sonst ploppt PDF beim Laden auf) ---
-console.warn("PDF-SAVE deaktiviert (Debug):", safeName);
-
-// Wenn du später wieder speichern willst: doc.save(...) und fallback.save(...) wieder aktivieren
-return true;
-// --- TEMP ENDE ---
-  
-// <- HIER KEINE zusätzliche "}" einfügen
-
+        doc.save(`Begehung_${safeName}.pdf`);
+        return true;
+      }
+      // andernfalls nächsten Versuch mit stärkerer Kompression
+    }
+    // Falls alle Versuche > 1 MB sind, letzten trotzdem speichern
+    const fallback = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+    fallback.text("Bericht überschreitet 1 MB trotz Kompression.", 10, 10);
+    const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
+    fallback.save(`Begehung_${safeName}.pdf`);
+    return false;
+  };
 
   const findNoteForPhoto = (index) => {
     // Einfache Heuristik: erste Notiz aus der Checkliste, die zu Bildindex passt (optional erweiterbar)
@@ -1069,31 +998,18 @@ return true;
     return null;
   };
 
- const onSubmit = async (e) => {
-  // funktioniert sowohl für <form onSubmit> als auch für Button onClick
-  if (e?.preventDefault) e.preventDefault();
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    const err = validate();
+    if (err) { setMsg({ type: "error", text: err }); return; }
+    setBusy(true); setMsg(null);
+    try {
+await sendPdfToMail();
+setMsg({ type: "ok", text: "E-Mail mit PDF-Anhang wurde versendet." });
 
-  const err = validate();
-  if (err) {
-    setMsg({ type: "error", text: err });
-    return;
-  }
-
-  setBusy(true);
-  setMsg(null);
-
-  try {
-   await withUserAction(() => sendPdfToMail());
- 
-    setMsg({ type: "ok", text: "E-Mail mit PDF-Anhang wurde versendet." });
-  } catch (error) {
-    console.error("E-Mail Versand fehlgeschlagen:", error);
-    setMsg({ type: "error", text: "Versand fehlgeschlagen. Details in der Konsole." });
-  } finally {
-    setBusy(false);
-  }
-};
-
+    
+    } finally { setBusy(false); }
+  };
 
   /* ===================== UI ===================== */
 // ----------------------
@@ -1179,8 +1095,7 @@ async function onLogoUpload(e) {
     doc.text(`Datum: ${new Date(form.date).toLocaleString()}`, margin, y); y += 6;
     doc.text(`Ersteller: ${form.inspector || "-"}`, margin, y); y += 6;
 
- // doc.save("bericht-test.pdf"); // TEST: deaktiviert, damit kein Autostart-PDF beim Laden entsteht
-
+    doc.save("bericht-test.pdf");
   } catch (err) {
     console.error("PDF-Fehler:", err);
     alert("PDF konnte nicht erzeugt werden. Details in der Konsole.");
@@ -1233,10 +1148,7 @@ const drawSignatureBlockOnFirstPage = (doc, margin = 15) => {
 };
  
 
-const sendPdfToMail = async () => {
-  if (!userActionRef.current) return; // WICHTIG: nur nach Klick/Submit erlauben
-
-
+ const sendPdfToMail = async () => {
   // PDF erzeugen (Report)
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
   const pageW = doc.internal.pageSize.getWidth();
@@ -1295,7 +1207,7 @@ drawSignatureBlockOnFirstPage(doc, margin);
 
   await addPhotosSection(doc, checklist, CATEGORIES);
    // Footer auf alle Seiten: Datum · Begeher | Seite x von y
-doc.internal.getNumberOfPages();
+const total = doc.internal.getNumberOfPages();
 for (let p = 1; p <= total; p++) {
   doc.setPage(p);
   drawFooter(doc, p, total, margin);
@@ -1335,8 +1247,6 @@ for (let p = 1; p <= total; p++) {
 
 // === einfache PDF-Erzeugung ===
 const sharePdf = async () => {
-  if (!userActionRef.current) return; // <- WICHTIG: blockt Autostart
-
   try {
     // Erzeuge PDF genauso wie beim Speichern:
     const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
@@ -1407,10 +1317,10 @@ const file = new File([blob], fileName, { type: "application/pdf" });
     alert("Teilen wird von diesem Browser/Gerät nicht unterstützt – PDF wurde gespeichert.");
   }
 
-  } catch (err) {
-    console.error("PDF-Fehler:", err);
-    alert("PDF konnte nicht erstellt werden. Details in der Konsole.");
-  }
+} catch (err) {
+  console.error("PDF-Fehler:", err);
+  alert("PDF konnte nicht erstellt werden. Details in der Konsole.");
+}
 };
 
 
@@ -1466,11 +1376,9 @@ return (
 </div>
 
         
-<form onSubmit={onSubmit} className="space-y-6">
 
 
-
-       
+        <form onSubmit={onSubmit} className="space-y-6">
           {/* Stammdaten */}
           <section className="grid md:grid-cols-2 gap-4 bg-white p-4 rounded-2xl shadow">
             <h2 className="md:col-span-2 text-lg font-semibold">Stammdaten</h2>
@@ -1790,15 +1698,9 @@ Offene Mängel (noch zu beheben):
           )}
 
           <div className="flex items-center gap-3 flex-wrap">
-       <button
-  type="submit"
-  disabled={busy}
-  className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60"
->
-  {busy ? "Sende..." : "Begehung per E-Mail senden"}
-</button>
-
-
+            <button type="submit" disabled={busy} className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60">
+              {busy ? "Sende…" : "Begehung per E-Mail senden"}
+            </button>
 
 
 
