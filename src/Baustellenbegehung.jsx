@@ -218,12 +218,13 @@ useEffect(() => {
   localStorage.setItem("app.ccEmail", ccEmail);
 }, [ccEmail]);
 const [showOnlyOpen, setShowOnlyOpen] = useState(false);
+
 const [openCats, setOpenCats] = useState(() => {
   const init = {};
   for (const cat of CATEGORIES) init[cat.key] = false; // alles zu
   return init;
 });
- };
+
  
 
   // ... danach kommen deine Funktionen wie saveSignature(), sendPdfToMail() usw.
