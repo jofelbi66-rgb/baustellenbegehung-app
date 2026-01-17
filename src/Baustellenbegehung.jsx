@@ -1290,7 +1290,117 @@ y = boxY + boxH + (signatureCapturedAt ? 10 : 6);
 
    
 // Checkpunkt-Fotos
-await addPhotosSection(doc, checklist, CATEGORIES);
+/* ===========================
+   1) AUFRUFSTELLE ERSETZEN
+   ===========================
+
+   Suche diese Zeile (bei dir nach der Unterschrift, ca. Zeile 1293):
+     await addPhotosSection(doc, checklist, CATEGORIES);
+
+   Ersetze sie 1:1 durch:
+*/
+y = await addPhotosSection(doc, checklist, CATEGORIES, y);
+
+
+/* ===========================
+   2) FUNKTIONSDEFINITION 1:1 ERSETZEN
+   ===========================
+
+   Suche die komplette Funktion `addPhotosSection` in deiner Datei und ersetze sie
+   vollständig durch diese Version.
+
+   WICHTIG:
+   - Diese Version startet exakt bei `startY` (also unter der Unterschrift).
+   - Sie zeichnet bei Seitenumbruch den Header nach (drawHeader).
+   - Sie arbeitet mit deinem vorhandenen findNoteForPhoto(i), recompressImage(...),
+     images-Array, pageW, margin, drawHeader(...) — genauso wie dein bisheriger Loop.
+*/
+
+async function addPhotosSection(doc, checklist, CATEGORIES, startY) {
+  // Startposition von außen übernehmen
+  let y = startY;
+
+  // Fotos (2 pro Zeile Raster) – vorher neu komprimieren auf att.maxPx / att.q
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const colGap = 6;
+  const cols = 2;
+
+  const maxWPerCol = (pageW - margin * 2 - colGap) / cols; // mm
+  const maxHmm = 60; // mm pro Bild
+
+  let col = 0;
+
+  for (let i = 0; i < images.length; i++) {
+    try {
+      const recompressed = await recompressImage(images[i], att.maxPx, att.q);
+
+      // Größe bestimmen
+      const tmp = new Image();
+      await new Promise((r) => {
+        tmp.onload = r;
+        tmp.src = recompressed;
+      });
+
+      const px2mm = 0.264583; // 96 dpi -> mm
+      let w = tmp.width * px2mm;
+      let h = tmp.height * px2mm;
+
+      const ratio = Math.min(maxWPerCol / w, maxHmm / h, 1);
+      w = Math.max(10, Math.round(w * ratio));
+      h = Math.max(10, Math.round(h * ratio));
+
+      // Caption VOR der Platzprüfung ermitteln (damit sie mitgerechnet wird)
+      const caption = findNoteForPhoto(i);
+      const captionH = caption ? 5 : 0;
+
+      // Benötigte Höhe (Fototitel + Bild + Abstand + optionale Caption)
+      const neededH = 4 + h + 3 + captionH;
+
+      const bottomLimit = pageH - margin;
+
+      // Seitenumbruch (mit Margin statt harter 287)
+      if (y + neededH > bottomLimit) {
+        doc.addPage();
+        drawHeader(doc, pageW, margin);
+        y = margin + 5; // Start unterhalb Header
+        col = 0;
+      }
+
+      // X-Position je Spalte
+      const x = margin + col * (maxWPerCol + colGap);
+
+      doc.setFontSize(10);
+      doc.text(`Foto ${i + 1}`, x, y);
+      y += 4;
+
+      doc.addImage(recompressed, "JPEG", x, y, w, h, undefined, "FAST");
+
+      // unter Bild
+      y += h + 3;
+
+      // Caption, falls Notiz existiert
+      if (caption) {
+        doc.setFontSize(9);
+        doc.text(String(caption).slice(0, 120), x, y);
+        y += 5;
+      }
+
+      // Nächste Spalte / Zeile
+      col = (col + 1) % cols;
+      if (col === 0) y += 6;
+    } catch (err) {
+      // Bildfehler ignorieren, aber Loop fortsetzen
+      console.error("Foto konnte nicht ins PDF gerendert werden:", err);
+      col = 0;
+      y += 6;
+    }
+  }
+
+  return y;
+}
+
+
 
 // Dateiname
 const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
