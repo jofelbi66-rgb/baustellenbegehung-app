@@ -1242,7 +1242,8 @@ doc.setPage(lastPage);
 let y = doc.lastAutoTable.finalY + 8;
 
 const pageH = doc.internal.pageSize.getHeight();
-const signatureBlockHeight = 45;
+const signatureBlockHeight = signatureCapturedAt ? 38 : 30;
+
 
 // Wenn nicht genug Platz: neue Seite VOR der Unterschrift
 if (y + signatureBlockHeight > pageH - margin) {
@@ -1251,24 +1252,40 @@ if (y + signatureBlockHeight > pageH - margin) {
   y = margin + 5;
 }
 
-// Unterschrift zeichnen
-doc.setFontSize(12);
+// Unterschrift zeichnen (Feld + optionales Signaturbild)
+doc.setFont("helvetica", "bold");
+doc.setFontSize(11);
 doc.text("Unterschrift", margin, y);
 
-doc.setFontSize(10);
-const line1Y = y + 14;
-doc.text("Name / Funktion", margin, line1Y - 3);
-doc.line(margin, line1Y, margin + 90, line1Y);
+// Box-Groessen wie vorher (aber jetzt dynamisch)
+const boxW = 80;
+const boxH = 18;
 
-const line2Y = y + 30;
-doc.text("Unterschrift", margin, line2Y - 3);
-doc.line(margin, line2Y, margin + 90, line2Y);
+// Box unter der Überschrift platzieren
+const boxY = y + 6;
 
-doc.text("Datum", margin + 110, line1Y - 3);
-doc.line(margin + 110, line1Y, margin + 170, line1Y);
+// Rahmenbox
+doc.setDrawColor(180);
+doc.rect(margin, boxY, boxW, boxH);
 
-// Cursor unterhalb der Unterschrift
-y += signatureBlockHeight;
+// Signaturbild (falls vorhanden) in die Box einpassen
+if (signatureDataURL) {
+  doc.addImage(signatureDataURL, "PNG", margin + 2, boxY + 2, boxW - 4, boxH - 4, undefined, "FAST");
+
+  // Zeitstempel unterhalb der Box (falls vorhanden)
+  if (signatureCapturedAt) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text(`Unterschrift erfasst am: ${signatureCapturedAt}`, margin, boxY + boxH + 6);
+    doc.setTextColor(0);
+  }
+}
+
+doc.setFont("helvetica", "normal");
+
+// Cursor unterhalb der Unterschrift weiter setzen
+y = boxY + boxH + (signatureCapturedAt ? 10 : 6);
 
    
 // Checkpunkt-Fotos
