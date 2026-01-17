@@ -774,7 +774,7 @@ const drawHeader = () => {};
 
     // Originalbilder ggf. weiter komprimieren pro Versuch
     for (const att of attempts) {
-      const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const doc = new ({ unit: "mm", format: "a4", orientation: "portrait" });
       await addLogoTopRight(doc, logoSrc);
 
       const pageW = doc.internal.pageSize.getWidth();
@@ -842,6 +842,7 @@ y = autoTable.previous.finalY + 8;
       // Checkliste mit Zebra
       const rows = buildChecklistRows();
     autoTable(doc, {
+      
   head: [["Feld", "Wert"]],
   body: [
     ["Projekt", form.project || "-"],
@@ -857,10 +858,45 @@ y = autoTable.previous.finalY + 8;
   styles: { fontSize: 10, cellPadding: 2 },
   alternateRowStyles: { fillColor: [245, 245, 245] }, // Zebra
 });
+const tableEndY = doc.lastAutoTable.finalY;
+let y = tableEndY + 8;
 
+// SIGNATURE_DYNAMIC_OK (alte Signatur am Seitenende muss entfernt werden)
 
       // Unterschrift (falls vorhanden)
-      let y = doc.lastAutoTable ? doc.lastAutoTable.finalY + 8 : 50;
+      const pageHeight = doc.internal.pageSize.getHeight();
+const marginBottom = margin;          // du nutzt margin bereits links/rechts
+const signatureBlockHeight = 45;      // Reservierter Platz fuer Unterschrift
+
+// Wenn Unterschrift nicht mehr auf die Seite passt: neue Seite vor der Unterschrift
+if (y + signatureBlockHeight > pageHeight - marginBottom) {
+  doc.addPage();
+  y = margin; // oben starten
+}
+
+// Unterschrift
+doc.setFontSize(12);
+doc.text("Unterschrift", margin, y);
+
+doc.setFontSize(10);
+
+// Linie: Name / Funktion
+const line1Y = y + 14;
+doc.text("Name / Funktion", margin, line1Y - 3);
+doc.line(margin, line1Y, margin + 90, line1Y);
+
+// Linie: Unterschrift
+const line2Y = y + 30;
+doc.text("Unterschrift", margin, line2Y - 3);
+doc.line(margin, line2Y, margin + 90, line2Y);
+
+// Linie: Datum (rechts)
+doc.text("Datum", margin + 110, line1Y - 3);
+doc.line(margin + 110, line1Y, margin + 170, line1Y);
+
+// Cursor unterhalb der Unterschrift weiter setzen
+y = y + signatureBlockHeight;
+
     
 
       // Fotos (2 pro Zeile Raster) – vorher neu komprimieren auf att.maxPx / att.q
@@ -882,7 +918,21 @@ y = autoTable.previous.finalY + 8;
           h = Math.max(10, Math.round(h * ratio));
 
           // Seitenumbruch
-          if (y + h > 287) { doc.addPage(); drawHeader(doc, pageW, margin); y = 20; col = 0; }
+        const pageHeight = doc.internal.pageSize.getHeight();
+const bottomLimit = pageHeight - margin;
+
+// Seitenumbruch (mit Margin statt harter 287)
+const caption = findNoteForPhoto(i);
+const captionH = caption ? 5 : 0;
+const neededH = 4 + h + 3 + captionH; // 4=Fototitel, h=Bild, 3=Abstand, captionH optional
+
+if (y + neededH > bottomLimit) {
+  doc.addPage();
+  drawHeader(doc, pageW, margin);
+  y = margin + 5;
+  col = 0;
+}
+
 
           const x = margin + col * (maxWPerCol + colGap);
           doc.setFontSize(10);
@@ -892,7 +942,8 @@ y = autoTable.previous.finalY + 8;
 
           // Caption, falls Notiz existiert
           y += h + 3;
-          const caption = findNoteForPhoto(i);
+          // caption ist bereits oben ermittelt
+
           if (caption) { doc.setFontSize(9); doc.text(String(caption).slice(0, 120), x, y); y += 5; }
 
           // Nächste Spalte / Zeile
@@ -913,50 +964,7 @@ y = autoTable.previous.finalY + 8;
       const sizeMB = blob.size / (1024 * 1024);
       if (sizeMB <= 1.0) {
         const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
-       await addPhotosSection(doc, checklist, CATEGORIES);
-// --- Unterschriftenblock: immer sichtbar am Seitenende ---
-const SIGN_H = 40;          // Höhe der Unterschriftsfelder
-const GAP    = 10;          // Abstand zwischen den Feldern
-const boxW   = (pageW - 2 * margin - GAP) / 2;
-
-// Falls oberhalb schon Inhalt steht: reicht der Platz noch?
-// (nur relevant, wenn du mit 'y' arbeitest)
-if (typeof y === "number") {
-  // Wir brauchen unten noch SIGN_H + 8 mm Luft
-  if (y + SIGN_H + 8 > pageH - margin) {
-    doc.addPage();
-    y = margin;
-  }
-}
-
-// Position fest von unten berechnen (damit garantiert sichtbar)
-const baseY = pageH - margin - SIGN_H;
-
-// Box 1 (links)
-doc.setFontSize(10);
-doc.rect(margin, baseY, boxW, SIGN_H);
-doc.text("Unterschrift Bauleitung / EHS", margin + 2, baseY + 6);
-if (signatureCapturedAt) {
-  doc.setFontSize(8);
-  doc.setTextColor(120);
-  doc.text(`Unterschrift erfasst am: ${signatureCapturedAt}`, margin + 2, baseY + 12);
-  doc.setTextColor(0);
-  doc.setFontSize(10);
-}
-
-// Box 2 (rechts)
-doc.rect(margin + boxW + GAP, baseY, boxW, SIGN_H);
-doc.text("Unterschrift Auftragnehmer", margin + boxW + GAP + 2, baseY + 6);
-
-// Kleine Fußzeile über dem Seitenrand
-doc.setFontSize(8);
-doc.setTextColor(120);
-doc.text(
-  `Ort, Datum: ${form.location || "-"}, ${new Date(form.date).toLocaleDateString()}`,
-  margin,
-  pageH - margin - 2
-);
-doc.setTextColor(0);  // Farbe zurücksetzen
+    
 
 const total = doc.getNumberOfPages();
 for (let i = 1; i <= total; i++) {
