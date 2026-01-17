@@ -1184,7 +1184,8 @@ async function onLogoUpload(e) {
     doc.text(`Datum: ${new Date(form.date).toLocaleString()}`, margin, y); y += 6;
     doc.text(`Ersteller: ${form.inspector || "-"}`, margin, y); y += 6;
 
-    doc.save("bericht-test.pdf");
+ // doc.save("bericht-test.pdf"); // TEST: deaktiviert, damit kein Autostart-PDF beim Laden entsteht
+
   } catch (err) {
     console.error("PDF-Fehler:", err);
     alert("PDF konnte nicht erzeugt werden. Details in der Konsole.");
