@@ -861,41 +861,6 @@ y = autoTable.previous.finalY + 8;
 const tableEndY = doc.lastAutoTable.finalY;
 let y = tableEndY + 8;
 
-// SIGNATURE_DYNAMIC_OK (alte Signatur am Seitenende muss entfernt werden)
-
-      // Unterschrift (falls vorhanden)
-      const pageHeight = doc.internal.pageSize.getHeight();
-const marginBottom = margin;          // du nutzt margin bereits links/rechts
-const signatureBlockHeight = 45;      // Reservierter Platz fuer Unterschrift
-
-// Wenn Unterschrift nicht mehr auf die Seite passt: neue Seite vor der Unterschrift
-if (y + signatureBlockHeight > pageHeight - marginBottom) {
-  doc.addPage();
-  y = margin; // oben starten
-}
-
-// Unterschrift
-doc.setFontSize(12);
-doc.text("Unterschrift", margin, y);
-
-doc.setFontSize(10);
-
-// Linie: Name / Funktion
-const line1Y = y + 14;
-doc.text("Name / Funktion", margin, line1Y - 3);
-doc.line(margin, line1Y, margin + 90, line1Y);
-
-// Linie: Unterschrift
-const line2Y = y + 30;
-doc.text("Unterschrift", margin, line2Y - 3);
-doc.line(margin, line2Y, margin + 90, line2Y);
-
-// Linie: Datum (rechts)
-doc.text("Datum", margin + 110, line1Y - 3);
-doc.line(margin + 110, line1Y, margin + 170, line1Y);
-
-// Cursor unterhalb der Unterschrift weiter setzen
-y = y + signatureBlockHeight;
 
     
 
@@ -1293,6 +1258,37 @@ const sharePdf = async () => {
       styles: { fontSize: 9 },
       theme: "grid",
     });
+// Unterschrift direkt unter der Checkliste (dynamisch)
+let y = doc.lastAutoTable.finalY + 8;
+
+const pageH = doc.internal.pageSize.getHeight();
+const signatureBlockHeight = 45;
+
+// Wenn nicht genug Platz: neue Seite VOR der Unterschrift
+if (y + signatureBlockHeight > pageH - margin) {
+  doc.addPage();
+  drawHeader(doc, pageW, margin);
+  y = margin + 5;
+}
+
+// Unterschrift zeichnen
+doc.setFontSize(12);
+doc.text("Unterschrift", margin, y);
+
+doc.setFontSize(10);
+const line1Y = y + 14;
+doc.text("Name / Funktion", margin, line1Y - 3);
+doc.line(margin, line1Y, margin + 90, line1Y);
+
+const line2Y = y + 30;
+doc.text("Unterschrift", margin, line2Y - 3);
+doc.line(margin, line2Y, margin + 90, line2Y);
+
+doc.text("Datum", margin + 110, line1Y - 3);
+doc.line(margin + 110, line1Y, margin + 170, line1Y);
+
+// Cursor unterhalb der Unterschrift
+y += signatureBlockHeight;
 
    
 // Checkpunkt-Fotos
