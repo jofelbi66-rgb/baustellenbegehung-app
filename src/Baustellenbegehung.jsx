@@ -1471,7 +1471,8 @@ return (
 </div>
 
         
-<form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+<form onSubmit={onSubmit} className="space-y-6">
+
 
 
        
@@ -1794,14 +1795,14 @@ Offene Mängel (noch zu beheben):
           )}
 
           <div className="flex items-center gap-3 flex-wrap">
-          <button
-  type="button"
-  onClick={onSubmit}
+       <button
+  type="submit"
   disabled={busy}
   className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60"
 >
-  {busy ? "Sende…" : "Begehung per E-Mail senden"}
+  {busy ? "Sende..." : "Begehung per E-Mail senden"}
 </button>
+
 
 
 
