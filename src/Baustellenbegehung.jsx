@@ -1091,33 +1091,7 @@ async function onLogoUpload(e) {
 const drawSignatureBlockOnFirstPage = (doc, margin = 15) => {
   const pageH = doc.internal.pageSize.getHeight();
 
-  // Platz unten reservieren (Unterschrift + Fußzeile)
-  const boxW = 80;
-  const boxH = 18;
-  const footerLineY = pageH - 6;
-  const y = footerLineY - 10 - boxH; // 10mm Abstand zur Fußzeile
 
-  doc.setPage(1);
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.text("Unterschrift", margin, y - 3);
-
-  // Rahmenbox (immer sichtbar)
-  doc.setDrawColor(180);
-  doc.rect(margin, y, boxW, boxH);
-
-  // Signaturbild (falls vorhanden) in die Box einpassen
-  if (signatureDataURL) {
-    doc.addImage(signatureDataURL, "PNG", margin + 2, y + 2, boxW - 4, boxH - 4, undefined, "FAST");
-    if (signatureCapturedAt) {
-  doc.setFontSize(8);
-  doc.setTextColor(120);
-  doc.text(`Unterschrift erfasst am: ${signatureCapturedAt}`, margin + 2, y + boxH + 4);
-  doc.setTextColor(0);
-}
-
-  }
 };
  
 
