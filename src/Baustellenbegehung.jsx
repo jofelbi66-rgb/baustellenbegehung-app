@@ -1047,18 +1047,13 @@ for (let i = 1; i <= total; i++) {
 doc.setTextColor(0);
         
         
-        doc.save(`Begehung_${safeName}.pdf`);
-        return true;
-      }
-      // andernfalls nächsten Versuch mit stärkerer Kompression
-    }
-    // Falls alle Versuche > 1 MB sind, letzten trotzdem speichern
-    const fallback = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+// --- TEMP: Autodownload deaktiviert (sonst ploppt PDF beim Laden auf) ---
+console.warn("PDF-SAVE deaktiviert (Debug):", safeName);
 
-fallback.text("Bericht überschreitet 1 MB trotz Kompression.", 10, 10);
-const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
-fallback.save(`Begehung_${safeName}.pdf`);
-return false;
+// Wenn du später wieder speichern willst: doc.save(...) und fallback.save(...) wieder aktivieren
+return true;
+// --- TEMP ENDE ---
+  
 // <- HIER KEINE zusätzliche "}" einfügen
 
 
