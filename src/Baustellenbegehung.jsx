@@ -1161,7 +1161,8 @@ if (rows.length === 0) {
 autoTable(doc, {
   head: [["Kategorie", "Prüfpunkt", "Bewertung", "Notiz"]],
   body: rows,
-  startY: (doc.lastAutoTable?.finalY || startY + 10) + 6,
+ startY: ((doc.lastAutoTable?.finalY ?? (startY + 10)) + 6),
+
   margin: { left: margin, right: margin },
   theme: "grid",
   
@@ -1258,7 +1259,12 @@ const sharePdf = async () => {
       styles: { fontSize: 9 },
       theme: "grid",
     });
+
+
+    
 // Unterschrift direkt unter der Checkliste (dynamisch)
+const lastPage = doc.getNumberOfPages();
+doc.setPage(lastPage);
 let y = doc.lastAutoTable.finalY + 8;
 
 const pageH = doc.internal.pageSize.getHeight();
