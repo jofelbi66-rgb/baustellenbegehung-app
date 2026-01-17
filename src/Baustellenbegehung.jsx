@@ -1238,8 +1238,9 @@ const drawSignatureBlockOnFirstPage = (doc, margin = 15) => {
 };
  
 
- const sendPdfToMail = async () => {
-  if (!userActionRef.current) return; // <- WICHTIG: blockt Autostart
+const sendPdfToMail = async () => {
+  if (!userActionRef.current) return; // WICHTIG: nur nach Klick/Submit erlauben
+
 
   // PDF erzeugen (Report)
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
