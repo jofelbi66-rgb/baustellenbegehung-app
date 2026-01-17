@@ -1238,6 +1238,8 @@ const drawSignatureBlockOnFirstPage = (doc, margin = 15) => {
  
 
  const sendPdfToMail = async () => {
+  if (!userActionRef.current) return; // <- WICHTIG: blockt Autostart
+
   // PDF erzeugen (Report)
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
   const pageW = doc.internal.pageSize.getWidth();
@@ -1336,6 +1338,8 @@ for (let p = 1; p <= total; p++) {
 
 // === einfache PDF-Erzeugung ===
 const sharePdf = async () => {
+  if (!userActionRef.current) return; // <- WICHTIG: blockt Autostart
+
   try {
     // Erzeuge PDF genauso wie beim Speichern:
     const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
