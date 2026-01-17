@@ -1237,8 +1237,7 @@ const sharePdf = async () => {
 
     
 // Unterschrift direkt unter der Checkliste (dynamisch)
-const lastPage = doc.getNumberOfPages();
-doc.setPage(lastPage);
+doc.setPage(doc.lastAutoTable.pageNumber);
 let y = doc.lastAutoTable.finalY + 8;
 
 const pageH = doc.internal.pageSize.getHeight();
@@ -1265,8 +1264,10 @@ const boxH = 18;
 const boxY = y + 6;
 
 // Rahmenbox
-doc.setDrawColor(180);
+doc.setLineWidth(0.4);
+doc.setDrawColor(0);
 doc.rect(margin, boxY, boxW, boxH);
+
 
 // Signaturbild (falls vorhanden) in die Box einpassen
 if (signatureDataURL) {
