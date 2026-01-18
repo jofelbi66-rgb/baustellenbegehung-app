@@ -652,10 +652,15 @@ async function addPhotosSection(doc, checklist, CATEGORIES) {
   const pageH = doc.internal.pageSize.getHeight();
   const margin = 15;
 
+  checklist = checklist || {};
+
   // Prüfen, ob überhaupt Fotos existieren
-  const hasAny = CATEGORIES.some(cat =>
-    (checklist[cat.key] || []).some(r => (r.photos || []).length)
-  );
+  const cats = Array.isArray(CATEGORIES) ? CATEGORIES : [];
+const hasAny = cats.some(cat =>
+  Array.isArray(checklist?.[cat.key]) &&
+  checklist[cat.key].some(r => Array.isArray(r?.photos) && r.photos.length > 0)
+);
+
   if (!hasAny) return;
 
   // neue Seite für den Fototeil anhängen
