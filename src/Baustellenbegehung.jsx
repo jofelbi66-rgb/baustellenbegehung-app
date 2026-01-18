@@ -1266,10 +1266,7 @@ y = boxY + boxH + (signatureCapturedAt ? 10 : 6);
 
 
 
-  let y = (doc.lastAutoTable?.finalY || startY + 10) + 10;
- 
-// Unterschrift immer auf Seite 1 unten einzeichnen
-// =====================
+
 // Unterschrift direkt unter der Checkliste (Mail-PDF, dynamisch)
 // =====================
 doc.setPage(doc.lastAutoTable.pageNumber);
