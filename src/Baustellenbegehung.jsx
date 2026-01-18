@@ -1292,6 +1292,55 @@ const sharePdf = async () => {
       styles: { fontSize: 9 },
       theme: "grid",
     });
+// =====================
+// Unterschrift direkt unter der Checkliste (Share-Pfad)
+// =====================
+doc.setPage(doc.lastAutoTable.pageNumber);
+let y = doc.lastAutoTable.finalY + 8;
+
+const pageH = doc.internal.pageSize.getHeight();
+const signatureBlockHeight = signatureCapturedAt ? 38 : 30;
+
+// Wenn nicht genug Platz: neue Seite VOR der Unterschrift
+if (y + signatureBlockHeight > pageH - margin) {
+  doc.addPage();
+  drawHeader(doc, pageW, margin);
+  y = margin + 5;
+}
+
+// Überschrift
+doc.setFont("helvetica", "bold");
+doc.setFontSize(11);
+doc.setTextColor(0);
+doc.text("Unterschrift", margin, y);
+
+// Box
+const boxW = 80;
+const boxH = 18;
+const boxY = y + 6;
+
+doc.setLineWidth(0.6);
+doc.setDrawColor(0);
+doc.setFillColor(245, 245, 245);
+doc.rect(margin, boxY, boxW, boxH, "FD");
+
+// Signaturbild (falls vorhanden)
+if (signatureDataURL) {
+  doc.addImage(signatureDataURL, "PNG", margin + 2, boxY + 2, boxW - 4, boxH - 4, undefined, "FAST");
+}
+
+// Zeitstempel (falls vorhanden)
+if (signatureCapturedAt) {
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(120);
+  doc.text(`Unterschrift erfasst am: ${signatureCapturedAt}`, margin, boxY + boxH + 6);
+  doc.setTextColor(0);
+}
+
+doc.setFont("helvetica", "normal");
+y = boxY + boxH + (signatureCapturedAt ? 10 : 6);
+
 
 
     
