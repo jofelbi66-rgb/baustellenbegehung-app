@@ -1208,23 +1208,34 @@ const checklistEndPage = doc.lastAutoTable.pageNumber;
 const checklistEndY = doc.lastAutoTable.finalY;
 
 
+// ===================
+// Unterschrift (dynamisch direkt nach der Checkliste)
+// ===================
 
-   
+// Ende der Checkliste (AutoTable) merken
+const sigPage = doc.internal.getNumberOfPages();   // robuste "letzte Seite"
+doc.setPage(sigPage);
 
+let y = (doc.lastAutoTable?.finalY ?? 20) + 8;
 
+const pageH = doc.internal.pageSize.getHeight();
+const boxW = 80;
+const boxH = 18;
+const stampH = signatureCapturedAt ? 6 : 0;
+const neededH = 6 + boxH + 6 + stampH;            // Überschrift + Box + Abstand + ggf. Zeitstempel
 
-
+// Wenn nicht genug Platz: neue Seite VOR der Unterschrift
+if (y + neededH > pageH - margin) {
+  doc.addPage();
+  if (typeof drawHeader === "function") drawHeader(doc, pageW, margin);
+  y = margin + 5;
+}
 
 // Überschrift
 doc.setFont("helvetica", "bold");
 doc.setFontSize(11);
 doc.setTextColor(0);
-doc.setPage(checklistEndPage);
-let y = checklistEndY + 8;
-   
 doc.text("Unterschrift", margin, y);
-const boxW = 80;
-const boxH = 18;
 
 // Box (immer sichtbar)
 const boxY = y + 6;
@@ -1247,11 +1258,9 @@ if (signatureCapturedAt) {
   doc.setTextColor(0);
 }
 
-doc.setFont("helvetica", "normal");
-doc.setTextColor(0);
-
-// Cursor unterhalb der Unterschrift
+// Cursor unterhalb der Unterschrift (für Fotos)
 y = boxY + boxH + (signatureCapturedAt ? 10 : 6);
+
 
 
  y = await addPhotosSection(doc, images, att, y, pageW, margin);
