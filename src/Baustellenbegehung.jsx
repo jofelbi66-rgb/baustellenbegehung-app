@@ -868,6 +868,7 @@ let y = tableEndY + 8;
       const pageWmm = pageW, colGap = 6, cols = 2;
       const maxWPerCol = (pageWmm - margin * 2 - colGap) / cols; // mm
       const maxHmm = 60; // mm pro Bild
+const att = { maxPx: 1600, q: 0.8 };
 
       let col = 0;
       for (let i = 0; i < images.length; i++) {
