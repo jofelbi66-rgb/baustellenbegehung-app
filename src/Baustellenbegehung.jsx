@@ -1223,6 +1223,8 @@ doc.setPage(checklistEndPage);
 let y = checklistEndY + 8;
    
 doc.text("Unterschrift", margin, y);
+const boxW = 80;
+const boxH = 18;
 
 // Box (immer sichtbar)
 const boxY = y + 6;
