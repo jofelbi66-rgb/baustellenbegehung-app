@@ -1153,7 +1153,8 @@ columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: "auto" } },
 // Unterschrift immer auf Seite 1 unten einzeichnen
 drawSignatureBlockOnFirstPage(doc, margin);
 
-  await addPhotosSection(doc, checklist, CATEGORIES);
+ y = await addPhotosSection(doc, images, att, y, pageW, margin);
+
    // Footer auf alle Seiten: Datum · Begeher | Seite x von y
 const total = doc.internal.getNumberOfPages();
 for (let p = 1; p <= total; p++) {
@@ -1316,13 +1317,27 @@ y = await addPhotosSection(doc, checklist, CATEGORIES, y);
      images-Array, pageW, margin, drawHeader(...) — genauso wie dein bisheriger Loop.
 */
 
-async function addPhotosSection(doc, checklist, CATEGORIES, startY) {
-  // Startposition von außen übernehmen
+async function addPhotosSection(doc, images, att, startY, pageW, margin) {
   let y = startY;
 
-  // Fotos (2 pro Zeile Raster) – vorher neu komprimieren auf att.maxPx / att.q
-  const pageW = doc.internal.pageSize.getWidth();
+  // Titel (damit man sofort sieht, dass der Abschnitt überhaupt läuft)
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(0);
+  doc.text("Fotos", margin, y);
+  y += 6;
+  doc.setFont("helvetica", "normal");
+
+  // Wenn keine Fotos da sind: sichtbar ins PDF schreiben und sauber zurück
+  if (!Array.isArray(images) || images.length === 0) {
+    doc.setFontSize(10);
+    doc.text("Keine Fotos vorhanden.", margin, y);
+    return y + 6;
+  }
+
   const pageH = doc.internal.pageSize.getHeight();
+  const bottomLimit = pageH - margin;
+
   const colGap = 6;
   const cols = 2;
 
@@ -1342,7 +1357,7 @@ async function addPhotosSection(doc, checklist, CATEGORIES, startY) {
         tmp.src = recompressed;
       });
 
-      const px2mm = 0.264583; // 96 dpi -> mm
+      const px2mm = 0.264583;
       let w = tmp.width * px2mm;
       let h = tmp.height * px2mm;
 
@@ -1350,24 +1365,20 @@ async function addPhotosSection(doc, checklist, CATEGORIES, startY) {
       w = Math.max(10, Math.round(w * ratio));
       h = Math.max(10, Math.round(h * ratio));
 
-      // Caption VOR der Platzprüfung ermitteln (damit sie mitgerechnet wird)
-      const caption = findNoteForPhoto(i);
+      // Caption vor Platzprüfung ermitteln
+      const caption = typeof findNoteForPhoto === "function" ? findNoteForPhoto(i) : "";
       const captionH = caption ? 5 : 0;
 
-      // Benötigte Höhe (Fototitel + Bild + Abstand + optionale Caption)
       const neededH = 4 + h + 3 + captionH;
 
-      const bottomLimit = pageH - margin;
-
-      // Seitenumbruch (mit Margin statt harter 287)
+      // Seitenumbruch
       if (y + neededH > bottomLimit) {
         doc.addPage();
-        drawHeader(doc, pageW, margin);
-        y = margin + 5; // Start unterhalb Header
+        if (typeof drawHeader === "function") drawHeader(doc, pageW, margin);
+        y = margin + 5;
         col = 0;
       }
 
-      // X-Position je Spalte
       const x = margin + col * (maxWPerCol + colGap);
 
       doc.setFontSize(10);
@@ -1375,11 +1386,8 @@ async function addPhotosSection(doc, checklist, CATEGORIES, startY) {
       y += 4;
 
       doc.addImage(recompressed, "JPEG", x, y, w, h, undefined, "FAST");
-
-      // unter Bild
       y += h + 3;
 
-      // Caption, falls Notiz existiert
       if (caption) {
         doc.setFontSize(9);
         doc.text(String(caption).slice(0, 120), x, y);
@@ -1390,15 +1398,29 @@ async function addPhotosSection(doc, checklist, CATEGORIES, startY) {
       col = (col + 1) % cols;
       if (col === 0) y += 6;
     } catch (err) {
-      // Bildfehler ignorieren, aber Loop fortsetzen
-      console.error("Foto konnte nicht ins PDF gerendert werden:", err);
-      col = 0;
+      // Sichtbarer Hinweis im PDF, statt "still nichts"
+      doc.setFontSize(9);
+      doc.setTextColor(200, 0, 0);
+      doc.text(`Foto ${i + 1} konnte nicht geladen werden.`, margin, y);
+      doc.setTextColor(0);
+
       y += 6;
+      col = 0;
+
+      // Optional: auf neuer Seite weitermachen, falls unten eng
+      if (y > bottomLimit) {
+        doc.addPage();
+        if (typeof drawHeader === "function") drawHeader(doc, pageW, margin);
+        y = margin + 5;
+      }
+
+      console.error("Foto-Render-Fehler:", err);
     }
   }
 
   return y;
 }
+
 
 
 
