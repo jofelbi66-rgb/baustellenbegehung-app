@@ -958,12 +958,11 @@ doc.setTextColor(0);
       }
       // andernfalls nächsten Versuch mit stärkerer Kompression
     }
-    // Falls alle Versuche > 1 MB sind, letzten trotzdem speichern
-    const fallback = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-    fallback.text("Bericht überschreitet 1 MB trotz Kompression.", 10, 10);
-    const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
-    fallback.save(`Begehung_${safeName}.pdf`);
-    return false;
+// Falls alle Versuche > 1 MB sind: den erstellten Bericht trotzdem speichern (NICHT neues leeres PDF)
+const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
+doc.save(`Begehung_${safeName}.pdf`);
+return false;
+
   };
 
   const findNoteForPhoto = (index) => {
