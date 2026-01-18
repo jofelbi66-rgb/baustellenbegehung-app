@@ -1262,8 +1262,9 @@ if (signatureCapturedAt) {
 y = boxY + boxH + (signatureCapturedAt ? 10 : 6);
 
 
+await addPhotosSection(doc, checklist, CATEGORIES);
 
- y = await addPhotosSection(doc, images, att, y, pageW, margin);
+ 
 
    // Footer auf alle Seiten: Datum · Begeher | Seite x von y
 const total = doc.internal.getNumberOfPages();
