@@ -1271,10 +1271,11 @@ const boxH = 18;
 // Box unter der Überschrift platzieren
 const boxY = y + 6;
 
-// Rahmenbox
-doc.setLineWidth(0.4);
+doc.setLineWidth(0.6);
 doc.setDrawColor(0);
-doc.rect(margin, boxY, boxW, boxH);
+doc.setFillColor(245, 245, 245);
+doc.rect(margin, boxY, boxW, boxH, "FD");
+
 
 
 // Signaturbild (falls vorhanden) in die Box einpassen
