@@ -1203,13 +1203,125 @@ columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: "auto" } },
 
   alternateRowStyles: { fillColor: [245, 245, 245] }, // Zebra
 });
+const checklistEndPage = doc.lastAutoTable.pageNumber;
+const checklistEndY = doc.lastAutoTable.finalY;
+
+
+
+   
+// =====================
+// Unterschrift direkt unter der Checkliste (Mail-PDF)
+// =====================
+doc.setPage(checklistEndPage);
+let y = checklistEndY + 8;
+
+const pageH = doc.internal.pageSize.getHeight();
+const boxW = 80;
+const boxH = 18;
+
+const stampH = signatureCapturedAt ? 6 : 0;
+const neededH = 6 + boxH + 6 + stampH;
+
+// Wenn nicht genug Platz: neue Seite VOR der Unterschrift
+if (y + neededH > pageH - margin) {
+  doc.addPage();
+  if (typeof drawHeader === "function") drawHeader(doc, pageW, margin);
+  y = margin + 5;
+}
+
+// Überschrift
+doc.setFont("helvetica", "bold");
+doc.setFontSize(11);
+doc.setTextColor(0);
+doc.text("Unterschrift", margin, y);
+doc.setTextColor(255, 0, 0); doc.text("### SIGNATURE BLOCK EXECUTED ###", margin, y + 4); doc.setTextColor(0);
+   
+
+// Box (immer sichtbar)
+const boxY = y + 6;
+doc.setLineWidth(0.6);
+doc.setDrawColor(0);
+doc.setFillColor(245, 245, 245);
+doc.rect(margin, boxY, boxW, boxH, "FD");
+
+// Signaturbild (falls vorhanden)
+if (signatureDataURL) {
+  doc.addImage(signatureDataURL, "PNG", margin + 2, boxY + 2, boxW - 4, boxH - 4, undefined, "FAST");
+}
+
+// Zeitstempel (falls vorhanden)
+if (signatureCapturedAt) {
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(120);
+  doc.text(`Unterschrift erfasst am: ${signatureCapturedAt}`, margin, boxY + boxH + 6);
+  doc.setTextColor(0);
+}
+
+doc.setFont("helvetica", "normal");
+doc.setTextColor(0);
+
+// Cursor unterhalb der Unterschrift (falls danach Fotos folgen)
+y = boxY + boxH + (signatureCapturedAt ? 10 : 6);
 
 
 
   let y = (doc.lastAutoTable?.finalY || startY + 10) + 10;
  
 // Unterschrift immer auf Seite 1 unten einzeichnen
-drawSignatureBlockOnFirstPage(doc, margin);
+// =====================
+// Unterschrift direkt unter der Checkliste (Mail-PDF, dynamisch)
+// =====================
+doc.setPage(doc.lastAutoTable.pageNumber);
+y = doc.lastAutoTable.finalY + 8;
+
+const pageH = doc.internal.pageSize.getHeight();
+const boxW = 80;
+const boxH = 18;
+
+const stampH = signatureCapturedAt ? 6 : 0;
+const neededH = 6 + boxH + 6 + stampH;
+
+// Wenn nicht genug Platz: neue Seite VOR der Unterschrift
+if (y + neededH > pageH - margin) {
+  doc.addPage();
+  if (typeof drawHeader === "function") drawHeader(doc, pageW, margin);
+  y = margin + 5;
+}
+
+// Überschrift
+doc.setFont("helvetica", "bold");
+doc.setFontSize(11);
+doc.setTextColor(0);
+doc.text("Unterschrift", margin, y);
+
+// Box (immer sichtbar)
+const boxY = y + 6;
+doc.setLineWidth(0.6);
+doc.setDrawColor(0);
+doc.setFillColor(245, 245, 245);
+doc.rect(margin, boxY, boxW, boxH, "FD");
+
+// Signaturbild (falls vorhanden)
+if (signatureDataURL) {
+  doc.addImage(signatureDataURL, "PNG", margin + 2, boxY + 2, boxW - 4, boxH - 4, undefined, "FAST");
+}
+
+// Zeitstempel (falls vorhanden)
+if (signatureCapturedAt) {
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(120);
+  doc.text(`Unterschrift erfasst am: ${signatureCapturedAt}`, margin, boxY + boxH + 6);
+  doc.setTextColor(0);
+}
+
+doc.setFont("helvetica", "normal");
+doc.setTextColor(0);
+
+// Cursor unterhalb der Unterschrift
+y = boxY + boxH + (signatureCapturedAt ? 10 : 6);
+
 
  y = await addPhotosSection(doc, images, att, y, pageW, margin);
 
@@ -1292,54 +1404,7 @@ const sharePdf = async () => {
       styles: { fontSize: 9 },
       theme: "grid",
     });
-// =====================
-// Unterschrift direkt unter der Checkliste (Share-Pfad)
-// =====================
-doc.setPage(doc.lastAutoTable.pageNumber);
-let y = doc.lastAutoTable.finalY + 8;
 
-const pageH = doc.internal.pageSize.getHeight();
-const signatureBlockHeight = signatureCapturedAt ? 38 : 30;
-
-// Wenn nicht genug Platz: neue Seite VOR der Unterschrift
-if (y + signatureBlockHeight > pageH - margin) {
-  doc.addPage();
-  drawHeader(doc, pageW, margin);
-  y = margin + 5;
-}
-
-// Überschrift
-doc.setFont("helvetica", "bold");
-doc.setFontSize(11);
-doc.setTextColor(0);
-doc.text("Unterschrift", margin, y);
-
-// Box
-const boxW = 80;
-const boxH = 18;
-const boxY = y + 6;
-
-doc.setLineWidth(0.6);
-doc.setDrawColor(0);
-doc.setFillColor(245, 245, 245);
-doc.rect(margin, boxY, boxW, boxH, "FD");
-
-// Signaturbild (falls vorhanden)
-if (signatureDataURL) {
-  doc.addImage(signatureDataURL, "PNG", margin + 2, boxY + 2, boxW - 4, boxH - 4, undefined, "FAST");
-}
-
-// Zeitstempel (falls vorhanden)
-if (signatureCapturedAt) {
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(120);
-  doc.text(`Unterschrift erfasst am: ${signatureCapturedAt}`, margin, boxY + boxH + 6);
-  doc.setTextColor(0);
-}
-
-doc.setFont("helvetica", "normal");
-y = boxY + boxH + (signatureCapturedAt ? 10 : 6);
 
 
 
