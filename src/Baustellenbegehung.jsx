@@ -1004,17 +1004,16 @@ for (let i = 1; i <= total; i++) {
   );
 }
 doc.setTextColor(0);
+ doc.setPage(doc.lastAutoTable.pageNumber);
+       
         
-        
-        doc.save(`Begehung_${safeName}.pdf`);
-        return true;
+     
       }
       // andernfalls nächsten Versuch mit stärkerer Kompression
     }
 // Falls alle Versuche > 1 MB sind: den erstellten Bericht trotzdem speichern (NICHT neues leeres PDF)
 const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
-doc.save(`Begehung_${safeName}.pdf`);
-return false;
+
 
   };
 
