@@ -933,7 +933,7 @@ if (y + neededH > bottomLimit) {
 
 // Unterschrift direkt unter der Checkliste (dynamisch)
 doc.setPage(doc.lastAutoTable.pageNumber);
-let y = doc.lastAutoTable.finalY + 8;
+y = doc.lastAutoTable.finalY + 8;
 
 const pageH = doc.internal.pageSize.getHeight();
 const signatureBlockHeight = signatureCapturedAt ? 38 : 30;
