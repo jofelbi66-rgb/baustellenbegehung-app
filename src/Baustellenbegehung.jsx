@@ -1035,7 +1035,8 @@ const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
     if (err) { setMsg({ type: "error", text: err }); return; }
     setBusy(true); setMsg(null);
     try {
-await sendPdfToMail_OLD1();
+await sendPdfToMail();
+
 setMsg({ type: "ok", text: "E-Mail mit PDF-Anhang wurde versendet." });
 
     
