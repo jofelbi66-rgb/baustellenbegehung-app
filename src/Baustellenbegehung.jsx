@@ -184,6 +184,7 @@ function recompressImage(imgOrDataURL, maxSizePx = 1280, quality = 0.8) {
     resolve(canvas.toDataURL("image/jpeg", quality));
   });
 }
+const att = { maxPx: 1280, q: 0.8 };
 
 /* ===================== Komponente ===================== */
 export default function BaustellenbegehungApp() {
