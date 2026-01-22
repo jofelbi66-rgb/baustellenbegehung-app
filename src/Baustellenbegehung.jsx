@@ -165,25 +165,78 @@ async function resizeImageFromFile(file, maxSize = 1280, quality = 0.8) {
   return recompressImage(img, maxSize, quality);
 }
 
-function recompressImage(imgOrDataURL, maxSizePx = 1280, quality = 0.8) {
-  return new Promise(async (resolve) => {
-    let img = imgOrDataURL;
-    if (typeof imgOrDataURL === "string") {
-      img = new Image();
-      await new Promise((r) => {
-        img.onload = r;
-        img.src = imgOrDataURL;
-      });
+async function recompressImage(imgOrDataURL, maxSizePx = 1280, quality = 0.8) {
+  // Quelle in ein Blob bringen (funktioniert für DataURL, File, Blob)
+  let blob;
+
+  if (typeof imgOrDataURL === "string") {
+    const res = await fetch(imgOrDataURL);
+    blob = await res.blob();
+  } else if (imgOrDataURL instanceof Blob) {
+    blob = imgOrDataURL;
+  } else {
+    const res = await fetch(String(imgOrDataURL));
+    blob = await res.blob();
+  }
+
+  // EXIF-Orientation korrekt ins Bitmap übernehmen (wenn möglich)
+  let bitmap = null;
+  if (typeof createImageBitmap === "function") {
+    try {
+      bitmap = await createImageBitmap(blob, { imageOrientation: "from-image" });
+    } catch {
+      bitmap = await createImageBitmap(blob);
     }
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const ratio = Math.min(maxSizePx / img.width, maxSizePx / img.height, 1);
-    canvas.width = Math.max(1, Math.round(img.width * ratio));
-    canvas.height = Math.max(1, Math.round(img.height * ratio));
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    resolve(canvas.toDataURL("image/jpeg", quality));
-  });
+  }
+
+  // Maße bestimmen
+  let srcW, srcH;
+
+  if (bitmap) {
+    srcW = bitmap.width;
+    srcH = bitmap.height;
+  } else {
+    // Fallback: über HTMLImageElement
+    const dataURL = typeof imgOrDataURL === "string"
+      ? imgOrDataURL
+      : await new Promise((resolve, reject) => {
+          const fr = new FileReader();
+          fr.onload = () => resolve(fr.result);
+          fr.onerror = reject;
+          fr.readAsDataURL(blob);
+        });
+
+    const img = new Image();
+    await new Promise((res, rej) => {
+      img.onload = res;
+      img.onerror = rej;
+      img.src = dataURL;
+    });
+
+    srcW = img.naturalWidth || img.width || 1;
+    srcH = img.naturalHeight || img.height || 1;
+    bitmap = img;
+  }
+
+  // Proportional skalieren (kein Stretch)
+  const ratio = Math.min(maxSizePx / srcW, maxSizePx / srcH, 1);
+  const outW = Math.max(1, Math.round(srcW * ratio));
+  const outH = Math.max(1, Math.round(srcH * ratio));
+
+  // Canvas rendern
+  const canvas = document.createElement("canvas");
+  canvas.width = outW;
+  canvas.height = outH;
+
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(bitmap, 0, 0, outW, outH);
+
+  // Ergebnis ist immer JPEG
+  return canvas.toDataURL("image/jpeg", quality);
 }
+
 const att = { maxPx: 1280, q: 0.8 };
 
 /* ===================== Komponente ===================== */
