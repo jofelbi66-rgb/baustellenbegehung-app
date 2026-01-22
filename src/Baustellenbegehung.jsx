@@ -701,7 +701,28 @@ const hasAny = cats.some(cat =>
         if (data) {
          
 const fmt = data.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
-doc.addImage(data, fmt, px, py, cellW, cellH, undefined, "FAST");
+// --- Contain: Bild proportional in die Kachel (cellW x cellH) einpassen, ohne Verzerrung ---
+const img = new Image();
+await new Promise((res, rej) => {
+  img.onload = res;
+  img.onerror = rej;
+  img.src = data; // data ist dein DataURL (toDataUrl(...))
+});
+
+const imgW = img.width || 1;
+const imgH = img.height || 1;
+
+// Skalierung so, dass das Bild komplett in die Kachel passt (Contain)
+const scale = Math.min(cellW / imgW, cellH / imgH, 1); // "1" verhindert unnötiges Hochskalieren
+const drawW = imgW * scale;
+const drawH = imgH * scale;
+
+// Zentrieren innerhalb der Kachel
+const offX = (cellW - drawW) / 2;
+const offY = (cellH - drawH) / 2;
+
+// Bild zeichnen (ohne Verzerrung)
+doc.addImage(data, fmt, px + offX, py + offY, drawW, drawH, undefined, "FAST");
 
  
         }
