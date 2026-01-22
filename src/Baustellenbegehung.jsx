@@ -149,8 +149,16 @@ function formatDEDateTime(isoLocal) {
   return `${pad(d)}.${pad(m)}.${y} ${pad(hh)}:${pad(mm)}${tz ? " " + tz : ""}`;
 }
 
+async function recompressImage(imgOrDataURL, maxSizePx = 1280, quality = 0.8) {
+  // HIER ganz oben rein:
+  if (imgOrDataURL instanceof HTMLImageElement) {
+    imgOrDataURL = imgOrDataURL.src;
+  }
 
-async function resizeImageFromFile(file, maxSize = 1280, quality = 0.8) {
+  // ... ab hier dein bestehender Code (Blob/DataURL/File Handling)
+}
+
+
   // Datei direkt als ObjectURL laden (robuster als FileReader->DataURL)
   const objectUrl = URL.createObjectURL(file);
 
@@ -164,7 +172,8 @@ async function resizeImageFromFile(file, maxSize = 1280, quality = 0.8) {
     });
 
     // nutzt weiterhin deine bestehende Logik in recompressImage()
-    return recompressImage(img, maxSize, quality);
+return recompressImage(objectUrl, maxSize, quality);
+
   } finally {
     URL.revokeObjectURL(objectUrl);
   }
