@@ -169,8 +169,6 @@ async function resizeImageFromFile(file, maxSize = 1280, quality = 0.8) {
   }
 }
 
-
-
 async function recompressImage(imgOrDataURL, maxSizePx = 1280, quality = 0.8) {
   // Quelle in ein Blob bringen (funktioniert für DataURL, File, Blob)
   let blob;
