@@ -303,7 +303,7 @@ const onCapturePhoto = (catKey, itemIndex) => async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
   try {
-    const dataUrl = await resizeImageFromFile(file, 1280, 0.8);
+
 const dataUrl = await resizeImageFromFile(file, 1280, 0.8);
 console.log("dataUrl prefix:", String(dataUrl).slice(0, 30));
 console.log("file:", file?.type, file?.name, file?.size);
