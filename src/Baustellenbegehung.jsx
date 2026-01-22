@@ -151,19 +151,25 @@ function formatDEDateTime(isoLocal) {
 
 
 async function resizeImageFromFile(file, maxSize = 1280, quality = 0.8) {
-  const img = document.createElement("img");
-  const reader = new FileReader();
-  const dataURL = await new Promise((resolve, reject) => {
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-  await new Promise((r) => {
-    img.onload = r;
-    img.src = dataURL;
-  });
-  return recompressImage(img, maxSize, quality);
+  // Datei direkt als ObjectURL laden (robuster als FileReader->DataURL)
+  const objectUrl = URL.createObjectURL(file);
+
+  try {
+    const img = new Image();
+
+    await new Promise((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("Bild konnte nicht decodiert werden (img.onerror)"));
+      img.src = objectUrl;
+    });
+
+    // nutzt weiterhin deine bestehende Logik in recompressImage()
+    return recompressImage(img, maxSize, quality);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
+
 
 async function recompressImage(imgOrDataURL, maxSizePx = 1280, quality = 0.8) {
   // Quelle in ein Blob bringen (funktioniert für DataURL, File, Blob)
@@ -291,12 +297,18 @@ const [checklist, setChecklist] = useState(() => {
   const [images, setImages] = useState([]); // dataURLs
   const [msg, setMsg] = useState(null);
   const [busy, setBusy] = useState(false);
-// Kamera-Funktion pro Checkpunkt (Foto aufnehmen)
+  
+  // Kamera-Funktion pro Checkpunkt (Foto aufnehmen)
 const onCapturePhoto = (catKey, itemIndex) => async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
   try {
     const dataUrl = await resizeImageFromFile(file, 1280, 0.8);
+const dataUrl = await resizeImageFromFile(file, 1280, 0.8);
+console.log("dataUrl prefix:", String(dataUrl).slice(0, 30));
+console.log("file:", file?.type, file?.name, file?.size);
+
+    
     setChecklist((prev) => {
       const next = { ...prev };
       const entry = { ...next[catKey][itemIndex] };
