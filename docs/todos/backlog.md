@@ -1,3 +1,22 @@
+# Backlog / ToDos
+
+## Offen
+
+- [ ] Mehrere Checklisten je Firma/Logo-Auswahl (Konzept + Umsetzung)
+- [ ] Checklisten-Import per Excel/CSV (Schema vorhanden)
+- [ ] Klärung: PDF-Checklisten nur als Referenz oder automatischer Import?
+- [ ] Foto-Layout im PDF final abstimmen (aktuell ok, keine weiteren Experimente)
+- [ ] Fehler/Edge-Cases: Kamera/Upload robust halten (Decode/404-Themen beobachten)
+
+## In Arbeit
+
+- [ ] —
+
+## Erledigt
+
+- [x] Unterschrift im PDF unter der Checkliste platzieren
+- [x] Foto-Seiten nach Unterschrift wieder korrekt generieren
+- [x] Verzerrung der Fotos behoben (kein Stretch)
 # Backlog / ToDo
 
 ## A) Checklisten-Strategie (firmenspezifisch)
