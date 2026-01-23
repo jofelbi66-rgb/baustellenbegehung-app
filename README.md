@@ -1,2 +1,0 @@
-JOJA
-Joa
