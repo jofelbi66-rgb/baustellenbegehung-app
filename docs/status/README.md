@@ -1,2 +1,6 @@
 # Status
-Aktueller Stand der App (Funktionen, offene Baustellen, bekannte Bugs).
+
+Hier liegt der aktuelle Projektstand.
+
+- Aktueller Stand: ./current.md
+
