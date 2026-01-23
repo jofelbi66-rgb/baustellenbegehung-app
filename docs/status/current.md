@@ -1,3 +1,23 @@
+# Aktueller Stand
+
+## Kurzfassung
+- PDF-Export: Checkliste + Unterschrift + Foto-Seiten funktionieren.
+- Fotos: nicht mehr verzerrt/gestretcht.
+- Offene Produktfrage: mehrere firmenspezifische Checklisten (Logo-Auswahl).
+
+## Status der Kernfunktionen
+- [x] Checkliste rendern (AutoTable)
+- [x] Unterschrift unter Checkliste (mit Box + optional Bild)
+- [x] Foto-Sektion hinten anhängen (neue Seiten nach Bedarf)
+- [x] Bildverzerrung behoben
+
+## Offene Punkte / Nächste Schritte
+- Mehrere Checklisten pro Firma/Logo-Auswahl (Datenmodell + UI + Import)
+- Import: Excel/CSV als Quelle (Template vorhanden)
+- PDF-Checklisten: Entscheidung, ob nur Referenz oder Parsing/Mapping
+
+## Notizen
+- Chat ist lang; relevante Entscheidungen/ToDos werden in `docs/` gepflegt.
 # Projektstatus – baustellenbegehung-app
 
 ## Stand heute
