@@ -1,8 +1,28 @@
-baustellenbegehung-app/
-  docs/
-  src/
-  public/
-  package.json
-  vite.config.js
-  ...
+docs/
+  README.md
+  STATUS.md
+  TODO.md
+  CHANGELOG.md
+  ARCHITECTURE.md
 
+  decisions/
+    README.md
+    2026-01-23-pdf-signature-placement.md
+    2026-01-23-photo-contain-no-stretch.md
+
+  templates/
+    mail_checklist_request.md
+    excel_schema_notes.md
+
+  checklists/
+    README.md
+    schema.md
+    examples/
+      checklist_example.csv
+      checklist_example.json
+
+  troubleshooting/
+    README.md
+    pdf.md
+    photos.md
+    build-deploy.md
