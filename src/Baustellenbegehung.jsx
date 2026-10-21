@@ -413,14 +413,21 @@ const [showOnlyOpen, setShowOnlyOpen] = useState(false);
  
 const ALL_CATEGORIES = [...CATEGORIES, ...GENERAL_EXTRA_CATEGORIES];
 
-const VISIBLE_CATEGORIES = inspectionArea === "mobilkran"
-  ? [...ALL_CATEGORIES, ...MOBILKRAN_CATEGORIES]
-  : ALL_CATEGORIES;
+
+const VISIBLE_CATEGORIES =
+  inspectionArea === "mobilkran"
+    ? [...ALL_CATEGORIES, ...MOBILKRAN_CATEGORIES]
+    : inspectionArea === "bau"
+    ? [...ALL_CATEGORIES, ...BAU_CATEGORIES]
+    : ALL_CATEGORIES;
+
  
 const [openCats, setOpenCats] = useState(() => {
   const init = {};
  
-for (const cat of [...ALL_CATEGORIES, ...MOBILKRAN_CATEGORIES]) init[cat.key] = false; // alles zu
+ 
+for (const cat of [...ALL_CATEGORIES, ...MOBILKRAN_CATEGORIES, ...BAU_CATEGORIES]) init[cat.key] = false;
+// alles zu
 
   return init;
 });
@@ -428,7 +435,9 @@ for (const cat of [...ALL_CATEGORIES, ...MOBILKRAN_CATEGORIES]) init[cat.key] = 
 const [checklist, setChecklist] = useState(() => {
   const init = {};
   
-for (const cat of [...ALL_CATEGORIES, ...MOBILKRAN_CATEGORIES]) {
+
+for (const cat of [...ALL_CATEGORIES, ...MOBILKRAN_CATEGORIES, ...BAU_CATEGORIES]) {
+
 
     init[cat.key] = cat.items.map(() => ({ rating: "", note: "", photos: [] }));
   }
