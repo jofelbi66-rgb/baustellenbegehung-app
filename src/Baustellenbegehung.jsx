@@ -120,6 +120,58 @@ const CATEGORIES = [
   },
 ];
 
+// ===== Ergänzungen Allgemein / Werkstatt =====
+const GENERAL_EXTRA_CATEGORIES = [
+  {
+    key: "organisation",
+    title: "Organisation & Arbeitsvorbereitung",
+    items: [
+      "Verantwortlichkeiten und Ansprechpartner geregelt",
+      "Erforderliche Unterweisungsnachweise vorhanden",
+      "Arbeitsabläufe und Gefährdungen besprochen (LMRA)",
+    ],
+  },
+  {
+    key: "erstehilfe",
+    title: "Erste Hilfe",
+    items: [
+      "Erste-Hilfe-Material vorhanden und einsatzbereit",
+    ],
+  },
+  {
+    key: "brandschutz",
+    title: "Brandschutz & Notfallorganisation",
+    items: [
+      "Feuerlöscher vorhanden und geprüft",
+      "Flucht- und Rettungsorganisation geregelt",
+    ],
+  },
+  {
+    key: "arbeitsmittel",
+    title: "Arbeitsmittel",
+    items: [
+      "Arbeitsmittel augenscheinlich in sicherem Zustand",
+      "Erforderliche Bedienungsanleitungen verfügbar",
+    ],
+  },
+  {
+    key: "sozialraeume",
+    title: "Sozial- und Sanitärräume",
+    items: [
+      "Aufenthalts- und Sanitäreinrichtungen hygienisch",
+    ],
+  },
+  {
+    key: "umwelt",
+    title: "Umwelt & Entsorgung",
+    items: [
+      "Abfallentsorgung und Abfalltrennung ordnungsgemäß",
+      "Erforderliche Auffang- und Rückhalteeinrichtungen vorhanden",
+    ],
+  },
+];
+
+
 // Bewertungsoptionen: grün=OK, rot=Mangel, gelb=Notiz
 const RATING_OPTIONS = [
   { value: "ok", label: "OK", color: "bg-green-600 text-white", border: "border-green-600" },
