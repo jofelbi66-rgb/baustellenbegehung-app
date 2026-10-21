@@ -346,13 +346,13 @@ const ALL_CATEGORIES = [...CATEGORIES, ...GENERAL_EXTRA_CATEGORIES];
  
 const [openCats, setOpenCats] = useState(() => {
   const init = {};
-  for (const cat of CATEGORIES) init[cat.key] = false; // alles zu
+  for (const cat of ALL_CATEGORIES) init[cat.key] = false; // alles zu
   return init;
 });
 
 const [checklist, setChecklist] = useState(() => {
   const init = {};
-  for (const cat of CATEGORIES) {
+  for (const cat of ALL_CATEGORIES) {
     init[cat.key] = cat.items.map(() => ({ rating: "", note: "", photos: [] }));
   }
   return init;
@@ -682,7 +682,7 @@ if (!canvas.width || !canvas.height) return;
   /* ---------- E-Mail HTML ---------- */
   const buildSummaryHTML = () => {
     const rows = [];
-    for (const cat of CATEGORIES) {
+    for (const cat of ALL_CATEGORIES) {
       rows.push(`<tr style=\"background:#f8fafc\"><td colspan=\"3\" style=\"padding:8px 6px;font-weight:600;border-top:1px solid #e5e7eb\">${cat.title}</td></tr>`);
       cat.items.forEach((label, i) => {
         const row = checklist?.[cat.key]?.[i] || { rating: "", note: "" };
@@ -889,7 +889,7 @@ doc.addImage(data, fmt, px + offX, py + offY, drawW, drawH, undefined, "FAST");
   const rows = [];
   const ratingMap = { ok: "OK", defect: "Mangel", note: "Notiz" };
 
-  for (const cat of CATEGORIES) {
+  for (const cat of ALL_CATEGORIES) {
     cat.items.forEach((label, i) => {
       const row = checklist?.[cat.key]?.[i] || { rating: "", note: "", photos: [] };
 
@@ -1414,7 +1414,7 @@ if (signatureCapturedAt) {
 y = boxY + boxH + (signatureCapturedAt ? 10 : 6);
 
 
-await addPhotosSection(doc, checklist, CATEGORIES);
+await addPhotosSection(doc, checklist, ALL_CATEGORIES);
 
  
 
@@ -1907,7 +1907,7 @@ Offene Mängel (noch zu beheben):
           </section>
 
           {/* Checkliste mit farbigen Buttons & Zebra-Hintergrund */}
-{CATEGORIES.map((cat) => (
+{ALL_CATEGORIES.map((cat) => (
   <section key={cat.key} className="bg-white p-4 rounded-2xl shadow">
     <button
       type="button"
