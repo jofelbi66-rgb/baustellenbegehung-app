@@ -172,6 +172,23 @@ const GENERAL_EXTRA_CATEGORIES = [
 ];
 
 
+// ===== Ergänzungen Mobilkran =====
+const MOBILKRAN_CATEGORIES = [
+  {
+    key: "mobilkran_hse",
+    title: "Mobilkran – HSE-Begehung",
+    items: [
+      "Kranaufstellung gemäß Aufstellplanung und Einsatzbedingungen",
+      "Abstützung und Unterbauung augenscheinlich sicher",
+      "Standsicherheit und Tragfähigkeit des Untergrunds berücksichtigt",
+      "Sicherheitsabstände zu Freileitungen, Baugruben und Geländekanten eingehalten",
+      "Schwenk- und Lastbewegungsbereiche ausreichend gesichert",
+      "Sichere Durchführung der Hebevorgänge organisatorisch geregelt",
+    ],
+  },
+];
+
+
 // Bewertungsoptionen: grün=OK, rot=Mangel, gelb=Notiz
 const RATING_OPTIONS = [
   { value: "ok", label: "OK", color: "bg-green-600 text-white", border: "border-green-600" },
