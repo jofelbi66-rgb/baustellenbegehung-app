@@ -1578,6 +1578,9 @@ subject: `Baustellenbegehung – ${INSPECTION_AREAS.find(area => area.key === in
 
     body: "Im Anhang der PDF-Bericht.",
     project: form.project || "",
+    
+inspectionArea: INSPECTION_AREAS.find(area => area.key === inspectionArea)?.title || "Allgemein / Werkstatt",
+
     location: form.location || "",
     inspector: form.inspector || "",
     date: form.date || "",
