@@ -37,6 +37,17 @@ const APPS_SCRIPT_TOKEN = ""; // nur falls du im Apps Script einen TOKEN gesetzt
 const LOGO_URL = "https://github.com/jofelbi66-rgb/Fahrzeugkontrolle/blob/main/felbermayr_logo.png";
 
 /* ===================== Checklisten-Daten ===================== */
+
+// ================== Begehungsbereiche ==================
+const INSPECTION_AREAS = [
+  { key: "allgemein", title: "Allgemein / Werkstatt" },
+  { key: "mobilkran", title: "Mobilkran" },
+  { key: "bau", title: "Bau" },
+  { key: "montage", title: "Montage / Einbringung" },
+];
+
+
+
 const CATEGORIES = [
   {
     key: "ordnung",
