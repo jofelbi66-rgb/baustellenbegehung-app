@@ -1572,8 +1572,10 @@ for (let p = 1; p <= total; p++) {
     filename,
     pdfBase64,
     cc: ccEmail || "",
+ 
+   
+subject: `Baustellenbegehung – ${INSPECTION_AREAS.find(area => area.key === inspectionArea)?.title || "Allgemein"} – ${form.project || "Projekt"}`,
 
-    subject: "Baustellenbegehung – Bericht",
     body: "Im Anhang der PDF-Bericht.",
     project: form.project || "",
     location: form.location || "",
