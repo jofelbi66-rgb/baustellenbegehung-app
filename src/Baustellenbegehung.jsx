@@ -258,6 +258,8 @@ const att = { maxPx: 1280, q: 0.8 };
 export default function BaustellenbegehungApp() {
   const now = useNowISOLocal();
 
+const [inspectionArea, setInspectionArea] = useState("allgemein");
+
   // HIER EINFÜGEN:
   const [inspectorName, setInspectorName] =
   useLocalStorageState("app.inspectorName", "");
