@@ -188,6 +188,58 @@ const MOBILKRAN_CATEGORIES = [
   },
 ];
 
+// ===== Ergänzungen Bau / HAGN =====
+const BAU_CATEGORIES = [
+  {
+    key: "bau_baustelle",
+    title: "Bau – Baustelleneinrichtung & Verkehr",
+    items: [
+      "Baustellenabsicherung und Verkehrssicherung entsprechend den örtlichen Gefährdungen",
+      "Baustellenverkehr und Trennung von Personen- und Maschinenverkehr geregelt",
+    ],
+  },
+  {
+    key: "bau_erdarbeiten",
+    title: "Bau – Baugruben & Erdarbeiten",
+    items: [
+      "Baugruben und Gräben gegen Einsturz gesichert (Böschung/Verbau)",
+      "Sichere Zugänge, Übergänge und Schutzstreifen an Baugruben vorhanden",
+    ],
+  },
+  {
+    key: "bau_maschinen",
+    title: "Bau – Baumaschinen",
+    items: [
+      "Baumaschinen standsicher aufgestellt und sicher eingesetzt",
+      "Gefahrenbereiche von Erdbaumaschinen abgesichert",
+    ],
+  },
+  {
+    key: "bau_hoehe",
+    title: "Bau – Gerüste & Höhenarbeiten",
+    items: [
+      "Gerüste zur Nutzung freigegeben und erkennbare Mängel berücksichtigt",
+      "Leitern, Zugänge und Arbeitsbühnen sicher verwendet",
+    ],
+  },
+  {
+    key: "bau_besondere",
+    title: "Bau – Besondere Arbeiten",
+    items: [
+      "Schutzmaßnahmen bei Abbruch- und Rückbauarbeiten umgesetzt",
+      "Erforderliche Schutzmaßnahmen bei Heißarbeiten vorhanden",
+    ],
+  },
+  {
+    key: "bau_wasser",
+    title: "Bau – Wasserbau",
+    items: [
+      "Schutz gegen Hineinfallen und Ertrinken bei Arbeiten am oder auf dem Wasser vorhanden",
+      "Rettungsmittel und Rettungsorganisation für Wasserarbeiten einsatzbereit",
+    ],
+  },
+];
+
 
 // Bewertungsoptionen: grün=OK, rot=Mangel, gelb=Notiz
 const RATING_OPTIONS = [
