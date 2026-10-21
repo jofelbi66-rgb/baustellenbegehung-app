@@ -341,6 +341,9 @@ useEffect(() => {
   localStorage.setItem("app.ccEmail", ccEmail);
 }, [ccEmail]);
 const [showOnlyOpen, setShowOnlyOpen] = useState(false);
+ 
+const ALL_CATEGORIES = [...CATEGORIES, ...GENERAL_EXTRA_CATEGORIES];
+ 
 const [openCats, setOpenCats] = useState(() => {
   const init = {};
   for (const cat of CATEGORIES) init[cat.key] = false; // alles zu
