@@ -1565,7 +1565,9 @@ for (let p = 1; p <= total; p++) {
   const pdfBase64 = dataUri.split(",")[1];
 
   const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
-  const filename = `Begehung_${safeName}.pdf`;
+ 
+const filename = `Begehung_${inspectionArea === "montage" ? "Montage-Einbringung" : inspectionArea === "mobilkran" ? "Mobilkran" : inspectionArea === "bau" ? "Bau" : "Allgemein-Werkstatt"}_${safeName}.pdf`;
+
 
   const params = new URLSearchParams({
     token: APPS_SCRIPT_TOKEN || "",
@@ -1781,7 +1783,9 @@ async function addPhotosSection(doc, images, att, startY, pageW, margin) {
 
 // Dateiname
 const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
-const fileName = `Begehung_${safeName}.pdf`;
+
+const fileName = `Begehung_${inspectionArea === "montage" ? "Montage-Einbringung" : inspectionArea === "mobilkran" ? "Mobilkran" : inspectionArea === "bau" ? "Bau" : "Allgemein-Werkstatt"}_${safeName}.pdf`;
+
 
 // PDF als Datei bauen
 const blob = doc.output("blob");
