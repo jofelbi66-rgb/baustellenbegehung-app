@@ -240,6 +240,45 @@ const BAU_CATEGORIES = [
   },
 ];
 
+// ===== Ergänzungen Montage / Einbringung =====
+const MONTAGE_CATEGORIES = [
+  {
+    key: "montage_vorbereitung",
+    title: "Montage – Arbeitsvorbereitung",
+    items: [
+      "Bauseitige Voraussetzungen einschließlich erforderlicher statischer Nachweise geklärt",
+      "Montage- und Einbringablauf mit beteiligten Gewerken abgestimmt",
+    ],
+  },
+  {
+    key: "montage_geraete",
+    title: "Montage – Geräte und Einrichtungen",
+    items: [
+      "Hubgerüste, Verschubsysteme und Montageeinrichtungen entsprechend der Planung aufgebaut",
+      "Unterbauungen und Lastverteilungen entsprechend den festgelegten Vorgaben ausgeführt",
+      "Rüstzustand und Einsatzkonfiguration entsprechen der Arbeitsplanung",
+    ],
+  },
+  {
+    key: "montage_lasten",
+    title: "Montage – Lasten und Bewegungsbereiche",
+    items: [
+      "Lastaufnahme und vorgesehene Anschlag- beziehungsweise Unterbaupunkte geeignet",
+      "Verfahr- und Verschubwege frei von Hindernissen und unbefugten Personen",
+      "Gefahrenbereiche beim Heben, Senken und Verschieben ausreichend gesichert",
+    ],
+  },
+  {
+    key: "montage_koordination",
+    title: "Montage – Koordination",
+    items: [
+      "Kommunikation und eindeutige Verantwortlichkeiten während der Lastbewegungen geregelt",
+      "Gleichzeitige Arbeiten anderer Gewerke berücksichtigt und abgestimmt",
+    ],
+  },
+];
+
+
 
 // Bewertungsoptionen: grün=OK, rot=Mangel, gelb=Notiz
 const RATING_OPTIONS = [
