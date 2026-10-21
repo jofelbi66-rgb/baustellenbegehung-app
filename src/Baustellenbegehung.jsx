@@ -1456,6 +1456,9 @@ doc.text("Baustellenbegehung – Bericht", pageW / 2, startY, { align: "center" 
       ["Projekt", form.project || "-"],
       ["Ort", form.location || "-"],
       ["Firma/AG", form.company || "-"],
+      
+["Begehungsbereich", INSPECTION_AREAS.find(area => area.key === inspectionArea)?.title || "-"],
+
       ["Datum/Uhrzeit", formatDEDateTime(form.date)],
 
       ["Begehende Person", form.inspector || "-"],
