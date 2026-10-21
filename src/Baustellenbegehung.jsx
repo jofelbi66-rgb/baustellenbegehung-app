@@ -1641,6 +1641,30 @@ return (
   </div>
 </header>
 
+{/* Auswahl des Begehungsbereichs */}
+<div className="mb-6 rounded-xl border bg-white p-4">
+  <h2 className="font-semibold mb-3">
+    Begehungsbereich auswählen
+  </h2>
+
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+    {INSPECTION_AREAS.map((area) => (
+      <button
+        key={area.key}
+        type="button"
+        onClick={() => setInspectionArea(area.key)}
+        className={`p-3 rounded-xl border text-sm font-medium ${
+          inspectionArea === area.key
+            ? "bg-blue-600 text-white border-blue-600"
+            : "bg-white text-gray-700 border-gray-300"
+        }`}
+      >
+        {area.title}
+      </button>
+    ))}
+  </div>
+</div>
+
   
  
          
