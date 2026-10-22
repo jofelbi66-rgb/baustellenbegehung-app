@@ -418,7 +418,7 @@ const att = { maxPx: 1280, q: 0.8 };
 export default function BaustellenbegehungApp() {
   const now = useNowISOLocal();
 
-const [inspectionArea, setInspectionArea] = useState("allgemein");
+const [inspectionAreas, setInspectionAreas] = useState(["allgemein"]);
 
   // HIER EINFÜGEN:
   const [inspectorName, setInspectorName] =
@@ -454,14 +454,12 @@ const ALL_CATEGORIES = [...CATEGORIES, ...GENERAL_EXTRA_CATEGORIES];
 
 
 
-const VISIBLE_CATEGORIES =
-  inspectionArea === "mobilkran"
-    ? [...ALL_CATEGORIES, ...MOBILKRAN_CATEGORIES]
-    : inspectionArea === "bau"
-    ? [...ALL_CATEGORIES, ...BAU_CATEGORIES]
-    : inspectionArea === "montage"
-    ? [...ALL_CATEGORIES, ...MONTAGE_CATEGORIES]
-    : ALL_CATEGORIES;
+const VISIBLE_CATEGORIES = [
+  ...ALL_CATEGORIES,
+  ...(inspectionAreas.includes("mobilkran") ? MOBILKRAN_CATEGORIES : []),
+  ...(inspectionAreas.includes("bau") ? BAU_CATEGORIES : []),
+  ...(inspectionAreas.includes("montage") ? MONTAGE_CATEGORIES : []),
+];
 
 
  
@@ -1457,7 +1455,7 @@ doc.text("Baustellenbegehung – Bericht", pageW / 2, startY, { align: "center" 
       ["Ort", form.location || "-"],
       ["Firma/AG", form.company || "-"],
       
-["Begehungsbereich", INSPECTION_AREAS.find(area => area.key === inspectionArea)?.title || "-"],
+["Begehungsbereich", inspectionAreas.map(key => INSPECTION_AREAS.find(area => area.key === key)?.title || key).join(" + ")],
 
       ["Datum/Uhrzeit", formatDEDateTime(form.date)],
 
@@ -1566,8 +1564,16 @@ for (let p = 1; p <= total; p++) {
 
   const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
  
-const filename = `Begehung_${inspectionArea === "montage" ? "Montage-Einbringung" : inspectionArea === "mobilkran" ? "Mobilkran" : inspectionArea === "bau" ? "Bau" : "Allgemein-Werkstatt"}_${safeName}.pdf`;
+const areaFileName = inspectionAreas
+  .map((key) =>
+    key === "montage" ? "Montage-Einbringung" :
+    key === "mobilkran" ? "Mobilkran" :
+    key === "bau" ? "Bau" :
+    "Allgemein-Werkstatt"
+  )
+  .join("_");
 
+const filename = `Begehung_${areaFileName}_${safeName}.pdf`;
 
   const params = new URLSearchParams({
     token: APPS_SCRIPT_TOKEN || "",
@@ -1576,13 +1582,12 @@ const filename = `Begehung_${inspectionArea === "montage" ? "Montage-Einbringung
     cc: ccEmail || "",
  
    
-subject: `Baustellenbegehung – ${INSPECTION_AREAS.find(area => area.key === inspectionArea)?.title || "Allgemein"} – ${form.project || "Projekt"}`,
+subject: `Baustellenbegehung – ${inspectionAreas.map(key => INSPECTION_AREAS.find(area => area.key === key)?.title || key).join(" + ")} – ${form.project || "Projekt"}`,
 
     body: "Im Anhang der PDF-Bericht.",
     project: form.project || "",
     
-inspectionArea: INSPECTION_AREAS.find(area => area.key === inspectionArea)?.title || "Allgemein / Werkstatt",
-
+inspectionArea: inspectionAreas.map(key => INSPECTION_AREAS.find(area => area.key === key)?.title || key).join(" + "),
     location: form.location || "",
     inspector: form.inspector || "",
     date: form.date || "",
@@ -1784,8 +1789,16 @@ async function addPhotosSection(doc, images, att, startY, pageW, margin) {
 // Dateiname
 const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
 
-const fileName = `Begehung_${inspectionArea === "montage" ? "Montage-Einbringung" : inspectionArea === "mobilkran" ? "Mobilkran" : inspectionArea === "bau" ? "Bau" : "Allgemein-Werkstatt"}_${safeName}.pdf`;
+const areaFileName = inspectionAreas
+  .map((key) =>
+    key === "montage" ? "Montage-Einbringung" :
+    key === "mobilkran" ? "Mobilkran" :
+    key === "bau" ? "Bau" :
+    "Allgemein-Werkstatt"
+  )
+  .join("_");
 
+const fileName = `Begehung_${areaFileName}_${safeName}.pdf`;
 
 // PDF als Datei bauen
 const blob = doc.output("blob");
@@ -1851,9 +1864,17 @@ return (
       <button
         key={area.key}
         type="button"
-        onClick={() => setInspectionArea(area.key)}
+      onClick={() =>
+  setInspectionAreas((prev) =>
+    prev.includes(area.key)
+      ? prev.length > 1
+        ? prev.filter((key) => key !== area.key)
+        : prev
+      : [...prev, area.key]
+  )
+}
         className={`p-3 rounded-xl border text-sm font-medium ${
-          inspectionArea === area.key
+       inspectionAreas.includes(area.key)
             ? "bg-blue-600 text-white border-blue-600"
             : "bg-white text-gray-700 border-gray-300"
         }`}
