@@ -946,10 +946,16 @@ const hasAny = cats.some(cat =>
       const photos = rows[i]?.photos || [];
       if (!photos.length) continue;
 
-      ensureSpace(10);
+      
       doc.setFont("helvetica", "bold"); doc.setFontSize(11);
-      doc.text(`${cat.title} – ${cat.items[i]}`, margin, y);
-      y += 4;
+      const titleLines = doc.splitTextToSize(
+  `${cat.title} – ${cat.items[i]}`,
+  pageW - 2 * margin
+);
+ensureSpace(titleLines.length * 5 + 5);      
+doc.text(titleLines, margin, y);
+y += titleLines.length * 5;
+      
       doc.setFont("helvetica", "normal"); doc.setFontSize(10);
 
       for (let p = 0; p < photos.length; p++) {
@@ -1158,8 +1164,10 @@ let y = tableEndY + 8;
       const maxHmm = 60; // mm pro Bild
 const att = { maxPx: 1600, q: 0.8 };
 
-      let col = 0;
-      for (let i = 0; i < images.length; i++) {
+     let col = 0;
+
+
+for (let i = 0; i < images.length; i++) {
         try {
           const recompressed = await recompressImage(images[i], att.maxPx, att.q);
           // Größe bestimmen
@@ -1178,7 +1186,7 @@ const bottomLimit = pageHeight - margin;
 // Seitenumbruch (mit Margin statt harter 287)
 const caption = findNoteForPhoto(i);
 const captionH = caption ? 5 : 0;
-const neededH = 4 + h + 3 + captionH; // 4=Fototitel, h=Bild, 3=Abstand, captionH optional
+const neededH = 4 + h + 3 + captionH;
 
 if (y + neededH > bottomLimit) {
   doc.addPage();
@@ -1187,22 +1195,25 @@ if (y + neededH > bottomLimit) {
   col = 0;
 }
 
+    const x = margin + col * (maxWPerCol + colGap);
+doc.setFontSize(10);
+doc.text(`Foto ${i + 1}`, x, y);
+y += 4;
+doc.addImage(recompressed, "JPEG", x, y, w, h, undefined, "FAST");
 
-          const x = margin + col * (maxWPerCol + colGap);
-          doc.setFontSize(10);
-          doc.text(`Foto ${i + 1}`, x, y);
-          y += 4;
-          doc.addImage(recompressed, "JPEG", x, y, w, h, undefined, "FAST");
+// Caption, falls Notiz existiert
+y += h + 3;
+// caption ist bereits oben ermittelt
 
-          // Caption, falls Notiz existiert
-          y += h + 3;
-          // caption ist bereits oben ermittelt
+if (caption) {
+  doc.setFontSize(9);
+  doc.text(String(caption).slice(0, 120), x, y);
+  y += 5;
+}
 
-          if (caption) { doc.setFontSize(9); doc.text(String(caption).slice(0, 120), x, y); y += 5; }
-
-          // Nächste Spalte / Zeile
-          col = (col + 1) % cols;
-          if (col === 0) y += 6;
+// Nächste Spalte / Zeile
+col = (col + 1) % cols;
+if (col === 0) y += 6; 
         } catch {}
       }
 
