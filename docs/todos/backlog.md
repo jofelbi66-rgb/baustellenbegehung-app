@@ -2,11 +2,11 @@
 
 ## Offen
 
-- [ ] Mehrere Checklisten je Firma/Logo-Auswahl (Konzept + Umsetzung)
-- [ ] Checklisten-Import per Excel/CSV (Schema vorhanden)
-- [ ] Klärung: PDF-Checklisten nur als Referenz oder automatischer Import?
-- [ ] Foto-Layout im PDF final abstimmen (aktuell ok, keine weiteren Experimente)
-- [ ] Fehler/Edge-Cases: Kamera/Upload robust halten (Decode/404-Themen beobachten)
+- [ ] Firmenspezifische Checklisten und Logo-Zuordnung prüfen (vier Begehungsbereiche und Mehrfachauswahl bereits umgesetzt)
+- [ ] Excel-/CSV-Import für Checklisten entwickeln (Schema vorbereitet; Importfunktion noch nicht umgesetzt)
+- [ ] PDF-Checklisten als fachliche Referenz verwenden; automatischen PDF-Import vorerst nicht vorsehen
+- [ ] PDF-Fotolayout: Darstellung von zwei Fotos nebeneinander und Seitenumbrüche bei umfangreichen Fotoberichten bei Bedarf prüfen (aktueller Test mit drei Fotos erfolgreich)
+- [ ] Kamera und Foto-Upload auf unterschiedlichen Geräten weiter testen; gelegentliche Aufnahme- und Decodierungsfehler beobachten und bei erneutem Auftreten untersuchen
 
 ## In Arbeit
 
@@ -17,6 +17,12 @@
 - [x] Unterschrift im PDF unter der Checkliste platzieren
 - [x] Foto-Seiten nach Unterschrift wieder korrekt generieren
 - [x] Verzerrung der Fotos behoben (kein Stretch)
+- [x] Vier Begehungsbereiche eingerichtet: Allgemein / Werkstatt, Mobilkran, Bau, Montage / Einbringung
+- [x] Insgesamt 65 unterschiedliche Prüfpunkte integriert
+- [x] Mehrfachauswahl der Begehungsbereiche umgesetzt und getestet
+- [x] Begehungsbereiche in PDF, E-Mail-Betreff und Dateinamen integriert
+- [x] Automatischen Zeilenumbruch für Prüfpunktbeschreibungen auf PDF-Fotoseiten umgesetzt
+- [ ] 
 # Backlog / ToDo
 
 ## A) Checklisten-Strategie (firmenspezifisch)
