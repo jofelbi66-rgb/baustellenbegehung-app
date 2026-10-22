@@ -46,3 +46,28 @@
 - Abstimmung intern: Checklisten je Firma/Bereich sammeln.
 - Entscheidung: Ein App-Grundgerüst für mehrere Firmen-Varianten vs. eine App mit dynamischem Checklist-Loading.
 
+## Entwicklungsstand 22.10.2026
+
+### Begehungsbereiche und Checklisten
+- Vier Bereiche: Allgemein / Werkstatt, Mobilkran, Bau, Montage / Einbringung.
+- Insgesamt 65 unterschiedliche Prüfpunkte.
+- Mehrfachauswahl der Bereiche umgesetzt und getestet.
+- Allgemeine Prüfpunkte erscheinen nur einmal.
+- Bewertungen und Notizen bleiben beim Wechsel der Bereiche erhalten.
+
+### PDF-Berichte und E-Mail-Versand
+- PDF-Erstellung mit Checkliste, Bewertungen, Notizen, Fotos und Unterschrift funktioniert.
+- Mehrere Begehungsbereiche werden in einem gemeinsamen Bericht dokumentiert.
+- E-Mail-Betreff, Nachrichtentext und PDF-Dateiname berücksichtigen die ausgewählten Bereiche.
+- Automatischer Zeilenumbruch für lange Prüfpunktbeschreibungen auf Fotoseiten umgesetzt und getestet.
+- Fotodarstellung ohne erkennbare Verzerrung getestet.
+
+### Veröffentlichung
+- Quellcode auf GitHub, Branch main.
+- GitHub Pages Deployment über GitHub Actions erfolgreich.
+- Sicherheitskopie: backup-vor-mehrfachauswahl.
+
+### Noch zu prüfen / verbessern
+- Darstellung von zwei Fotos nebeneinander in unterschiedlichen Konstellationen.
+- Ältere, teilweise doppelte Foto- und PDF-Codeabschnitte bei späterer Bereinigung prüfen.
+- Projektdokumentation und Präsentation für das Bereichsleitermeeting fertigstellen.
