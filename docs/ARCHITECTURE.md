@@ -1,75 +1,58 @@
-# Architektur – Baustellenbegehung-App
+# Architektur – HSE-Begehungsapp
 
-Stand: 22.10.2026
+**Stand: 23.10.2026 – geprüfte Pilotarchitektur, Zielarchitektur noch abzustimmen**
 
-## 1. Projektübersicht
+## Zweck und Benutzer
 
-Die Baustellenbegehung-App dient der digitalen Durchführung und Dokumentation von HSE-Begehungen.
+Web-App für HSE-Begehungen durch Führungskräfte auf Firmenhandy, Tablet und PC. Vier kombinierbare Prüfkataloge: Allgemein/Werkstatt, Mobilkran, Bau und Montage/Einbringung. Insgesamt 65 Prüfpunkte. Ratings OK, Mangel, Notiz sowie Notizen und punktbezogene Fotos. Kein allgemeines unzugeordnetes Foto-Upload-Feld mehr in der Pilotoberfläche.
 
-Die Anwendung ermöglicht die Erfassung von Stammdaten, Bewertungen, Notizen, Fotos und Unterschriften. Die Ergebnisse werden in einem PDF-Bericht zusammengefasst und können per E-Mail versendet werden.
+## Technische Pilotarchitektur
 
-Die Anwendung ist als React-/Vite-Projekt umgesetzt und wird über GitHub Pages bereitgestellt.
+```text
+React / Vite im Browser
+  |-- Checklisten, Bilder, Signatur
+  |-- jsPDF / jspdf-autotable -> PDF-Download lokal (ohne Übermittlung)
+  `-- HTTPS POST (URLSearchParams, PDF Base64 + strukturierte Daten)
+         |
+         v
+    Google Apps Script Web-App (doPost)
+      |-- MailApp: PDF-Bericht an HSE-Empfänger
+      `-- Google Sheets: HSE_Begehungsregister
+           |-- Begehungen (ein Datensatz je UUID)
+           `-- Feststellungen (je Mangel / Hinweis, mit Begehungs-ID)
+```
 
-## 2. Begehungsbereiche und Checklistenlogik
+Beobachteter Integrationstest: E-Mail-Meldung grün; Google Sheet mit Begehung, 1 Mangel und 1 Notiz, jeweils zur Begehungs-ID zugeordnet; Spalte M `Versendet`. Keine Garantie für E-Mail-Zustellung oder vollständige Ausfallsicherheit.
 
-Die App unterstützt vier Begehungsbereiche:
+## Datenmodell
 
-- Allgemein / Werkstatt
-- Mobilkran
-- Bau
-- Montage / Einbringung
+**Begehungen (A–M):** Begehungs-ID (UUID), Datum, Gesellschaft, Standort, Projekt, Begehungsbereich, begehende Person, Prüfpunkte bewertet, Mängel, Hinweise, PDF-Dateiname, Erfasst am, E-Mail-Versandstatus.
 
-Die Bereiche können einzeln oder kombiniert ausgewählt werden (Mehrfachauswahl).
+**Feststellungen (A–O):** Feststellungs-ID, Begehungs-ID, Datum, Gesellschaft, Standort, Projekt, Begehungsbereich, Prüfpunkt-ID, Prüfkategorie, Prüfpunkt, Bewertung, Beschreibung/Notiz, Maßnahmenstatus, Verantwortlich, Fälligkeit.
 
-Die Checklisten bestehen aus 37 allgemeinen Prüfpunkten und zusätzlichen fachbezogenen Prüfpunkten:
+Zu beachten: `Firma/AG` ist Auftragsgeber/Freitext und darf nicht automatisch mit der ausführenden Gesellschaft gleichgesetzt werden. Letztere wird im Pilot über die Logoauswahl abgeleitet – fachlich zu verifizieren.
 
-- Mobilkran: 6 zusätzliche Prüfpunkte
-- Bau: 12 zusätzliche Prüfpunkte
-- Montage / Einbringung: 10 zusätzliche Prüfpunkte
+## GitHub / Umgebungen
 
-Insgesamt sind 65 unterschiedliche Prüfpunkte verfügbar. Die allgemeinen Prüfpunkte werden unabhängig von der Auswahl nur einmal eingebunden.
+- Original-Repo `jofelbi66-rgb/baustellenbegehung-app`, `main` = Altversion und Live GitHub Pages.
+- `jofelbi66-rgb-patch-1` = getestete Pilotänderungen, Build über `.github/workflows/build-test.yml` (ohne Deploy).
+- `.github/workflows/deploy.yml` = GitHub Pages Veröffentlichung bei Push auf `main`; nicht auf dem Test-Branch manuell mit Deployment starten.
+- Zusätzliche Repository-Anlage `baustellenbegehung-test` derzeit nicht als Quellcode-Ziel verwenden.
+- `node_modules/`, `dist/`, `package-lock.json` können im Codespace als untracked erscheinen. Nur gezielt gewünschte Dateien committen; Build-Artefakte nicht pauschal versionieren.
+- Apps Script: bisherige produktive URL und neu eingerichtete Pilotbereitstellung sind verschieden. Konfiguration explizit je Umgebung validieren. Keine URLs, Tokens oder sonstigen Geheimnisse in öffentliche Übergabedokumentation aufnehmen.
 
-Die sichtbaren Prüfpunkte werden in `VISIBLE_CATEGORIES` anhand der Zustandsvariable `inspectionAreas` zusammengestellt. Bereits erfasste Bewertungen und Notizen bleiben beim Abwählen und erneuten Auswählen eines Bereichs erhalten.
+## Betrieb und Sicherheit
 
-## 3. PDF-Erstellung und E-Mail-Versand
+Die aktuelle Pilotbereitstellung ist öffentlich erreichbar, die Google-Sheet-Daten liegen in einem privaten Google-Kontext. Das ist **keine empfohlene Dauerlösung für reale Betriebsdaten**. Kein Frontend-Token als alleinige Authentisierung verwenden. Backend-seitige Identitäts-/Raten-/Eingabeprüfung, Ereignisprotokoll, verlässliche Wiederholbarkeit von Versand und Registerverarbeitung sowie Datenschutzkonzept vor Firmenfreigabe klären.
 
-Die Anwendung erzeugt PDF-Begehungsberichte mit folgenden Inhalten:
+## Zielarchitektur (noch kein Implementierungsstand)
 
-- Projekt- und Begehungsdaten einschließlich ausgewählter Begehungsbereiche
-- Bewertete Prüfpunkte mit Bewertungen und Notizen
-- Unterschrift unterhalb der Checkliste
-- Fotodokumentation auf separaten PDF-Seiten
-- Seitenzahlen und Firmenlogo
+Firmenverwaltetes Web-Hosting + Microsoft Entra ID für Führungskräfte; serverseitige API/Automation; SharePoint Lists für Begehungen/Feststellungen, SharePoint-Dokumentbibliothek für PDFs; optional Power BI / Power Query; Firmenlaufwerk als ergänzendes Archiv nach IT-Vorgabe. Technisches Berechtigungs-, Lizenzierungs- und Aufbewahrungskonzept entscheidet die Firmen-IT.
 
-Für die PDF-Erstellung werden jsPDF und AutoTable verwendet.
+## Freigabegates
 
-Längere Prüfpunktbeschreibungen auf den Fotoseiten werden automatisch auf mehrere Zeilen umgebrochen.
-
-Beim E-Mail-Versand wird der PDF-Bericht über die React-Funktion `sendPdfToMail` erzeugt. Die Daten werden an ein Google Apps Script übertragen, das die E-Mail mit dem PDF-Anhang versendet.
-
-E-Mail-Betreff, Nachrichtentext und PDF-Dateiname enthalten die ausgewählten Begehungsbereiche. Eine kombinierte Begehung wird in einem einzigen PDF-Bericht dokumentiert.
-
-## 4. Bereitstellung und Versionsverwaltung
-
-Der Quellcode der Anwendung wird im GitHub-Repository `jofelbi66-rgb/baustellenbegehung-app` verwaltet.
-
-- Hauptbranch: `main`
-- Sicherheitskopie vor Einführung der Mehrfachauswahl: `backup-vor-mehrfachauswahl`
-- Entwicklungsumgebung: React und Vite
-- Hosting: GitHub Pages
-- Automatisierte Veröffentlichung: GitHub Actions (`deploy.yml`)
-
-Änderungen am Hauptbranch lösen den Build und das Deployment über GitHub Actions aus. Nach erfolgreicher Veröffentlichung steht die aktualisierte Anwendung über GitHub Pages zur Verfügung.
-
-Vor größeren funktionalen Änderungen wird ein Sicherungsbranch erstellt. Neue Funktionen werden nach dem Deployment anhand praktischer Begehungsberichte getestet.
-
-## 5. Technische Besonderheiten und Wartung
-
-- Die zentralen React-Funktionen befinden sich in `src/Baustellenbegehung.jsx`.
-- Die Checklisten werden derzeit direkt im Quellcode definiert.
-- Der Import externer Excel-/CSV-Checklisten ist vorbereitet, aber noch nicht implementiert.
-- Die PDF-Erstellung enthält mehrere historisch entstandene Foto- und Ausgabefunktionen. Vor einer Bereinigung müssen die tatsächlich verwendeten Funktionsaufrufe geprüft werden.
-- Bei Änderungen an der Fotoausgabe müssen Textumbruch, Bildproportionen und Seitenumbrüche gemeinsam getestet werden.
-- Der E-Mail-Versand erfolgt über Google Apps Script. Änderungen am Apps Script erfordern eine Aktualisierung der Web-App-Bereitstellung.
-- Bekannte offene Aufgaben werden in `docs/todos/backlog.md` gepflegt.
-- Der aktuelle Entwicklungsstand wird in `docs/status/current.md` dokumentiert.
+1. Finalen Testbranch-Commit referenzieren und Build grün.
+2. Eindeutige Backend-Adresse, Rechte und Datenschutz freigeben.
+3. Testfälle PDF, Bild, Signatur, Mail, Register, Duplikate und Teilfehler dokumentieren.
+4. Neue Zielumgebung sichern, Umstellungsstichtag und Verantwortlichkeiten bestimmen.
+5. `main` erst nach Freigabe aktualisieren; Rückrollplan dokumentieren.
