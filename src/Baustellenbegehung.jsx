@@ -719,7 +719,7 @@ if (signatureDataURL) {
 
   const start = (ev) => {
     ev.preventDefault();
-    setup(); // falls Layout sich geändert hat (Rotation etc.)
+    // Canvas hier nicht zurücksetzen: sonst wird bei jedem Strich die Signatur gelöscht.
 
     isDrawingRef.current = true;
     const { x, y } = getPoint(ev);
@@ -748,6 +748,7 @@ if (signatureDataURL) {
 
     isDrawingRef.current = false;
     setSignatureDataURL(canvas.toDataURL("image/png"));
+    setSignatureCapturedAt(new Date().toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }));
 
     if (ev.pointerId != null && canvas.releasePointerCapture) {
       try { canvas.releasePointerCapture(ev.pointerId); } catch {}
@@ -1529,7 +1530,7 @@ const drawSignatureBlockOnFirstPage = (doc, margin = 15) => {
 };
  
 
- const sendPdfToMail = async () => {
+ const createReportPdf = async () => {
   // PDF erzeugen (Report)
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
   const pageW = doc.internal.pageSize.getWidth();
@@ -1650,8 +1651,11 @@ for (let p = 1; p <= total; p++) {
   doc.setPage(p);
   drawFooter(doc, p, total, margin);
 }
+  return doc;
+};
 
-
+const sendPdfToMail = async () => {
+  const doc = await createReportPdf();
   const dataUri = doc.output("datauristring");
   const pdfBase64 = dataUri.split(",")[1];
 
@@ -1704,6 +1708,23 @@ if (!res.ok || txt.trim() !== "OK") {
 };
  
 
+
+// Derselbe vollständige Bericht wie beim E-Mail-Versand – ohne Versand.
+const downloadPdf = async () => {
+  if (busy) return;
+  setBusy(true);
+  setMsg(null);
+  try {
+    const doc = await createReportPdf();
+    const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
+    doc.save(`Begehung_${safeName}.pdf`);
+  } catch (err) {
+    console.error("PDF-Download fehlgeschlagen:", err);
+    setMsg({ type: "error", text: "PDF konnte nicht erstellt werden." });
+  } finally {
+    setBusy(false);
+  }
+};
 
 // === einfache PDF-Erzeugung ===
 const sharePdf = async () => {
@@ -2287,28 +2308,6 @@ Offene Mängel (noch zu beheben):
 ))}
 
 
-          {/* Fotos */}
-          <section className="bg-white p-4 rounded-2xl shadow">
-            <h2 className="text-lg font-semibold mb-3">Fotos (werden verkleinert)</h2>
-            <input type="file" accept="image/*" multiple capture="environment" onChange={onPickImages} className="mb-3" />
-            {!!images.length && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {images.map((src, i) => (
-                  <div key={i} className="relative group">
-                    <img src={src} alt={`Foto ${i + 1}`} className="w-full h-32 object-cover rounded-xl border" />
-                    <button
-                      type="button"
-                      onClick={() => setImages((arr) => arr.filter((_, idx) => idx !== i))}
-                      className="absolute top-2 right-2 bg-white/90 border rounded-lg px-2 py-1 text-sm"
-                    >
-                      Entfernen
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
 {/* Unterschrift */}
 <section className="bg-white p-4 rounded-2xl shadow">
   <h2 className="text-lg font-semibold mb-3">Unterschrift</h2>
@@ -2317,8 +2316,6 @@ Offene Mängel (noch zu beheben):
  <canvas
   ref={sigCanvasRef}
   className="border rounded bg-white w-full h-40 block"
-  onPointerUp={saveSignature}
-  onPointerLeave={saveSignature}
 />
 
 
@@ -2331,9 +2328,11 @@ Offene Mängel (noch zu beheben):
     Löschen
   </button>
  <span className="text-gray-500 text-sm">
-  Bitte mit Finger/Maus unterschreiben. Wird lokal auf diesem Gerät gespeichert (bis „Löschen“).
+  Bitte mit Finger/Maus unterschreiben. Signatur wird nach dem Loslassen gespeichert.
 </span>
-
+  <span className="text-sm font-medium" aria-live="polite">
+    {signatureDataURL ? `Unterschrift gespeichert${signatureCapturedAt ? ` (${signatureCapturedAt})` : ""}` : "Noch keine Unterschrift gespeichert"}
+  </span>
 </div>
 
   </div>
@@ -2348,6 +2347,9 @@ Offene Mängel (noch zu beheben):
           <div className="flex items-center gap-3 flex-wrap">
             <button type="submit" disabled={busy} className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60">
               {busy ? "Sende…" : "Begehung per E-Mail senden"}
+            </button>
+            <button type="button" disabled={busy} onClick={downloadPdf} className="px-5 py-3 rounded-2xl border bg-white disabled:opacity-60">
+              PDF herunterladen (ohne Versand)
             </button>
 
 
