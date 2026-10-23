@@ -30,7 +30,7 @@ const FIRM_MATCH = [
 
 /* ===================== Konfiguration ===================== */
 
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQ4iCoCwQIqLfOFzkq8QHfZfgORdCrag4myM-S8G59zfnH4UeLijBQQsuhLwrmmFLR/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoJIX3kq3vkb2P0Rja9jiFrqfrZecG8EPa4XuSRyTlNO7xE0kBYTSjIl3zKUKiw7IX/exec";
 const APPS_SCRIPT_TOKEN = ""; // nur falls du im Apps Script einen TOKEN gesetzt hast
 
 // Logo für PDF (nur Seite 1). GitHub RAW-URL, z. B. https://raw.githubusercontent.com/<user>/<repo>/main/felbermayr_logo.png
