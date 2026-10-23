@@ -334,7 +334,7 @@ async function resizeImageFromFile(file, maxSize = 1280, quality = 0.8) {
     });
 
     // Wichtig: objectUrl weitergeben (nicht dataURL)
-    return recompressImage(objectUrl, maxSize, quality);
+    return await recompressImage(objectUrl, maxSize, quality);
   } finally {
     URL.revokeObjectURL(objectUrl);
   }
@@ -816,14 +816,12 @@ window.addEventListener("resize", handleResize);
 
 const clearSignature = () => {
   const canvas = sigCanvasRef.current;
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
   setSignatureDataURL("");
   setSignatureCapturedAt("");
-
   isDrawingRef.current = false;
 };
 
@@ -862,6 +860,20 @@ if (!canvas.width || !canvas.height) return;
         );
       });
     }
+    return `
+      <table style=\"border-collapse:collapse;width:100%;font-family:Arial,Helvetica,sans-serif;font-size:14px\">
+        <thead>
+          <tr>
+            <th align=\"left\" style=\"padding:6px 8px;border-bottom:2px solid #ddd\">Prüfpunkt</th>
+            <th align=\"left\" style=\"padding:6px 8px;border-bottom:2px solid #ddd\">Bewertung</th>
+            <th align=\"left\" style=\"padding:6px 8px;border-bottom:2px solid #ddd\">Notiz</th>
+          </tr>
+        </thead>
+        <tbody>${rows.join("")}</tbody>
+      </table>`;
+  };
+
+  // Strukturierte Kennzahlen und Feststellungen für das HSE-Register
     const countBewertetePruefpunkte = () => {
   let anzahl = 0;
 
@@ -900,18 +912,6 @@ if (!canvas.width || !canvas.height) return;
 
   return feststellungen;
 };
-    return `
-      <table style=\"border-collapse:collapse;width:100%;font-family:Arial,Helvetica,sans-serif;font-size:14px\">
-        <thead>
-          <tr>
-            <th align=\"left\" style=\"padding:6px 8px;border-bottom:2px solid #ddd\">Prüfpunkt</th>
-            <th align=\"left\" style=\"padding:6px 8px;border-bottom:2px solid #ddd\">Bewertung</th>
-            <th align=\"left\" style=\"padding:6px 8px;border-bottom:2px solid #ddd\">Notiz</th>
-          </tr>
-        </thead>
-        <tbody>${rows.join("")}</tbody>
-      </table>`;
-  };
 
   const buildImagesHTML = () => {
     if (!images.length) return "";
