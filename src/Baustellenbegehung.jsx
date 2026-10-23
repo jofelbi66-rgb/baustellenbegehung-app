@@ -424,7 +424,7 @@ const [inspectionAreas, setInspectionAreas] = useState(["allgemein"]);
   const [inspectorName, setInspectorName] =
   useLocalStorageState("app.inspectorName", "");
 
-
+const [begehungsId, setBegehungsId] = useState(() => crypto.randomUUID());
   const [form, setForm] = useState({
     project: "",
     location: "",
@@ -474,25 +474,61 @@ for (const cat of [...ALL_CATEGORIES, ...MOBILKRAN_CATEGORIES, ...BAU_CATEGORIES
 
   return init;
 });
-
-const [checklist, setChecklist] = useState(() => {
+const createEmptyChecklist = () => {
   const init = {};
-  
 
-
-for (const cat of [...ALL_CATEGORIES, ...MOBILKRAN_CATEGORIES, ...BAU_CATEGORIES, ...MONTAGE_CATEGORIES]) {
-
-
-    init[cat.key] = cat.items.map(() => ({ rating: "", note: "", photos: [] }));
+  for (const cat of [
+    ...ALL_CATEGORIES,
+    ...MOBILKRAN_CATEGORIES,
+    ...BAU_CATEGORIES,
+    ...MONTAGE_CATEGORIES
+  ]) {
+    init[cat.key] = cat.items.map(() => ({
+      rating: "",
+      note: "",
+      photos: []
+    }));
   }
+
   return init;
-});
+};
+const [checklist, setChecklist] = useState(createEmptyChecklist);
+
+
 
 
 
   const [images, setImages] = useState([]); // dataURLs
   const [msg, setMsg] = useState(null);
   const [busy, setBusy] = useState(false);
+ const neueBegehung = () => {
+  const bestaetigt = window.confirm(
+    "Neue Begehung starten?\n\nAlle bisherigen Eingaben, Bewertungen und Fotos werden verworfen."
+  );
+
+  if (!bestaetigt) return;
+   const neueId = crypto.randomUUID();
+
+setBegehungsId(neueId);
+setChecklist(createEmptyChecklist());
+ setOpenCats((prev) =>
+  Object.fromEntries(
+    Object.keys(prev).map((key) => [key, false])
+  )
+);  
+setImages([]);
+ clearSignature();
+setInspectionAreas(["allgemein"]);  
+ setForm({
+  project: "",
+  location: "",
+  company: "",
+ date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+  inspector: inspectorName,
+  weather: "",
+  remarks: "",
+});  
+};
   
   // Kamera-Funktion pro Checkpunkt (Foto aufnehmen)
 const onCapturePhoto = (catKey, itemIndex) => async (e) => {
@@ -798,7 +834,7 @@ if (!canvas.width || !canvas.height) return;
   
   try {
     const dataUrl = canvas.toDataURL("image/png");
-    setSignatureDataUrl(dataUrl);
+   setSignatureDataURL(dataUrl); 
    setSignatureCapturedAt(
   new Date().toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })
 );
@@ -826,6 +862,44 @@ if (!canvas.width || !canvas.height) return;
         );
       });
     }
+    const countBewertetePruefpunkte = () => {
+  let anzahl = 0;
+
+  for (const cat of VISIBLE_CATEGORIES) {
+    cat.items.forEach((_, index) => {
+      const rating = checklist?.[cat.key]?.[index]?.rating;
+
+      if (["ok", "defect", "note"].includes(rating)) {
+        anzahl++;
+      }
+    });
+  }
+
+  return anzahl;
+};
+    const buildFeststellungen = () => {
+  const feststellungen = [];
+
+  for (const cat of VISIBLE_CATEGORIES) {
+    cat.items.forEach((itemText, index) => {
+      const entry = checklist?.[cat.key]?.[index];
+
+      if (!entry || !["defect", "note"].includes(entry.rating)) {
+        return;
+      }
+
+      feststellungen.push({
+        pruefpunktId: `${cat.key}-${index + 1}`,
+        kategorie: cat.title,
+        pruefpunkt: itemText,
+        bewertung: entry.rating === "defect" ? "Mangel" : "Notiz",
+        beschreibung: entry.note || ""
+      });
+    });
+  }
+
+  return feststellungen;
+};
     return `
       <table style=\"border-collapse:collapse;width:100%;font-family:Arial,Helvetica,sans-serif;font-size:14px\">
         <thead>
@@ -1331,9 +1405,17 @@ const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
 await sendPdfToMail();
 
 setMsg({ type: "ok", text: "E-Mail mit PDF-Anhang wurde versendet." });
-
+} catch (error) {
+  console.error("Versand fehlgeschlagen:", error);
+  setMsg({
+    type: "error",
+    text: "Der Versand ist fehlgeschlagen. Bitte erneut versuchen."
+  });
+} finally {
+  setBusy(false);
+}
     
-    } finally { setBusy(false); }
+   
   };
 
   /* ===================== UI ===================== */
@@ -1585,11 +1667,17 @@ const areaFileName = inspectionAreas
   .join("_");
 
 const filename = `Begehung_${areaFileName}_${safeName}.pdf`;
-
+const feststellungen = buildFeststellungen();
+const feststellungenJSON = JSON.stringify(feststellungen);
+ const anzahlBewertet = countBewertetePruefpunkte();  
   const params = new URLSearchParams({
     token: APPS_SCRIPT_TOKEN || "",
     filename,
     pdfBase64,
+    begehungsId,
+    feststellungen: feststellungenJSON,
+    anzahlBewertet: String(anzahlBewertet),
+    gesellschaft: logoChoice === "custom" ? "" : logoChoice,
     cc: ccEmail || "",
  
    
@@ -1608,12 +1696,14 @@ inspectionArea: inspectionAreas.map(key => INSPECTION_AREAS.find(area => area.ke
   const txt = await res.text();
   console.log("AppsScript Antwort:", txt);
 
-  if (!res.ok || /^ERROR/i.test(txt) || /^Unauthorized/i.test(txt)) {
-    throw new Error(txt || `HTTP ${res.status}`);
-  }
+if (!res.ok || txt.trim() !== "OK") {
+  throw new Error(
+    `Apps Script: ${txt || `HTTP ${res.status}`}`
+  );
+}  
 };
  
-// ... deine bisherigen States und Funktionen (z. B. onCapturePhoto, resizeImageFromFile usw.)
+
 
 // === einfache PDF-Erzeugung ===
 const sharePdf = async () => {
@@ -1869,7 +1959,16 @@ return (
   <h2 className="font-semibold mb-3">
     Begehungsbereich auswählen
   </h2>
-
+<div className="flex justify-end mb-3">
+  <button
+    type="button"
+    onClick={neueBegehung}
+    disabled={busy}
+    className="px-4 py-2 rounded-xl border border-gray-300 bg-gray-100 text-sm font-medium hover:bg-gray-200"
+  >
+    + Neue Begehung
+  </button>
+</div>
   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
     {INSPECTION_AREAS.map((area) => (
       <button
