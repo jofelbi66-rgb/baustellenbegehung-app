@@ -1,3 +1,4 @@
+import { useInspectionDraft } from "./hooks/useInspectionDraft";
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useLocalStorageState } from "./hooks/useLocalStorageState";
 
@@ -493,6 +494,7 @@ for (const cat of [...ALL_CATEGORIES, ...MOBILKRAN_CATEGORIES, ...BAU_CATEGORIES
   const [images, setImages] = useState([]); // dataURLs
   const [msg, setMsg] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [pendingMedia, setPendingMedia] = useState(0);
   
   // Kamera-Funktion pro Checkpunkt (Foto aufnehmen)
 const onCapturePhoto = (catKey, itemIndex) => async (e) => {
@@ -500,6 +502,7 @@ const onCapturePhoto = (catKey, itemIndex) => async (e) => {
   if (!file) return;
   try {
 
+setPendingMedia(n => n + 1);
 const dataUrl = await resizeImageFromFile(file, 1280, 0.8);
 console.log("dataUrl prefix:", String(dataUrl).slice(0, 30));
 console.log("file:", file?.type, file?.name, file?.size);
@@ -519,6 +522,7 @@ console.log("file:", file?.type, file?.name, file?.size);
     console.error("Foto aufnehmen fehlgeschlagen:", err);
     setMsg?.({ type: "error", text: "Konnte Foto nicht aufnehmen." });
   } finally {
+    setPendingMedia(n => Math.max(0, n - 1));
     e.target.value = "";
   }
 };
@@ -630,9 +634,9 @@ const onLocate = async () => {
 const sigCanvasRef = React.useRef(null);
 const isDrawingRef = React.useRef(false);
 const [signatureDataURL, setSignatureDataURL] =
-  useLocalStorageState("app.signature_v1", "");
+  useState("");
 const [signatureCapturedAt, setSignatureCapturedAt] =
-  useLocalStorageState("app.signatureCapturedAt_v1", "");
+  useState("");
 
   
 
@@ -798,7 +802,7 @@ if (!canvas.width || !canvas.height) return;
   
   try {
     const dataUrl = canvas.toDataURL("image/png");
-    setSignatureDataUrl(dataUrl);
+    setSignatureDataURL(dataUrl);
    setSignatureCapturedAt(
   new Date().toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })
 );
@@ -808,6 +812,32 @@ if (!canvas.width || !canvas.height) return;
   }
 };
 
+
+  const draftCategories = [...CATEGORIES, ...GENERAL_EXTRA_CATEGORIES, ...MOBILKRAN_CATEGORIES, ...BAU_CATEGORIES, ...MONTAGE_CATEGORIES];
+  const draftValues = { form, inspectionAreas, checklist, images, coords, ccEmail, logoChoice, logoSrc, signatureDataURL, signatureCapturedAt, openCats, showOnlyOpen };
+  const restoreDraft = (data) => {
+    setForm(data.form);
+    setInspectionAreas(data.inspectionAreas);
+    setChecklist(data.checklist);
+    setImages(data.images);
+    setCoords(data.coords ?? null);
+    setCcEmail(data.ccEmail ?? "");
+    setLogoChoice(data.logoChoice ?? "felbermayr");
+    setLogoSrc(data.logoSrc ?? DEFAULT_LOGOS[0].url);
+    setSignatureDataURL(data.signatureDataURL ?? "");
+    setSignatureCapturedAt(data.signatureCapturedAt ?? "");
+    setOpenCats(data.openCats ?? {});
+    setShowOnlyOpen(data.showOnlyOpen ?? false);
+    setMsg(null);
+  };
+  const freshDraft = () => ({
+    ...draftValues,
+    form: { project: "", location: "", company: "", date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), inspector: inspectorName, weather: "", remarks: "" },
+    inspectionAreas: ["allgemein"],
+    checklist: Object.fromEntries(draftCategories.map(cat => [cat.key, cat.items.map(() => ({ rating: "", note: "", photos: [] }))])),
+    images: [], coords: null, signatureDataURL: "", signatureCapturedAt: "", openCats: {}, showOnlyOpen: false,
+  });
+  const draft = useInspectionDraft(draftCategories, draftValues, restoreDraft, freshDraft);
 
   /* ---------- E-Mail HTML ---------- */
   const buildSummaryHTML = () => {
@@ -1356,6 +1386,8 @@ async function onLogoUpload(e) {
   const f = e.target.files?.[0];
   if (!f) return;
 
+  setPendingMedia(n => n + 1);
+  try {
   // Bild laden
   const img = document.createElement("img");
   img.src = await fileToDataURL(f);
@@ -1372,6 +1404,7 @@ async function onLogoUpload(e) {
 
   const data = canvas.toDataURL("image/png", 0.9); // kompakt
   setLogoSrc(data);
+  } finally { setPendingMedia(n => n - 1); }
 }
 
   const exportPdfQuick = async () => {
@@ -1846,6 +1879,11 @@ return (
 <div className="min-h-screen bg-gray-50 p-3 md:p-8 overflow-x-hidden">
 
       <div className="max-w-5xl mx-auto">
+    <div className="mb-3 flex flex-wrap items-center gap-3" aria-live="polite">
+      <span role={draft.error ? "alert" : "status"} className={draft.error ? "text-red-700" : "text-gray-600 text-sm"}>{draft.error || draft.status}</span>
+      <button type="button" className="px-3 py-2 rounded-xl border" disabled={!draft.ready || !!draft.error || busy || locating || pendingMedia > 0 || draft.resetting} onClick={draft.newInspection}>Neue Begehung</button>
+    </div>
+    <fieldset disabled={!draft.ready || draft.resetting} className="min-w-0" style={{ pointerEvents: !draft.ready || draft.resetting ? "none" : undefined }}>
     <header className="mb-6">
   <div className="flex items-start justify-between gap-4">
     <div>
@@ -2256,6 +2294,7 @@ Offene Mängel (noch zu beheben):
             <span className="text-gray-500 text-sm">E-Mail via EmailJS oder lokale PDF-Ablage. Logo nur auf Seite 1.</span>
           </div>
         </form>
+    </fieldset>
       </div>
     </div>
   );
