@@ -1,3 +1,4 @@
+import { readPreference, usePreferenceState } from "./hooks/usePreferenceState";
 import { useInspectionDraft } from "./hooks/useInspectionDraft";
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useLocalStorageState } from "./hooks/useLocalStorageState";
@@ -442,13 +443,7 @@ const updateInspector = (v) => {
 };
 
   
-const [ccEmail, setCcEmail] = useState(() =>
-  localStorage.getItem("app.ccEmail") || ""
-);
-
-useEffect(() => {
-  localStorage.setItem("app.ccEmail", ccEmail);
-}, [ccEmail]);
+const [ccEmail, setCcEmail, ccStorageError] = usePreferenceState("app.ccEmail", "");
 const [showOnlyOpen, setShowOnlyOpen] = useState(false);
  
 const ALL_CATEGORIES = [...CATEGORIES, ...GENERAL_EXTRA_CATEGORIES];
@@ -529,12 +524,8 @@ console.log("file:", file?.type, file?.name, file?.size);
 
 
 // Logo-Auswahl speichern
-const [logoChoice, setLogoChoice] = useState(() =>
-  localStorage.getItem("app.logoChoice") || "felbermayr"
-);
-const [logoSrc, setLogoSrc] = useState(() =>
-  localStorage.getItem("app.logoSrc") || (DEFAULT_LOGOS[0]?.url || "")
-);
+const [logoChoice, setLogoChoice, logoChoiceStorageError] = usePreferenceState("app.logoChoice", "felbermayr");
+const [logoSrc, setLogoSrc, logoSrcStorageError] = usePreferenceState("app.logoSrc", DEFAULT_LOGOS[0]?.url || "", true);
 
 // Automatische Zuordnung nach Firmenname (Firma/AG-Feld)
 function autoPickLogoByCompany(companyName) {
@@ -546,12 +537,6 @@ function autoPickLogoByCompany(companyName) {
   setLogoChoice(hit.logoId);
   setLogoSrc(preset.url);
 }
-
-  
-// persistieren
-useEffect(() => localStorage.setItem("app.logoChoice", logoChoice), [logoChoice]);
-useEffect(() => logoSrc && localStorage.setItem("app.logoSrc", logoSrc), [logoSrc]);
-
 
   
   // Geoposition & Reverse Geocoding
@@ -1881,6 +1866,9 @@ return (
       <div className="max-w-5xl mx-auto">
     <div className="mb-3 flex flex-wrap items-center gap-3" aria-live="polite">
       <span role={draft.error ? "alert" : "status"} className={draft.error ? "text-red-700" : "text-gray-600 text-sm"}>{draft.error || draft.status}</span>
+      {(ccStorageError || logoChoiceStorageError || logoSrcStorageError) && (
+        <span role="alert" className="text-amber-700 text-sm">{ccStorageError || logoChoiceStorageError || logoSrcStorageError}</span>
+      )}
       <button type="button" className="px-3 py-2 rounded-xl border" disabled={!draft.ready || !!draft.error || busy || locating || pendingMedia > 0 || draft.resetting} onClick={draft.newInspection}>Neue Begehung</button>
     </div>
     <fieldset disabled={!draft.ready || draft.resetting} className="min-w-0" style={{ pointerEvents: !draft.ready || draft.resetting ? "none" : undefined }}>
@@ -2013,7 +2001,7 @@ return (
           const preset = DEFAULT_LOGOS.find((l) => l.id === val);
           if (preset && preset.url) setLogoSrc(preset.url);
           if (val === "custom") {
-            const stored = localStorage.getItem("app.logoSrc");
+            const stored = readPreference("app.logoSrc", logoSrc).value;
             if (stored) setLogoSrc(stored);
           }
         }}

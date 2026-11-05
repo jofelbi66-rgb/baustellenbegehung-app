@@ -71,3 +71,21 @@ Die Tests verwenden isolierte Browserprofile und verschicken keine E-Mails. Abwe
 ## Grenzen
 
 Die Sicherung liegt nur auf diesem Gerät unter derselben Website-Origin und demselben Browserprofil. Privatmodus, Browserdatenlöschung, Geräteverlust und Speicherbereinigung können Daten entfernen. Ein Service Worker, Cloud-Synchronisation und ein geräteübergreifendes Backup sind nicht enthalten. Noch nicht abgeschlossene Fotoverarbeitung, Zeichenstriche oder Datenbanktransaktionen können bei abruptem Absturz verloren gehen. Eine Archivierung benötigt zusätzlichen Speicher; bei vollem Speicher bleibt der bisherige aktive Stand erhalten. Die komplette Momentaufnahme einschließlich Fotos wird pro Änderung gespeichert; die Leistung bei großen Begehungen muss auf echten Geräten geprüft werden.
+
+## Nachbesserung nach Review, 05.11.2026
+
+Die bisherigen direkten `localStorage`-Zugriffe für CC und Logo werden nun durch `usePreferenceState` abgesichert, einschließlich der Zugriffseigenschaft `window.localStorage` selbst und des Logo-Auswahlhandlers. Fehler beim Lesen oder Schreiben führen zu einer sichtbaren Warnung und verhindern die IndexedDB-Wiederherstellung nicht. Wenn beide Speicher nicht verfügbar sind, bleibt auch die IndexedDB-Fehlermeldung sichtbar und die Bearbeitung gesperrt. Bereits abgefangene Namens-Voreinstellungen bleiben unverändert; der vollständige Name ist weiterhin Bestandteil des Entwurfs.
+
+Bestehende Schlüssel und ihr Rohtextformat werden beibehalten. Keine Browserdaten werden gelöscht. Nach einem fehlgeschlagenen Lesen wird der unbekannte vorhandene Wert nicht durch den Standardwert überschrieben. Der erfolgreiche IndexedDB-Speicherstatus und die Warnung zum alten Voreinstellungsspeicher werden getrennt angezeigt. Eine Warnung über einen fehlgeschlagenen Lesezugriff bleibt für die Sitzung sichtbar, auch wenn ein späterer Schreibzugriff gelingt.
+
+Zusätzlicher Test: `node tests/preference-browser.mjs` (gleicher lokaler Vite-Server und dieselbe externe Playwright-Installation wie oben). Die isolierten Testprofile prüfen:
+
+- Blockierter Zugriff auf die gesamte `localStorage`-Eigenschaft.
+- Blockierte `getItem`-Aufrufe; nicht lesbarer Altwert wird beim Start nicht mit einem Standardwert überschrieben.
+- `QuotaExceededError` bei `setItem`.
+- Gleichzeitiger Ausfall von localStorage und IndexedDB.
+- Erhalt und Wiederverwendung vorhandener Rohtext-Voreinstellungen und unbeteiligter Schlüssel.
+
+Für die ersten drei Fehlerfälle wurden Bearbeitung, Auswahl „Eigenes Logo“ und Wiederherstellung von Projekt, CC und Logo aus IndexedDB nach Neuladen geprüft. Keine unbehandelten Browserfehler. Alle fünf Fehlerfall-/Kompatibilitätsszenarien erfolgreich. Auch die fünf Datenbanktests, die gesamte bisherige Browser-Regressionssuite einschließlich echtem PDF mit abgefangenem Versand und vollständigem Browserneustart sowie der Produktionsbuild sind erneut erfolgreich. Die Vite-Bundlegrößenwarnung bleibt bestehen.
+
+PDF-, Versand- und Checklistenlogik bleiben durch diese Nachbesserung unverändert. Die weiterhin ausstehenden Tests auf echten Smartphones und die oben beschriebenen Grenzen gelten unverändert. Aktualisierung ausschließlich im bestehenden Entwicklungszweig; kein Merge und keine Veröffentlichung.
