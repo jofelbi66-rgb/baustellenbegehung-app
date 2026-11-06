@@ -553,28 +553,6 @@ function autoPickLogoByCompany(companyName) {
     }));
   };
 
-const onPickImages = async (e) => {
-  const files = Array.from(e.target.files || []);
-  if (!files.length) return;
-  setBusy(true);
-
-  try {
-    const resized = [];
-    for (const f of files.slice(0, 12)) {
-      const durl = await resizeImageFromFile(f, 1280, 0.8);
-      resized.push(durl);
-    }
-    setImages((prev) => [...prev, ...resized].slice(0, 24));
-  } catch (err) {
-    console.error(err);
-    setMsg({ type: "error", text: "Bilder konnten nicht verarbeitet werden." });
-  } finally {
-    setBusy(false);
-    e.target.value = "";
-  }
-};
-
-
   // ---------- Geolocation ----------
   const getBrowserPosition = (opts = { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }) =>
     new Promise((resolve, reject) => {
@@ -664,7 +642,7 @@ const clearSignature = () => {
     form: { project: "", location: "", company: "", date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), inspector: inspectorName, weather: "", remarks: "" },
     inspectionAreas: ["allgemein"],
     checklist: Object.fromEntries(draftCategories.map(cat => [cat.key, cat.items.map(() => ({ rating: "", note: "", photos: [] }))])),
-    images: [], coords: null, signatureDataURL: "", signatureCapturedAt: "", openCats: {}, showOnlyOpen: false,
+    images: [], coords: null, openCats: {}, showOnlyOpen: false,
   });
   const draft = useInspectionDraft(draftCategories, draftValues, restoreDraft, freshDraft);
 
@@ -2058,28 +2036,6 @@ Offene Mängel (noch zu beheben):
 ))}
 
 
-          {/* Fotos */}
-          <section className="bg-white p-4 rounded-2xl shadow">
-            <h2 className="text-lg font-semibold mb-3">Fotos (werden verkleinert)</h2>
-            <input type="file" accept="image/*" multiple capture="environment" onChange={onPickImages} className="mb-3" />
-            {!!images.length && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {images.map((src, i) => (
-                  <div key={i} className="relative group">
-                    <img src={src} alt={`Foto ${i + 1}`} className="w-full h-32 object-cover rounded-xl border" />
-                    <button
-                      type="button"
-                      onClick={() => setImages((arr) => arr.filter((_, idx) => idx !== i))}
-                      className="absolute top-2 right-2 bg-white/90 border rounded-lg px-2 py-1 text-sm"
-                    >
-                      Entfernen
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
 {/* Unterschrift */}
 <section className="bg-white p-4 rounded-2xl shadow">
   <h2 className="text-lg font-semibold mb-3">Unterschrift</h2>
@@ -2100,7 +2056,7 @@ Offene Mängel (noch zu beheben):
     Löschen
   </button>
  <span className="text-gray-500 text-sm">
-  Bitte mit Finger/Maus unterschreiben. Wird lokal auf diesem Gerät gespeichert (bis „Löschen“).
+  Persönliche Unterschrift: Bleibt auf diesem Gerät auch für neue Begehungen gespeichert. Zum Ersetzen zuerst „Löschen“ wählen und neu unterschreiben.
 </span>
 
 </div>

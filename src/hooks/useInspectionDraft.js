@@ -64,7 +64,7 @@ export function useInspectionDraft(categories, values, restore, fresh) {
 
   async function newInspection() {
     if (!ready || stopped.current || resetting.current) return;
-    if (!window.confirm('Neue Begehung beginnen? Der aktuelle Entwurf wird auf diesem Gerät archiviert. Die neue Begehung beginnt ohne Unterschrift.')) return;
+    if (!window.confirm('Neue Begehung beginnen? Der aktuelle Entwurf wird auf diesem Gerät archiviert. Die persönliche Unterschrift bleibt erhalten.')) return;
     resetting.current = true;
     setResettingState(true);
     try {

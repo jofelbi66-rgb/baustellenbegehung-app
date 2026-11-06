@@ -21,12 +21,13 @@ test('concurrent writers: exactly one succeeds, stale writer cannot overwrite', 
   assert.equal((await readDraft()).revision, 2);
   await assert.rejects(writeDraft(data, 1), /anderer Tab/);
 });
-test('new inspection archives full previous draft atomically, starts without signature', async () => {
+test('new inspection archives full previous draft atomically, retains personal signature', async () => {
   const previous = await readDraft();
-  const next = { ...data, form: { project: '' }, signatureDataURL: '', signatureCapturedAt: '', images: [] };
+  const next = { ...data, form: { project: '' }, images: [] };
   await writeDraft(next, 2, true);
   const active = await readDraft();
-  assert.equal(active.data.signatureDataURL, '');
+  assert.equal(active.data.signatureDataURL, data.signatureDataURL);
+  assert.equal(active.data.signatureCapturedAt, data.signatureCapturedAt);
   const db = await new Promise((resolve, reject) => { const r = indexedDB.open('baustellenbegehung-drafts', 1); r.onsuccess = () => resolve(r.result); r.onerror = reject; });
   const records = await new Promise((resolve) => { const r = db.transaction('drafts').objectStore('drafts').getAll(); r.onsuccess = () => resolve(r.result); });
   db.close();

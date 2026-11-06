@@ -1,5 +1,7 @@
 # Automatische Entwurfssicherung – Entwicklung und Teststand
 
+> **Aktuelle Regel ab 06.11.2026 nach ausdrücklicher Benutzerfreigabe:** Die persönliche Unterschrift und ihr ursprünglicher Erfassungszeitpunkt bleiben bei „Neue Begehung“ erhalten. Sie werden nur durch bewusstes Löschen oder neues Zeichnen geändert. Das allgemeine Foto-Uploadfeld ist entfernt; nur prüfpunktbezogene Fotos können neu hinzugefügt werden. Frühere Aussagen über das Leeren der Unterschrift und den allgemeinen Foto-Upload dokumentieren den historischen Stand und sind durch diese Regel ersetzt.
+
 Stand: 02.11.2026. Lokaler Entwicklungszweig: `feature/indexeddb-entwurfssicherung`.
 Keine Zusammenführung, kein Push, kein GitHub-Pages-Deployment.
 
@@ -101,3 +103,12 @@ Die Unterschriftsbedienung liegt nun in `useSignatureCanvas`: genau eine Ereigni
 Produktionsbuild und die fünf Datenbanktests bestanden. Die bestehenden Browser-Regressionsprüfungen für Entwürfe, Fotos, Archivierung, Tabkonflikte, Speicherfehler und PDF-Erzeugung mit abgefangenem Versand wurden erneut ausgeführt. Echte Safari-/iPhone-Tests bleiben vom simulierten Touch-Test getrennt und sind noch vom Benutzer zu bestätigen.
 
 Das separate Testpaket enthält zudem die Fotoimport-Korrektur: `connect-src` erlaubt lokale `blob:`- und `data:`-Quellen. Der externe E-Mail-Endpunkt bleibt gesperrt. Keine produktive Veröffentlichung oder Zusammenführung.
+
+
+## Persönliche Unterschrift und Foto-Oberfläche, 06.11.2026
+
+Nach bestandenem Neustart-Test auf dem iPhone hat der Benutzer die Regel ausdrücklich geändert: „Unterschrift speichern, bis eigenständig überschrieben“. Der Neustart übernimmt daher Unterschrift und ursprünglichen Erfassungszeitpunkt; sämtliche projektbezogenen Angaben, Bewertungen, Notizen und Fotos werden weiterhin zurückgesetzt und der alte Entwurf vollständig archiviert. Die Sicherheitsabfrage und der Hinweis am Signaturfeld benennen diese persönliche Geräteeinstellung. Bewusstes „Löschen“ entfernt die Unterschrift auch nach erneutem Öffnen; anschließendes Zeichnen speichert eine neue Unterschrift.
+
+Der separate allgemeine Foto-Upload wurde aus der Oberfläche entfernt, einschließlich seines nicht mehr verwendeten Handlers. Fotos direkt an Prüfpunkten und deren Ausgabe im aktiven PDF bleiben unverändert. Vorhandene allgemeine Fotos aus älteren Entwürfen werden beim Laden und Weiterspeichern nicht gelöscht; beim Neustart bleiben sie im archivierten ursprünglichen Entwurf erhalten. Diese Altdaten werden wie bisher nicht durch die aktive PDF-Fotofunktion ausgegeben.
+
+Die Browserprüfung kontrolliert die neue Regel einschließlich Neustart, Neuladen, bewusstem Löschen und Ersetzen der Unterschrift, das fehlende allgemeine Uploadfeld und den Erhalt älterer allgemeiner Fotos. Die visuelle Signaturprüfung, Speicherfehlerprüfungen und die fünf Datenbanktests bleiben Bestandteil der Regression. PDF-Fototeil, PDF-Tabellen, PDF-Erzeugung und Versand wurden unverändert belassen. Die neue Kombination ist erneut vom Benutzer auf seiner Testseite zu bestätigen; kein Merge oder produktives Deployment.
