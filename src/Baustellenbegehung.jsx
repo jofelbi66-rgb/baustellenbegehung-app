@@ -2188,28 +2188,6 @@ Offene Mängel (noch zu beheben):
 ))}
 
 
-          {/* Fotos */}
-          <section className="bg-white p-4 rounded-2xl shadow">
-            <h2 className="text-lg font-semibold mb-3">Fotos (werden verkleinert)</h2>
-            <input type="file" accept="image/*" multiple capture="environment" onChange={onPickImages} className="mb-3" />
-            {!!images.length && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {images.map((src, i) => (
-                  <div key={i} className="relative group">
-                    <img src={src} alt={`Foto ${i + 1}`} className="w-full h-32 object-cover rounded-xl border" />
-                    <button
-                      type="button"
-                      onClick={() => setImages((arr) => arr.filter((_, idx) => idx !== i))}
-                      className="absolute top-2 right-2 bg-white/90 border rounded-lg px-2 py-1 text-sm"
-                    >
-                      Entfernen
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
 {/* Unterschrift */}
 <section className="bg-white p-4 rounded-2xl shadow">
   <h2 className="text-lg font-semibold mb-3">Unterschrift</h2>
