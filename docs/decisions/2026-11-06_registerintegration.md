@@ -23,7 +23,7 @@ Das Entwurfsformat hat Version 2 und enthält eine dauerhafte `begehungsId` sowi
 
 Vor dem ersten Netzwerkaufruf wird die vollständige konkrete Anfrage inklusive PDF-Base64, Begehungs-ID, Feststellungen, bewerteten Prüfpunkten, Gesellschaft, übrigen Pilotfeldern und ursprünglicher Backend-Adresse als `pending` gespeichert. Erst nach Transaktionsabschluss wird die Anfrage gesendet. Ein Speicherfehler verhindert den Netzwerkaufruf. Der zusätzliche PDF-Speicherbedarf kann deshalb bei großen Berichten zu einer sichtbaren Speichergrenze führen; die bisherigen Daten werden nicht gelöscht.
 
-Ein erneuter Versuch erfolgt ausschließlich auf ausdrückliche Benutzeraktion. Er verwendet dieselbe gespeicherte Adresse und exakt dieselben Felder und PDF-Bytes. Das erneute lokale Speichern prüft vor dem Netzwerkaufruf die Revision, damit ein veralteter Tab nicht senden kann. Die Eingaben bleiben während des unklaren Zustands unverändert. Eine in einer späteren App-Version geänderte Standardadresse lenkt einen bereits vorbereiteten Versuch nicht unbemerkt in ein anderes Register um.
+Ein erneuter Versuch erfolgt ausschließlich auf ausdrückliche Benutzeraktion. Er verwendet dieselbe gespeicherte Adresse und exakt dieselben Felder und PDF-Bytes. Das erneute lokale Speichern prüft vor dem Netzwerkaufruf die Revision, damit ein veralteter Tab nicht senden kann. Die Eingaben bleiben während des unklaren Zustands unverändert. Eine geänderte Zielkonfiguration lenkt einen bereits vorbereiteten Versuch nicht in ein anderes Register um: Weicht die gespeicherte Zieladresse vom ausdrücklich konfigurierten Ziel ab, bleibt der Auftrag erhalten, aber der Wiederholknopf gesperrt. Zuerst muss die Bereitstellung zugeordnet werden.
 
 Der Transport akzeptiert nur HTTP-Erfolg plus Text `OK`. HTML-Seiten, andere Antworttexte und Fehler werden nicht als Erfolg interpretiert. Nach 60 Sekunden wird das Warten auf die HTTP-Anfrage beendet; dies ist KEIN Abbruch oder Rückgängigmachen einer möglicherweise laufenden Google-Verarbeitung. Der Status bleibt dann `pending`. Keine automatischen Wiederholungen.
 
@@ -42,9 +42,9 @@ Der Apps-Script-Code wurde nicht verändert und nicht in das Repository kopiert.
 ## Ausgeführte Prüfungen
 
 - Produktionsbuild erfolgreich; die bekannte Vite-Bundlegrößenwarnung bleibt bestehen.
-- Sechs Datenbank-/Migrationsprüfungen: vollständige Daten, feste Prüfpunktzuordnung, konkurrierende Revisionen, Archivierung/persönliche Unterschrift, fehlerhafte Daten und Schreiben, einmalige V1-Migration mit gesperrter unbekannter Versandhistorie.
+- Sieben Datenbank-/Migrations-/Konfigurationsprüfungen: vollständige Daten, feste Prüfpunktzuordnung, konkurrierende Revisionen, Archivierung/persönliche Unterschrift, fehlerhafte Daten und Schreiben, einmalige V1-Migration mit gesperrter unbekannter Versandhistorie.
 - Zwei Transportprüfungen: konkrete vorbereitete Felder/ID, strenge OK-Erkennung, Fehler-/HTML-Antworten, Netzwerkfehler ohne automatische Wiederholung.
-- Register-Browserprüfung: stabile ID nach Neuladen; echte Pilot-PDF-Erzeugung und vollständiger strukturierter Payload; Speicherung vor Netzwerk; verlorene Antwort; bytegleicher Retry; nur eine simulierte Mail; endgültiger Schreibschutz; neue ID nur bei neuer Begehung; gespeicherte Backend-Adresse; Speicherfehler vor Versand und nach Serverbestätigung; konkurrierende Tabs; Altentwurf-Migration einschließlich expliziter Bestätigung; unklare Backend-Antwort.
+- Register-Browserprüfung: stabile ID nach Neuladen; echte Pilot-PDF-Erzeugung und vollständiger strukturierter Payload; Speicherung vor Netzwerk; verlorene Antwort; bytegleicher Retry; nur eine simulierte Mail; endgültiger Schreibschutz; neue ID nur bei neuer Begehung; Sperre bei abweichender gespeicherter Backend-Adresse; Speicherfehler vor Versand und nach Serverbestätigung; konkurrierende Tabs; Altentwurf-Migration einschließlich expliziter Bestätigung; unklare Backend-Antwort.
 - Bestehende Browserregression: Formular, Bereiche, Bewertungen, Notizen, Prüfpunkt-Fotos, sichtbare Unterschrift, Neuladen, Schließen/Wiederöffnen, vollständiger Chromium-Neustart, persönlicher Signaturerhalt, Archivierung, Speicherfehler, alte allgemeine Fotos nicht gelöscht. Die Löschprüfung wartet ausdrücklich auf den tatsächlichen Datenbankabschluss vor Neuladen.
 - Sichtbare Signaturpixel: Maus, simulierter Touch bei hoher Pixeldichte, mehrere Striche, Neuladen, Größenänderung und absichtliches Löschen.
 - Speicher-Voreinstellungen: gesperrte localStorage-Eigenschaft, fehlgeschlagenes Lesen/Schreiben, voller Speicher, beide Speicher ausgefallen, Altwerte erhalten.
@@ -54,7 +54,7 @@ Werkzeuge liegen wie bisher ausschließlich unter `/tmp/baustellen-qa`. Befehle 
 ```sh
 node tests/draftStore.test.mjs
 node tests/mailTransport.test.mjs
-npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+VITE_APPS_SCRIPT_URL=https://script.google.com/macros/s/TEST-NO-REAL-SERVICE/exec npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 # Gegen diesen lokalen Entwicklungsserver, jeweils isolierte Testprofile:
 node tests/register-browser.mjs
 node tests/draft-browser.mjs
@@ -67,7 +67,7 @@ Alle Google-Aufrufe in den Browserprüfungen werden abgefangen. Die reale Google
 
 ## Noch vor einer produktiven Freigabe zu klären
 
-1. Die Konstante für die Apps-Script-Adresse wurde aus dem Pilotstand übernommen. Es muss ausdrücklich bestätigt werden, dass genau diese Web-App-Bereitstellung den gelieferten Code ausführt und auf das richtige Register zeigt. Unterschiedliche im Projekt vorhandene Alt-/Pilotbereitstellungen dürfen nicht verwechselt werden.
+1. Am 06.11.2026 hat der Benutzer die zugehörige Web-App-URL aus der Bereitstellungsverwaltung übermittelt. Die App verwendet diese ausdrücklich angegebene Adresse für neue Versandvorgänge statt der davon abweichenden ursprünglichen Pilotadresse. Der Benutzer hat anschließend klargestellt, dass diese Adresse ausschließlich zu einer Demo-Liste gehört. Sie darf nicht als Produktivziel verwendet werden. Statt eines fest einkompilierten Ziels verlangt die App nun die ausdrückliche Build-Konfiguration `VITE_APPS_SCRIPT_URL`. Ohne gültige Konfiguration bleiben Erstversand und Wiederholung gesperrt; lokale Entwürfe und PDF-Download bleiben verfügbar. Die ursprüngliche Produktivanbindung ist weiterhin ungeklärt. Ein bereits vorbereiteter Versand bleibt an seine gespeicherte ursprüngliche Adresse gebunden; bei abweichender aktueller Konfiguration wird auch die Wiederholung gesperrt. Unterschiedliche Alt-/Pilotbereitstellungen dürfen nicht verwechselt werden.
 2. Ein gezielt freigegebener echter Integrationstest für PDF, Mail und Register ist weiterhin erforderlich. Aus dem Quellcode oder einer simulierten `OK`-Antwort lässt sich die veröffentlichte Google-Version nicht beweisen.
 3. Ein unklarer Google-Status erfordert manuelle Prüfung im Register durch die zuständige Person. Die App überschreibt den Serverstatus nicht und bietet keinen ungesicherten „trotzdem senden“-Umweg.
 4. Neue UI-Abläufe, insbesondere Altentwurf-Bestätigung und abgeschlossene Begehungen, sind auf dem echten iPhone nachzutesten. Bisherige iPhone-Tests betrafen den Stand vor dieser Registerintegration.
@@ -76,3 +76,12 @@ Alle Google-Aufrufe in den Browserprüfungen werden abgefangen. Die reale Google
 7. PDF- und Bildmengen auf echten Geräten prüfen; der persistierte Versandauftrag enthält zusätzlich zum Entwurf das fertige PDF. Browserdatenlöschung oder Geräteverlust können lokal gespeicherte Daten entfernen.
 
 Für diese Integration wurde kein Merge, kein produktives GitHub-Pages-Deployment und keine Änderung am Google-Script oder an Registerdaten ausgeführt.
+
+
+## Klarstellung Demo/Produktion
+
+Die am 06.11.2026 übermittelte Web-App-Adresse gehört nach ausdrücklicher Klarstellung des Benutzers zu einer Demo-Liste. Diese Zuordnung bestätigt keine Produktivanbindung und auch nicht die dort veröffentlichte Codeversion. Die Demo-Adresse ist deshalb nicht als automatische Vorgabe im Programm hinterlegt. Build- und Hosting-Konfiguration müssen das Ziel ausdrücklich bestimmen. `VITE_APPS_SCRIPT_URL` ist eine öffentliche Zieladresse, kein Geheimnis und kein Ersatz für eine Authentisierung.
+
+Ein fehlendes gebundenes Apps-Script-Projekt in einer Liste beweist nicht, dass kein eigenständiges Script diese Liste beschreibt. Vor der produktiven Freigabe muss der tatsächlich genutzte App-/Versandweg zurückverfolgt werden. Keine neue Automatisierung an der ursprünglichen Liste anlegen, bevor die vorhandene Verbindung geklärt ist.
+
+Zusätzliche Prüfung des Builds ohne `VITE_APPS_SCRIPT_URL`: Nach `npm run build` den lokalen Build mit `npm run preview -- --host 127.0.0.1 --port 5174 --strictPort` starten, dann `node tests/target-configuration-browser.mjs`. Sichtbare Warnung, gesperrter Versand auch bei synthetischem Formularereignis, keine Netzwerkübermittlung, lokale Wiederherstellung und PDF-Download verfügbar. Die Registertests verwenden ausdrücklich eine nicht existente simulierte Testadresse und fangen jeden Aufruf ab. Die echte Demo-Liste und die ursprüngliche Liste werden nicht angesprochen.

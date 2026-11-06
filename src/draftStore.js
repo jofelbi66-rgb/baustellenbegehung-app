@@ -78,11 +78,7 @@ export function checkSchema(data, categories) {
     }
     if (['pending', 'sent'].includes(data.dispatch.state)) {
       const payload = data.dispatch.payload;
-      let validEndpoint = false;
-      try {
-        const endpoint = new URL(data.dispatch.endpoint);
-        validEndpoint = endpoint.origin === 'https://script.google.com' && !endpoint.username && !endpoint.password && !endpoint.search && !endpoint.hash && /^\/macros\/s\/[^/]+\/exec$/.test(endpoint.pathname);
-      } catch { /* Invalid saved endpoint: keep data and block sending. */ }
+      const validEndpoint = isScriptEndpoint(data.dispatch.endpoint);
       if (!validEndpoint || !payload || payload.begehungsId !== data.begehungsId || Object.values(payload).some(value => typeof value !== 'string') ||
           !['pdfBase64', 'feststellungen', 'anzahlBewertet', 'project', 'location', 'inspector'].every(key => typeof payload[key] === 'string')) {
         throw new Error('Gesicherte Versanddaten unvollständig. Bitte vor erneutem Versand prüfen lassen.');
@@ -99,4 +95,11 @@ export function checkSchema(data, categories) {
 export function migrateDraft(data, newId) {
   if (data.version === 2) return data;
   return { ...data, version: 2, begehungsId: newId(), dispatch: { state: 'unverified' } };
+}
+
+export function isScriptEndpoint(value) {
+  try {
+    const endpoint = new URL(value);
+    return endpoint.origin === 'https://script.google.com' && !endpoint.username && !endpoint.password && !endpoint.search && !endpoint.hash && /^\/macros\/s\/[^/]+\/exec$/.test(endpoint.pathname);
+  } catch { return false; }
 }

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || '/tmp/baustellen-qa/node_modules/playwright/index.mjs');
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH || '/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 const url=process.env.REGISTER_TEST_URL || 'http://127.0.0.1:5173/baustellenbegehung-app/';
+const expectedEndpoint=process.env.EXPECTED_APPS_SCRIPT_URL || 'https://script.google.com/macros/s/TEST-NO-REAL-SERVICE/exec';
 const saved=p=>p.getByRole('status').filter({hasText:'Auf diesem Gerät gespeichert'}).waitFor();
 const active=p=>p.evaluate(async()=>{
  const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('baustellenbegehung-drafts',1);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
@@ -20,6 +21,7 @@ try {
  await p.getByRole('button',{name:'Notiz',exact:true}).nth(1).click();await p.getByRole('button',{name:'OK',exact:true}).nth(2).click();await saved(p);
  let requests=0,mails=0;const records=new Map();let frozen;
  await p.route('https://script.google.com/**',async r=>{
+   assert.equal(r.request().url(),expectedEndpoint);
    requests++;const body=r.request().postData();const params=new URLSearchParams(body);const key=params.get('begehungsId');
    assert.equal(key,id);assert.equal(params.get('anzahlBewertet'),'3');assert.equal(params.get('gesellschaft'),'felbermayr');
    const findings=JSON.parse(params.get('feststellungen'));assert.equal(findings.length,2);assert.equal(findings[0].bewertung,'Mangel');assert.equal(findings[1].bewertung,'Notiz');assert.equal(findings[0].pruefpunktId,'ordnung-1');
@@ -41,8 +43,8 @@ try {
  await p.route('https://script.google.com/**',async r=>{requests++;if(requests===1)return r.abort('failed');assert.ok(r.request().url().includes('/SAVED-TARGET/exec'));return r.fulfill({status:200,body:'OK'});});
  await submit(p);await p.getByText('Versand nicht vollständig bestätigt.',{exact:false}).waitFor();
  await p.evaluate(async()=>{const db=await new Promise(resolve=>{const r=indexedDB.open('baustellenbegehung-drafts',1);r.onsuccess=()=>resolve(r.result);});await new Promise((resolve,reject)=>{const tx=db.transaction('drafts','readwrite');const store=tx.objectStore('drafts');const r=store.get('active');r.onsuccess=()=>{const value=r.result;value.data.dispatch.endpoint='https://script.google.com/macros/s/SAVED-TARGET/exec';store.put(value);};tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);});db.close();});
- await p.reload();await saved(p);await retry(p);await p.getByText('Versand vom Server bestätigt.',{exact:true}).waitFor();assert.equal(requests,2);
- console.log('PASS: pending retry uses its saved backend address, not a different current default');await c.close();}
+ await p.reload();await saved(p);assert.equal(await p.getByRole('button',{name:'Unveränderten Versand prüfen / erneut anfragen',exact:true}).isDisabled(),true);assert.equal(requests,1);assert.equal((await active(p)).data.dispatch.endpoint,'https://script.google.com/macros/s/SAVED-TARGET/exec');
+ console.log('PASS: pending request for a different backend remains preserved and blocked, never silently redirected');await c.close();}
  {const {c,p}=await fresh();await fill(p);let requests=0;
  await p.route('https://script.google.com/**',async r=>{requests++;await r.fulfill({status:200,body:'OK'});});
  await p.evaluate(()=>{const put=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(value,...rest){if(value.data?.dispatch?.state==='pending')throw new DOMException('full','QuotaExceededError');return put.call(this,value,...rest);};});

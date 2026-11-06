@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 // Install fake-indexeddb in an external QA directory; no production dependency needed.
 await import(process.env.FAKE_INDEXEDDB_MODULE || '/tmp/baustellen-qa/node_modules/fake-indexeddb/auto/index.mjs');
-const { readDraft, writeDraft, packChecklist, unpackChecklist, checkSchema, migrateDraft } = await import('../src/draftStore.js');
+const { readDraft, writeDraft, packChecklist, unpackChecklist, checkSchema, migrateDraft, isScriptEndpoint } = await import('../src/draftStore.js');
 const categories = [{ key: 'safety', items: ['First', 'Second'] }];
 const checklist = { safety: [{ rating: 'defect', note: 'Repair', photos: ['data:image/png;base64,abc'] }, { rating: 'ok', note: '', photos: [] }] };
 const data = { version: 1, form: { project: 'Site A' }, images: ['image'], inspectionAreas: ['bau'], checklist: packChecklist(categories, checklist), signatureDataURL: 'signature', signatureCapturedAt: 'time' };
@@ -55,4 +55,11 @@ test('legacy migration preserves data and requires unknown send history confirma
   assert.equal(ids, 1);
   checkSchema(migrated, categories);
   assert.throws(() => checkSchema({ ...migrated, dispatch: { state: 'pending', payload: { begehungsId: 'wrong' } } }, categories), /Versanddaten/);
+});
+
+test('mail target must be an explicit Apps Script web-app endpoint', () => {
+  assert.equal(isScriptEndpoint(''), false);
+  assert.equal(isScriptEndpoint('https://script.google.com/macros/s/TEST-NO-REAL-SERVICE/exec'), true);
+  assert.equal(isScriptEndpoint('https://example.invalid/macros/s/test/exec'), false);
+  assert.equal(isScriptEndpoint('https://user:password@script.google.com/macros/s/test/exec'), false);
 });

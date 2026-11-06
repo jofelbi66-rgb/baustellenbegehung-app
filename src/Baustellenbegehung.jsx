@@ -1,3 +1,4 @@
+import { isScriptEndpoint } from "./draftStore";
 import { useSignatureCanvas } from "./hooks/useSignatureCanvas";
 import { readPreference, usePreferenceState } from "./hooks/usePreferenceState";
 import { useInspectionDraft } from "./hooks/useInspectionDraft";
@@ -34,7 +35,9 @@ const FIRM_MATCH = [
 
 /* ===================== Konfiguration ===================== */
 
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoJIX3kq3vkb2P0Rja9jiFrqfrZecG8EPa4XuSRyTlNO7xE0kBYTSjIl3zKUKiw7IX/exec";
+// Explicit per-build target. No implicit demo or production destination.
+const APPS_SCRIPT_URL = (import.meta.env.VITE_APPS_SCRIPT_URL || "").trim();
+const MAIL_TARGET_CONFIGURED = isScriptEndpoint(APPS_SCRIPT_URL);
 const APPS_SCRIPT_TOKEN = ""; // nur falls du im Apps Script einen TOKEN gesetzt hast
 
 // Logo für PDF (nur Seite 1). GitHub RAW-URL, z. B. https://raw.githubusercontent.com/<user>/<repo>/main/felbermayr_logo.png
@@ -1220,7 +1223,7 @@ const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (sendInFlight.current || busy || !draft.ready || draft.error || dispatch.state !== "draft" || pendingMedia || locating) return;
+    if (!MAIL_TARGET_CONFIGURED || sendInFlight.current || busy || !draft.ready || draft.error || dispatch.state !== "draft" || pendingMedia || locating) return;
     const err = validate();
     if (err) { setMsg({ type: "error", text: err }); return; }
     sendInFlight.current = true;
@@ -1247,7 +1250,7 @@ const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
   };
 
   const retryDispatch = async () => {
-    if (sendInFlight.current || busy || draft.error || dispatch.state !== "pending") return;
+    if (!MAIL_TARGET_CONFIGURED || dispatch.endpoint !== APPS_SCRIPT_URL || sendInFlight.current || busy || draft.error || dispatch.state !== "pending") return;
     if (!window.confirm("Den unveränderten Versand mit derselben Begehungs-ID erneut anfragen? Bei unklarem Status im Google-Register zuerst manuell prüfen.")) return;
     sendInFlight.current = true; setBusy(true); setMsg(null);
     try {
@@ -1805,10 +1808,11 @@ return (
       <span role={draft.error ? "alert" : "status"} className={draft.error ? "text-red-700" : "text-gray-600 text-sm"}>{draft.error || draft.status}</span>
       {(ccStorageError || logoChoiceStorageError || logoSrcStorageError) && <span role="alert" className="text-amber-700 text-sm">{ccStorageError || logoChoiceStorageError || logoSrcStorageError}</span>}
       <span className="text-sm break-all">Begehungs-ID: {begehungsId}</span>
+      {!MAIL_TARGET_CONFIGURED && <span role="alert" className="text-amber-700">Kein gültiges Versandziel konfiguriert. Versand bleibt gesperrt; Entwürfe und PDF-Download sind verfügbar.</span>}
       {dispatch.state === "sent" && <span className="text-green-700">Bereits versendet – von Google bestätigt. Für eine weitere Begehung „Neue Begehung“ wählen.</span>}
       {dispatch.state === "pending" && <>
-        <span className="text-amber-700">{busy ? "Versand wird verarbeitet …" : "Versandstatus unklar. Bitte Google-Register prüfen. Eingaben bleiben zum Schutz vor widersprüchlichen Daten gesperrt."}</span>
-        <button type="button" className="px-3 py-2 rounded-xl border" disabled={busy || !!draft.error} onClick={retryDispatch}>Unveränderten Versand prüfen / erneut anfragen</button>
+        <span className="text-amber-700">{dispatch.endpoint !== APPS_SCRIPT_URL ? "Dieser gesicherte Versand gehört zu einer anderen Bereitstellung. Bitte vor weiteren Schritten zuordnen lassen." : busy ? "Versand wird verarbeitet …" : "Versandstatus unklar. Bitte Google-Register prüfen. Eingaben bleiben zum Schutz vor widersprüchlichen Daten gesperrt."}</span>
+        <button type="button" className="px-3 py-2 rounded-xl border" disabled={!MAIL_TARGET_CONFIGURED || dispatch.endpoint !== APPS_SCRIPT_URL || busy || !!draft.error} onClick={retryDispatch}>Unveränderten Versand prüfen / erneut anfragen</button>
       </>}
       {dispatch.state === "unverified" && <>
         <span className="text-amber-700">Älterer Entwurf: bisheriger Versandstatus unbekannt. Vor Versand im Register prüfen.</span>
@@ -2196,7 +2200,7 @@ Offene Mängel (noch zu beheben):
           )}
 
           <div className="flex items-center gap-3 flex-wrap">
-            <button type="submit" disabled={busy || !!draft.error || dispatch.state !== "draft" || pendingMedia > 0 || locating} className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60">
+            <button type="submit" disabled={!MAIL_TARGET_CONFIGURED || busy || !!draft.error || dispatch.state !== "draft" || pendingMedia > 0 || locating} className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60">
               {busy ? "Sende…" : "Begehung per E-Mail senden"}
             </button>
             <button type="button" disabled={busy} onClick={downloadPdf} className="px-5 py-3 rounded-2xl border bg-white disabled:opacity-60">
