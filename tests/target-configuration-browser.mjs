@@ -4,7 +4,7 @@ const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH ||
 try {
  const p=await browser.newPage();let requests=0;
  await p.route('https://script.google.com/**',r=>{requests++;return r.abort();});
- await p.goto(process.env.UNCONFIGURED_APP_URL || 'http://127.0.0.1:5174/baustellenbegehung-app/');
+ await p.goto(process.env.UNCONFIGURED_APP_URL || 'http://127.0.0.1:5186/');
  const saved=()=>p.getByRole('status').filter({hasText:'Auf diesem Gerät gespeichert'}).waitFor();
  await saved();await p.getByRole('alert').filter({hasText:'Kein gültiges Versandziel konfiguriert'}).waitFor();
  await p.getByPlaceholder('z.B. Schleusenmodernisierung XY').fill('Konfiguration TEST');await p.getByPlaceholder('Adresse oder automatisch ermitteln').fill('Testort');await p.getByLabel('Begehende Person *',{exact:false}).fill('Testperson');await saved();

@@ -2,7 +2,7 @@ import { isScriptEndpoint } from "./draftStore";
 import { useSignatureCanvas } from "./hooks/useSignatureCanvas";
 import { readPreference, usePreferenceState } from "./hooks/usePreferenceState";
 import { useInspectionDraft } from "./hooks/useInspectionDraft";
-import { postInspection } from "./mailTransport";
+import { postInspection, LEGACY_MAIL_ENDPOINT } from "./mailTransport";
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useLocalStorageState } from "./hooks/useLocalStorageState";
 
@@ -35,9 +35,10 @@ const FIRM_MATCH = [
 
 /* ===================== Konfiguration ===================== */
 
-// Explicit per-build target. No implicit demo or production destination.
-const APPS_SCRIPT_URL = (import.meta.env.VITE_APPS_SCRIPT_URL || "").trim();
+// Keep the existing PDF-mail destination. Explicit empty override disables sending.
+const APPS_SCRIPT_URL = (import.meta.env.VITE_APPS_SCRIPT_URL ?? LEGACY_MAIL_ENDPOINT).trim();
 const MAIL_TARGET_CONFIGURED = isScriptEndpoint(APPS_SCRIPT_URL);
+const MAIL_SEND_ENABLED = MAIL_TARGET_CONFIGURED && import.meta.env.VITE_DISABLE_MAIL !== "true";
 const APPS_SCRIPT_TOKEN = ""; // nur falls du im Apps Script einen TOKEN gesetzt hast
 
 // Logo für PDF (nur Seite 1). GitHub RAW-URL, z. B. https://raw.githubusercontent.com/<user>/<repo>/main/felbermayr_logo.png
@@ -615,10 +616,12 @@ const onLocate = async () => {
 
 // -------- Unterschrift (Signaturfeld) --------
 const sigCanvasRef = React.useRef(null);
-const [signatureDataURL, setSignatureDataURL] =
-  useState("");
-const [signatureCapturedAt, setSignatureCapturedAt] =
-  useState("");
+const [signatureDataURL, setSignatureDataURL] = useState(() => {
+  try { const value = JSON.parse(readPreference("app.signature_v1", '""').value); return typeof value === "string" && value.startsWith("data:image/") ? value : ""; } catch { return ""; }
+});
+const [signatureCapturedAt, setSignatureCapturedAt] = useState(() => {
+  try { const value = JSON.parse(readPreference("app.signatureCapturedAt_v1", '""').value); return typeof value === "string" ? value : ""; } catch { return ""; }
+});
 
   
 
@@ -645,6 +648,7 @@ const clearSignature = () => {
     setBegehungsId(data.begehungsId);
     setDispatch(data.dispatch);
     setForm(data.form);
+    setInspectorName(data.form.inspector || "");
     setInspectionAreas(data.inspectionAreas);
     setChecklist(data.checklist);
     setImages(data.images);
@@ -697,46 +701,6 @@ const clearSignature = () => {
         <tbody>${rows.join("")}</tbody>
       </table>`;
   };
-
-  // Strukturierte Kennzahlen und Feststellungen für das HSE-Register
-    const countBewertetePruefpunkte = () => {
-  let anzahl = 0;
-
-  for (const cat of VISIBLE_CATEGORIES) {
-    cat.items.forEach((_, index) => {
-      const rating = checklist?.[cat.key]?.[index]?.rating;
-
-      if (["ok", "defect", "note"].includes(rating)) {
-        anzahl++;
-      }
-    });
-  }
-
-  return anzahl;
-};
-    const buildFeststellungen = () => {
-  const feststellungen = [];
-
-  for (const cat of VISIBLE_CATEGORIES) {
-    cat.items.forEach((itemText, index) => {
-      const entry = checklist?.[cat.key]?.[index];
-
-      if (!entry || !["defect", "note"].includes(entry.rating)) {
-        return;
-      }
-
-      feststellungen.push({
-        pruefpunktId: `${cat.key}-${index + 1}`,
-        kategorie: cat.title,
-        pruefpunkt: itemText,
-        bewertung: entry.rating === "defect" ? "Mangel" : "Notiz",
-        beschreibung: entry.note || ""
-      });
-    });
-  }
-
-  return feststellungen;
-};
 
   const buildImagesHTML = () => {
     if (!images.length) return "";
@@ -1223,7 +1187,7 @@ const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (!MAIL_TARGET_CONFIGURED || sendInFlight.current || busy || !draft.ready || draft.error || dispatch.state !== "draft" || pendingMedia || locating) return;
+    if (!MAIL_SEND_ENABLED || sendInFlight.current || busy || !draft.ready || draft.error || dispatch.state !== "draft" || pendingMedia || locating) return;
     const err = validate();
     if (err) { setMsg({ type: "error", text: err }); return; }
     sendInFlight.current = true;
@@ -1232,7 +1196,7 @@ const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
     let serverConfirmed = false;
     try {
       const payload = await buildMailPayload();
-      const pending = { state: "pending", preparedAt: new Date().toISOString(), endpoint: APPS_SCRIPT_URL, payload };
+      const pending = { state: "pending", transport: "pdf-mail", preparedAt: new Date().toISOString(), endpoint: APPS_SCRIPT_URL, payload };
       await draft.checkpointDispatch(pending);
       prepared = true;
       await postInspection(APPS_SCRIPT_URL, payload);
@@ -1244,29 +1208,26 @@ const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
       setMsg({ type: "error", text: serverConfirmed
         ? "Google hat den Versand bestätigt, aber die lokale Bestätigung konnte nicht gespeichert werden. Bitte keinen neuen Versand unter neuer ID starten."
         : prepared
-          ? "Versand nicht vollständig bestätigt. Bitte den Status im Google-Register prüfen. Gesicherte Versanddaten bleiben erhalten."
+          ? "Versand nicht vollständig bestätigt. Bitte Versandprotokoll oder Eingang beim Empfänger manuell prüfen. Gesicherte Versanddaten bleiben erhalten."
           : "Versand wurde nicht gestartet. Bitte Speicherstatus und Eingaben prüfen; der Entwurf bleibt erhalten." });
     } finally { sendInFlight.current = false; setBusy(false); }
   };
 
-  const retryDispatch = async () => {
-    if (!MAIL_TARGET_CONFIGURED || dispatch.endpoint !== APPS_SCRIPT_URL || sendInFlight.current || busy || draft.error || dispatch.state !== "pending") return;
-    if (!window.confirm("Den unveränderten Versand mit derselben Begehungs-ID erneut anfragen? Bei unklarem Status im Google-Register zuerst manuell prüfen.")) return;
-    sendInFlight.current = true; setBusy(true); setMsg(null);
+  const closeUnclearDispatch = async () => {
+    if (busy || draft.error || dispatch.state !== "pending") return;
+    if (!window.confirm("Wurde der unklare Versand manuell geklärt oder der Bericht anderweitig weitergegeben? Dieser Schritt verschickt keine E-Mail und gibt keinen erneuten Versand dieses Entwurfs frei.")) return;
+    setBusy(true);
     try {
-      // Also verifies the local revision before a retry from another tab can reach Google.
-      await draft.checkpointDispatch(dispatch);
-      await postInspection(dispatch.endpoint, dispatch.payload);
-      await draft.checkpointDispatch({ ...dispatch, state: "sent", confirmedAt: new Date().toISOString() });
-      setMsg({ type: "ok", text: "Versand vom Server bestätigt." });
-    } catch (error) {
-      setMsg({ type: "error", text: "Versandstatus bleibt unklar. Bitte im Google-Register prüfen; ID und Versanddaten bleiben unverändert." });
-    } finally { sendInFlight.current = false; setBusy(false); }
+      await draft.checkpointDispatch({ ...dispatch, state: "closed", closedAt: new Date().toISOString() });
+      setMsg({ type: "ok", text: "Begehung manuell abgeschlossen. Keine E-Mail ausgelöst." });
+    } catch {
+      setMsg({ type: "error", text: "Manueller Abschluss konnte nicht gespeichert werden. Der Entwurf bleibt gesperrt erhalten." });
+    } finally { setBusy(false); }
   };
 
   const confirmUnsentLegacy = async () => {
     if (busy || draft.error || dispatch.state !== "unverified") return;
-    if (!window.confirm("Dieser ältere Entwurf hat keine bekannte Begehungs-ID. Bitte zuvor im Google-Register prüfen: Wurde er sicher noch nicht versendet? Nur dann bestätigen.")) return;
+    if (!window.confirm("Der bisherige Mailversand dieses älteren Entwurfs ist unbekannt. Bitte vorher manuell prüfen: Wurde er sicher noch nicht versendet? Nur dann bestätigen.")) return;
     setBusy(true);
     try { await draft.checkpointDispatch({ state: "draft" }); }
     catch { setMsg({ type: "error", text: "Bestätigung konnte nicht gespeichert werden. Kein Versand erfolgt." }); }
@@ -1528,17 +1489,10 @@ const areaFileName = inspectionAreas
   .join("_");
 
 const filename = `Begehung_${areaFileName}_${safeName}.pdf`;
-const feststellungen = buildFeststellungen();
-const feststellungenJSON = JSON.stringify(feststellungen);
- const anzahlBewertet = countBewertetePruefpunkte();
   const params = new URLSearchParams({
     token: APPS_SCRIPT_TOKEN || "",
     filename,
     pdfBase64,
-    begehungsId,
-    feststellungen: feststellungenJSON,
-    anzahlBewertet: String(anzahlBewertet),
-    gesellschaft: logoChoice === "custom" ? "" : logoChoice,
     cc: ccEmail || "",
  
    
@@ -1807,21 +1761,23 @@ return (
     <div className="mb-3 flex flex-wrap items-center gap-3" aria-live="polite">
       <span role={draft.error ? "alert" : "status"} className={draft.error ? "text-red-700" : "text-gray-600 text-sm"}>{draft.error || draft.status}</span>
       {(ccStorageError || logoChoiceStorageError || logoSrcStorageError) && <span role="alert" className="text-amber-700 text-sm">{ccStorageError || logoChoiceStorageError || logoSrcStorageError}</span>}
-      <span className="text-sm break-all">Begehungs-ID: {begehungsId}</span>
+      <span className="text-sm break-all">Lokale Begehungs-ID: {begehungsId}</span>
       {!MAIL_TARGET_CONFIGURED && <span role="alert" className="text-amber-700">Kein gültiges Versandziel konfiguriert. Versand bleibt gesperrt; Entwürfe und PDF-Download sind verfügbar.</span>}
-      {dispatch.state === "sent" && <span className="text-green-700">Bereits versendet – von Google bestätigt. Für eine weitere Begehung „Neue Begehung“ wählen.</span>}
+      {MAIL_TARGET_CONFIGURED && !MAIL_SEND_ENABLED && <span className="text-amber-700">Mailversand ist für diese Testversion gesperrt.</span>}
+      {dispatch.state === "sent" && <span className="text-green-700">Mailversand bestätigt. Für eine weitere Begehung „Neue Begehung“ wählen.</span>}
+      {dispatch.state === "closed" && <span className="text-green-700">Manuell abgeschlossen. Dieser Abschluss hat keine E-Mail ausgelöst.</span>}
       {dispatch.state === "pending" && <>
-        <span className="text-amber-700">{dispatch.endpoint !== APPS_SCRIPT_URL ? "Dieser gesicherte Versand gehört zu einer anderen Bereitstellung. Bitte vor weiteren Schritten zuordnen lassen." : busy ? "Versand wird verarbeitet …" : "Versandstatus unklar. Bitte Google-Register prüfen. Eingaben bleiben zum Schutz vor widersprüchlichen Daten gesperrt."}</span>
-        <button type="button" className="px-3 py-2 rounded-xl border" disabled={!MAIL_TARGET_CONFIGURED || dispatch.endpoint !== APPS_SCRIPT_URL || busy || !!draft.error} onClick={retryDispatch}>Unveränderten Versand prüfen / erneut anfragen</button>
+        <span className="text-amber-700">{busy ? "Mailversand wird verarbeitet …" : "Versandstatus unklar. Nicht erneut senden: Das bisherige Mail-Script erkennt Wiederholungen nicht. Bitte Versandprotokoll oder Empfängereingang manuell prüfen. Der Entwurf bleibt erhalten und gesperrt."}</span>
+        <button type="button" className="px-3 py-2 rounded-xl border" disabled={busy || !!draft.error} onClick={closeUnclearDispatch}>Nach manueller Klärung abschließen</button>
       </>}
       {dispatch.state === "unverified" && <>
-        <span className="text-amber-700">Älterer Entwurf: bisheriger Versandstatus unbekannt. Vor Versand im Register prüfen.</span>
+        <span className="text-amber-700">Älterer Entwurf: bisheriger Mailversand unbekannt. Vor erneuter Übertragung manuell prüfen.</span>
         <button type="button" className="px-3 py-2 rounded-xl border" disabled={busy || !!draft.error} onClick={confirmUnsentLegacy}>Noch nicht versendet – bestätigen</button>
       </>}
       {dispatch.state !== "draft" && <button type="button" className="px-3 py-2 rounded-xl border" disabled={!draft.ready || busy} onClick={downloadPdf}>PDF herunterladen (ohne Versand)</button>}
       <button type="button" className="px-3 py-2 rounded-xl border" disabled={!draft.ready || !!draft.error || busy || locating || pendingMedia > 0 || draft.resetting || dispatch.state === "pending"} onClick={draft.newInspection}>Neue Begehung</button>
     </div>
-    <fieldset disabled={!draft.ready || draft.resetting || busy || ["pending", "sent"].includes(dispatch.state)} className="min-w-0" style={{ pointerEvents: !draft.ready || draft.resetting || busy || ["pending", "sent"].includes(dispatch.state) ? "none" : undefined }}>
+    <fieldset disabled={!draft.ready || draft.resetting || busy || ["pending", "sent", "closed"].includes(dispatch.state)} className="min-w-0" style={{ pointerEvents: !draft.ready || draft.resetting || busy || ["pending", "sent", "closed"].includes(dispatch.state) ? "none" : undefined }}>
     <header className="mb-6">
   <div className="flex items-start justify-between gap-4">
     <div>
@@ -2200,7 +2156,7 @@ Offene Mängel (noch zu beheben):
           )}
 
           <div className="flex items-center gap-3 flex-wrap">
-            <button type="submit" disabled={!MAIL_TARGET_CONFIGURED || busy || !!draft.error || dispatch.state !== "draft" || pendingMedia > 0 || locating} className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60">
+            <button type="submit" disabled={!MAIL_SEND_ENABLED || busy || !!draft.error || dispatch.state !== "draft" || pendingMedia > 0 || locating} className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60">
               {busy ? "Sende…" : "Begehung per E-Mail senden"}
             </button>
             <button type="button" disabled={busy} onClick={downloadPdf} className="px-5 py-3 rounded-2xl border bg-white disabled:opacity-60">

@@ -1,5 +1,7 @@
 # Entwurfssicherung und Google-Begehungsregister
 
+> **Historischer Zwischenstand:** Der Benutzer hat den Umfang auf lokale Sicherung und den bisherigen PDF-Mailversand ohne produktives Google-Register begrenzt. Maßgeblich ist [der aktuelle Mail-/Entwurfsstand](2026-11-06_mail-entwurf.md). Frühere Register- und Wiederholversandpläne gelten nicht mehr.
+
 Stand: 06.11.2026. Entwicklungszweig `feature/indexeddb-entwurfssicherung`; keine Zusammenführung und keine produktive Veröffentlichung.
 
 ## Verbindliche Basis

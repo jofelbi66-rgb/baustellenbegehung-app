@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 // Install fake-indexeddb in an external QA directory; no production dependency needed.
 await import(process.env.FAKE_INDEXEDDB_MODULE || '/tmp/baustellen-qa/node_modules/fake-indexeddb/auto/index.mjs');
-const { readDraft, writeDraft, packChecklist, unpackChecklist, checkSchema, migrateDraft, isScriptEndpoint } = await import('../src/draftStore.js');
+const { readDraft, writeDraft, packChecklist, unpackChecklist, checkSchema, migrateDraft, isScriptEndpoint, DRAFT_DB_NAME } = await import('../src/draftStore.js');
 const categories = [{ key: 'safety', items: ['First', 'Second'] }];
 const checklist = { safety: [{ rating: 'defect', note: 'Repair', photos: ['data:image/png;base64,abc'] }, { rating: 'ok', note: '', photos: [] }] };
 const data = { version: 1, form: { project: 'Site A' }, images: ['image'], inspectionAreas: ['bau'], checklist: packChecklist(categories, checklist), signatureDataURL: 'signature', signatureCapturedAt: 'time' };
@@ -28,7 +28,7 @@ test('new inspection archives full previous draft atomically, retains personal s
   const active = await readDraft();
   assert.equal(active.data.signatureDataURL, data.signatureDataURL);
   assert.equal(active.data.signatureCapturedAt, data.signatureCapturedAt);
-  const db = await new Promise((resolve, reject) => { const r = indexedDB.open('baustellenbegehung-drafts', 1); r.onsuccess = () => resolve(r.result); r.onerror = reject; });
+  const db = await new Promise((resolve, reject) => { const r = indexedDB.open(DRAFT_DB_NAME, 1); r.onsuccess = () => resolve(r.result); r.onerror = reject; });
   const records = await new Promise((resolve) => { const r = db.transaction('drafts').objectStore('drafts').getAll(); r.onsuccess = () => resolve(r.result); });
   db.close();
   assert.deepEqual(records.find(r => r.id.startsWith('archive:')).data, previous.data);
@@ -43,10 +43,10 @@ test('failed structured clone leaves last saved record intact', async () => {
   assert.deepEqual(await readDraft(), before);
 });
 
-test('legacy migration preserves data and requires unknown send history confirmation; v2 identity remains stable', () => {
+test('legacy migration preserves data and requires unknown send history confirmation; current local identity remains stable', () => {
   let ids = 0;
   const migrated = migrateDraft(data, () => `ID-${++ids}`);
-  assert.equal(migrated.version, 2);
+  assert.equal(migrated.version, 3);
   assert.equal(migrated.begehungsId, 'ID-1');
   assert.deepEqual(migrated.dispatch, { state: 'unverified' });
   assert.deepEqual(migrated.checklist, data.checklist);
@@ -62,4 +62,22 @@ test('mail target must be an explicit Apps Script web-app endpoint', () => {
   assert.equal(isScriptEndpoint('https://script.google.com/macros/s/TEST-NO-REAL-SERVICE/exec'), true);
   assert.equal(isScriptEndpoint('https://example.invalid/macros/s/test/exec'), false);
   assert.equal(isScriptEndpoint('https://user:password@script.google.com/macros/s/test/exec'), false);
+});
+
+test('previous register test drafts keep their identity and pending payload without being reopened for sending', () => {
+  const pending = { ...data, version: 2, begehungsId: 'old-local-id', dispatch: { state: 'pending', endpoint: 'https://script.google.com/macros/s/OLD-DEMO/exec', payload: { begehungsId: 'old-local-id', pdfBase64: 'pdf', feststellungen: '[]', anzahlBewertet: '0', project: 'Test', location: 'Test', inspector: 'Test' } } };
+  checkSchema(pending, categories);
+  const migrated = migrateDraft(pending, () => { throw new Error('must not replace known ID'); });
+  assert.equal(migrated.version, 3);
+  assert.equal(migrated.begehungsId, 'old-local-id');
+  assert.deepEqual(migrated.dispatch, pending.dispatch);
+  checkSchema(migrated, categories);
+});
+
+test('storage paths separate GitHub project pages on the same host', async () => {
+  const { storagePath, preferenceKey } = await import('../src/storageScope.js');
+  assert.equal(storagePath('/baustellenbegehung-app/', 'https://example.github.io/baustellenbegehung-app/'), '/baustellenbegehung-app/');
+  assert.equal(storagePath('./', 'https://example.github.io/baustellenbegehung-test/site/index.html'), '/baustellenbegehung-test/site/');
+  assert.equal(storagePath('./', 'https://example.netlify.app/'), '/');
+  assert.notEqual(preferenceKey('app.ccEmail'), 'app.ccEmail');
 });

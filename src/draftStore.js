@@ -1,7 +1,9 @@
+import { DRAFT_DB_NAME, LEGACY_DRAFT_DB_NAME, mayImportLegacyDrafts } from './storageScope.js';
+export { DRAFT_DB_NAME } from './storageScope.js';
 // Transactions compare the revision before writing: tabs cannot silently overwrite each other.
 export function openDraftDB() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open('baustellenbegehung-drafts', 1);
+    const request = indexedDB.open(DRAFT_DB_NAME, 1);
     request.onupgradeneeded = () => request.result.createObjectStore('drafts', { keyPath: 'id' });
     request.onerror = () => reject(request.error);
     request.onblocked = () => reject(new Error('Datenbank blockiert. Andere App-Tabs schließen.'));
@@ -12,13 +14,53 @@ export function openDraftDB() {
     };
   });
 }
+async function legacyRecords() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(LEGACY_DRAFT_DB_NAME);
+    let absent = false;
+    request.onupgradeneeded = () => { absent = true; request.transaction.abort(); };
+    request.onerror = event => { event.preventDefault(); absent ? resolve([]) : reject(request.error); };
+    request.onblocked = () => reject(new Error('Alte Testdatenbank blockiert. Andere Test-Tabs schließen.'));
+    request.onsuccess = () => {
+      const db = request.result;
+      db.onversionchange = () => db.close();
+      if (!db.objectStoreNames.contains('drafts')) { db.close(); resolve([]); return; }
+      const tx = db.transaction('drafts', 'readonly');
+      const all = tx.objectStore('drafts').getAll();
+      tx.oncomplete = () => { db.close(); resolve(all.result); };
+      tx.onabort = () => { db.close(); reject(tx.error); };
+      tx.onerror = () => { db.close(); reject(tx.error); };
+    };
+  });
+}
 export async function readDraft() {
   const db = await openDraftDB();
   try {
-    return await new Promise((resolve, reject) => {
+    const current = await new Promise((resolve, reject) => {
       const tx = db.transaction('drafts', 'readonly');
       const request = tx.objectStore('drafts').get('active');
       tx.oncomplete = () => resolve(request.result || null);
+      tx.onabort = () => reject(tx.error);
+      tx.onerror = () => reject(tx.error);
+    });
+    if (current || !mayImportLegacyDrafts) return current;
+    const previous = await legacyRecords();
+    if (!previous.length) return null;
+    // Copy only into an entirely empty test scope, under one atomic write lock.
+    // Original records and archives remain untouched in the legacy database.
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction('drafts', 'readwrite');
+      const store = tx.objectStore('drafts');
+      let result = null;
+      const active = store.get('active');
+      active.onsuccess = () => { result = active.result || null; };
+      const count = store.count();
+      count.onsuccess = () => {
+        if (count.result !== 0) return;
+        for (const record of previous) store.add(record);
+        result = previous.find(record => record.id === 'active') || null;
+      };
+      tx.oncomplete = () => resolve(result);
       tx.onabort = () => reject(tx.error);
       tx.onerror = () => reject(tx.error);
     });
@@ -62,7 +104,7 @@ export function unpackChecklist(categories, saved) {
     saved[itemKey(cat.key, label)] || { rating: '', note: '', photos: [] })]));
 }
 export function checkSchema(data, categories) {
-  if (![1, 2].includes(data?.version) || !data.checklist || !data.form || !Array.isArray(data.images) || !Array.isArray(data.inspectionAreas)) {
+  if (![1, 2, 3].includes(data?.version) || !data.checklist || !data.form || !Array.isArray(data.images) || !Array.isArray(data.inspectionAreas)) {
     throw new Error('Der gespeicherte Entwurf hat ein unbekanntes Format. Er bleibt unverändert erhalten.');
   }
   if (typeof data.checklist !== 'object' || Array.isArray(data.checklist) ||
@@ -71,17 +113,17 @@ export function checkSchema(data, categories) {
       Object.values(data.checklist).some(row => !row || !['', 'ok', 'defect', 'note'].includes(row.rating) || typeof row.note !== 'string' || !Array.isArray(row.photos) || row.photos.some(photo => typeof photo !== 'string'))) {
     throw new Error('Der gespeicherte Entwurf ist beschädigt. Er bleibt unverändert erhalten.');
   }
-  if (data.version === 2) {
-    const validStates = ['draft', 'unverified', 'pending', 'sent'];
+  if (data.version >= 2) {
+    const validStates = ['draft', 'unverified', 'pending', 'sent', 'closed'];
     if (typeof data.begehungsId !== 'string' || !data.begehungsId.trim() || !validStates.includes(data.dispatch?.state)) {
       throw new Error('Begehungs-ID oder Versandstatus ungültig. Der gespeicherte Entwurf bleibt erhalten.');
     }
-    if (['pending', 'sent'].includes(data.dispatch.state)) {
+    if (['pending', 'sent', 'closed'].includes(data.dispatch.state)) {
       const payload = data.dispatch.payload;
       const validEndpoint = isScriptEndpoint(data.dispatch.endpoint);
-      if (!validEndpoint || !payload || payload.begehungsId !== data.begehungsId || Object.values(payload).some(value => typeof value !== 'string') ||
-          !['pdfBase64', 'feststellungen', 'anzahlBewertet', 'project', 'location', 'inspector'].every(key => typeof payload[key] === 'string')) {
-        throw new Error('Gesicherte Versanddaten unvollständig. Bitte vor erneutem Versand prüfen lassen.');
+      if (!validEndpoint || !payload || (payload.begehungsId !== undefined && payload.begehungsId !== data.begehungsId) || Object.values(payload).some(value => typeof value !== 'string') ||
+          !['pdfBase64', 'project', 'location', 'inspector'].every(key => typeof payload[key] === 'string')) {
+        throw new Error('Gesicherte Versanddaten unvollständig. Bitte manuell prüfen lassen; die Daten bleiben erhalten.');
       }
     }
   }
@@ -91,10 +133,11 @@ export function checkSchema(data, categories) {
   }
 }
 
-// Older local-only drafts have no reliable register identity or send history.
+// Keep earlier test drafts and ambiguous pending requests; never resend them.
 export function migrateDraft(data, newId) {
-  if (data.version === 2) return data;
-  return { ...data, version: 2, begehungsId: newId(), dispatch: { state: 'unverified' } };
+  if (data.version === 3) return data;
+  if (data.version === 2) return { ...data, version: 3 };
+  return { ...data, version: 3, begehungsId: newId(), dispatch: { state: 'unverified' } };
 }
 
 export function isScriptEndpoint(value) {

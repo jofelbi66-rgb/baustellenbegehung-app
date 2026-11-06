@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { postInspection } from '../src/mailTransport.js';
+import { postInspection, LEGACY_MAIL_ENDPOINT } from '../src/mailTransport.js';
 
 test('transport keeps the prepared ID/payload and accepts only exact OK (trimmed)', async () => {
   const original=globalThis.fetch;
@@ -30,4 +30,8 @@ test('network failure is reported without an automatic second request', async ()
     await assert.rejects(postInspection('https://example.invalid/mock',{}),/lost response/);
     assert.equal(calls,1);
   } finally {globalThis.fetch=original;}
+});
+
+test('default mail destination is the existing production deployment, not a register demo', () => {
+  assert.equal(LEGACY_MAIL_ENDPOINT, 'https://script.google.com/macros/s/AKfycbwQ4iCoCwQIqLfOFzkq8QHfZfgORdCrag4myM-S8G59zfnH4UeLijBQQsuhLwrmmFLR/exec');
 });

@@ -16,7 +16,7 @@ export function useInspectionDraft(categories, values, restore, fresh) {
   const mounted = useRef(true);
   const initialRestore = useRef(restore);
   const schema = useRef(categories);
-  const snapshot = { version: 2, ...values, checklist: packChecklist(categories, values.checklist) };
+  const snapshot = { version: 3, ...values, checklist: packChecklist(categories, values.checklist) };
   latest.current = snapshot;
   const fail = (e) => {
     stopped.current = true;
@@ -76,7 +76,7 @@ export function useInspectionDraft(categories, values, restore, fresh) {
     try {
       await persist(latest.current);
       const next = fresh();
-      await persist({ version: 2, ...next, checklist: packChecklist(categories, next.checklist) }, true);
+      await persist({ version: 3, ...next, checklist: packChecklist(categories, next.checklist) }, true);
       restore(next);
     } catch (e) { fail(e); }
     finally { resetting.current = false; setResettingState(false); }

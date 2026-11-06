@@ -41,16 +41,13 @@ try {
     await context.close();
   }
   const context = await browser.newContext();
-  const page = await context.newPage(); await page.goto(url); await saved(page);
-  await page.evaluate(() => {
+  await context.addInitScript(() => {
     localStorage.setItem('app.ccEmail', 'legacy@example.invalid');
     localStorage.setItem('app.logoChoice', 'hagn');
     localStorage.setItem('app.logoSrc', '/baustellenbegehung-app/hagn-logo.png');
     localStorage.setItem('untouched-test-key', 'retain');
   });
-  // A second origin-identical context is not needed: remove only this test's empty draft DB.
-  await page.evaluate(() => new Promise((resolve, reject) => { const r=indexedDB.deleteDatabase('baustellenbegehung-drafts');r.onsuccess=resolve;r.onerror=reject; }));
-  await page.reload(); await saved(page);
+  const page = await context.newPage(); await page.goto(url); await saved(page);
   assert.equal(await page.getByPlaceholder('z.B. joachim@firma.de').inputValue(), 'legacy@example.invalid');
   assert.equal(await page.locator('select').inputValue(), 'hagn');
   assert.equal(await page.evaluate(() => localStorage.getItem('app.ccEmail')), 'legacy@example.invalid');

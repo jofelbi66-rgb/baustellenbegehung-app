@@ -1,3 +1,4 @@
+import { preferenceKey, mayReadLegacyPreferences } from '../storageScope.js';
 import { useEffect, useState } from 'react';
 
 const warning = 'Voreinstellungen konnten nicht im bisherigen Browserspeicher gelesen oder gespeichert werden. Die Entwurfssicherung wird separat angezeigt.';
@@ -5,7 +6,9 @@ const warning = 'Voreinstellungen konnten nicht im bisherigen Browserspeicher ge
 // Keep existing raw-string keys readable; never clear storage after an error.
 export function readPreference(key, fallback) {
   try {
-    return { value: window.localStorage.getItem(key) || fallback, error: '' };
+    const scoped = window.localStorage.getItem(preferenceKey(key));
+    const legacy = scoped == null && mayReadLegacyPreferences ? window.localStorage.getItem(key) : null;
+    return { value: (scoped ?? legacy) || fallback, error: '' };
   } catch {
     return { value: fallback, error: warning };
   }
@@ -20,7 +23,7 @@ export function usePreferenceState(key, fallback, skipEmpty = false) {
     // A failed read must not replace an unknown existing preference with a default.
     if (initial.error && value === initial.value) return;
     try {
-      window.localStorage.setItem(key, value);
+      window.localStorage.setItem(preferenceKey(key), value);
       setError(initial.error);
     } catch {
       setError(warning);

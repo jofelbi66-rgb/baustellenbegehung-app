@@ -9,7 +9,7 @@ const errors = [];
 page.on('pageerror', e => errors.push(e.message));
 const saved = p => p.getByRole('status').filter({ hasText: 'Auf diesem Gerät gespeichert' }).waitFor();
 const record = p => p.evaluate(async () => {
-  const db = await new Promise((resolve,reject) => { const r=indexedDB.open('baustellenbegehung-drafts',1); r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error); });
+  const db = await new Promise((resolve,reject) => { const r=indexedDB.open(('baustellenbegehung-drafts:' + location.pathname.replace(/index\.html$/, '').replace(/\/?$/, '/')),1); r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error); });
   return new Promise(resolve => { const r=db.transaction('drafts').objectStore('drafts').getAll();r.onsuccess=()=>{db.close();resolve(r.result);}; });
 });
 try {
@@ -52,8 +52,10 @@ try {
   assert.ok(mailBody.get('filename').includes('Mobilkran'));
   const sentBefore=(await record(page)).find(r=>r.id==='active').data;
   assert.equal(sentBefore.dispatch.state,'sent');
-  assert.equal(mailBody.get('begehungsId'),before.begehungsId);
-  assert.ok(mailBody.has('feststellungen'));
+  assert.equal(mailBody.has('begehungsId'),false);
+  assert.equal(mailBody.has('feststellungen'),false);
+  assert.equal(mailBody.has('anzahlBewertet'),false);
+  assert.equal(mailBody.has('gesellschaft'),false);
   console.log('PASS: real PDF generation and POST payload; mail endpoint stubbed, no email sent');
   await page.close();
   const reopened=await context.newPage();await reopened.goto(url);await saved(reopened);
@@ -83,7 +85,7 @@ try {
   console.log('PASS: stale tab cannot overwrite newer revision; visible error');
   await reopened.getByRole('button', { name: 'Löschen', exact: true }).click();
   await reopened.waitForFunction(async () => {
-    const db=await new Promise(resolve=>{const r=indexedDB.open('baustellenbegehung-drafts',1);r.onsuccess=()=>resolve(r.result);});
+    const db=await new Promise(resolve=>{const r=indexedDB.open(('baustellenbegehung-drafts:' + location.pathname.replace(/index\.html$/, '').replace(/\/?$/, '/')),1);r.onsuccess=()=>resolve(r.result);});
     return new Promise(resolve=>{const r=db.transaction('drafts').objectStore('drafts').get('active');r.onsuccess=()=>{db.close();resolve(r.result.data.signatureDataURL === '');};});
   });await saved(reopened);
   await reopened.reload();await saved(reopened);
@@ -113,7 +115,7 @@ try {
   console.log('PASS: quota error visible, previous committed draft preserved, input remains available for rescue');
   const legacyContext=await browser.newContext();const legacyPage=await legacyContext.newPage();await legacyPage.goto(url);await saved(legacyPage);
   await legacyPage.evaluate(async data => {
-    const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('baustellenbegehung-drafts',1);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
+    const db=await new Promise((resolve,reject)=>{const r=indexedDB.open(('baustellenbegehung-drafts:' + location.pathname.replace(/index\.html$/, '').replace(/\/?$/, '/')),1);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
     await new Promise((resolve,reject)=>{const tx=db.transaction('drafts','readwrite');tx.objectStore('drafts').put({id:'active',revision:50,data:{...data,images:['legacy-general-photo']}});tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);});db.close();
   },before);
   await legacyPage.reload();await saved(legacyPage);
