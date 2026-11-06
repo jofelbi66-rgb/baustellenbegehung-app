@@ -1,3 +1,4 @@
+import { useSignatureCanvas } from "./hooks/useSignatureCanvas";
 import { readPreference, usePreferenceState } from "./hooks/usePreferenceState";
 import { useInspectionDraft } from "./hooks/useInspectionDraft";
 import React, { useMemo, useRef, useState, useEffect } from "react";
@@ -617,7 +618,6 @@ const onLocate = async () => {
 
 // -------- Unterschrift (Signaturfeld) --------
 const sigCanvasRef = React.useRef(null);
-const isDrawingRef = React.useRef(false);
 const [signatureDataURL, setSignatureDataURL] =
   useState("");
 const [signatureCapturedAt, setSignatureCapturedAt] =
@@ -625,147 +625,10 @@ const [signatureCapturedAt, setSignatureCapturedAt] =
 
   
 
-React.useEffect(() => {
-  const canvas = sigCanvasRef.current;
-  if (!canvas) return;
-
-  // iOS Safari: verhindert Scroll/Zoom-Gesten im Canvas
-  canvas.style.touchAction = "none";
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  const setup = () => {
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-
-    // Canvas intern auf dpr skalieren, aber in CSS-Pixeln zeichnen
-    canvas.width = Math.max(1, Math.round(rect.width * dpr));
-    canvas.height = Math.max(1, Math.round(rect.height * dpr));
-
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "#111";
-  };
-
-  const getPoint = (ev) => {
-    const rect = canvas.getBoundingClientRect();
-    const p =
-      ev.touches?.[0] ??
-      ev.changedTouches?.[0] ??
-      ev;
-    return { x: p.clientX - rect.left, y: p.clientY - rect.top };
-  };
-// einmal initial setzen (skaliert Canvas)
-setup();
-
-// gespeicherte Unterschrift wiederherstellen (muss NACH setup passieren)
-if (signatureDataURL) {
-  const img = new Image();
-  img.onload = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  };
-  img.src = signatureDataURL;
-}
-
-  const start = (ev) => {
-    ev.preventDefault();
-    setup(); // falls Layout sich geändert hat (Rotation etc.)
-
-    isDrawingRef.current = true;
-    const { x, y } = getPoint(ev);
-
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-
-    // Pointer capture (wenn PointerEvent)
-    if (ev.pointerId != null && canvas.setPointerCapture) {
-      try { canvas.setPointerCapture(ev.pointerId); } catch {}
-    }
-  };
-
-  const move = (ev) => {
-    if (!isDrawingRef.current) return;
-    ev.preventDefault();
-
-    const { x, y } = getPoint(ev);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-  };
-
-  const end = (ev) => {
-    if (!isDrawingRef.current) return;
-    ev.preventDefault();
-
-    isDrawingRef.current = false;
-    setSignatureDataURL(canvas.toDataURL("image/png"));
-
-    if (ev.pointerId != null && canvas.releasePointerCapture) {
-      try { canvas.releasePointerCapture(ev.pointerId); } catch {}
-    }
-  };
-const handleResize = () => {
-  setup();
-
-  if (signatureDataURL) {
-    const img = new Image();
-    img.onload = () => {
-      ctx.save();
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      ctx.restore();
-    };
-    img.src = signatureDataURL;
-  }
-};
-
-  handleResize();
-  // Restore: gespeicherte Unterschrift nach setup() wieder ins Canvas zeichnen
-if (signatureDataURL) {
-  const img = new Image();
-  img.onload = () => {
-    // In Gerätepixeln arbeiten, damit es mit deinem DPR-Setup sauber bleibt
-    ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    ctx.restore();
-  };
-  img.src = signatureDataURL;
-}
-window.addEventListener("resize", handleResize);
-  
-
-  // Native Listener (WICHTIG: passive:false für iOS)
-  canvas.addEventListener("pointerdown", start, { passive: false });
-  canvas.addEventListener("pointermove", move, { passive: false });
-  canvas.addEventListener("pointerup", end, { passive: false });
-  canvas.addEventListener("pointercancel", end, { passive: false });
-
-  canvas.addEventListener("touchstart", start, { passive: false });
-  canvas.addEventListener("touchmove", move, { passive: false });
-  canvas.addEventListener("touchend", end, { passive: false });
-  canvas.addEventListener("touchcancel", end, { passive: false });
-
-  return () => {
-   window.removeEventListener("resize", handleResize);
-
-
-    canvas.removeEventListener("pointerdown", start);
-    canvas.removeEventListener("pointermove", move);
-    canvas.removeEventListener("pointerup", end);
-    canvas.removeEventListener("pointercancel", end);
-
-    canvas.removeEventListener("touchstart", start);
-    canvas.removeEventListener("touchmove", move);
-    canvas.removeEventListener("touchend", end);
-    canvas.removeEventListener("touchcancel", end);
-  };
-}, [signatureDataURL]);
-
+useSignatureCanvas(sigCanvasRef, signatureDataURL, (data) => {
+  setSignatureDataURL(data);
+  setSignatureCapturedAt(new Date().toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }));
+}, () => setMsg({ type: "error", text: "Unterschrift konnte nicht verarbeitet werden. Bitte die Seite geöffnet lassen." }));
 
 const clearSignature = () => {
   const canvas = sigCanvasRef.current;
@@ -777,26 +640,7 @@ const clearSignature = () => {
   setSignatureDataURL("");
   setSignatureCapturedAt("");
 
-  isDrawingRef.current = false;
 };
-
-const saveSignature = () => {
-  const canvas = sigCanvasRef.current;
-  if (!canvas) return;
-if (!canvas.width || !canvas.height) return; 
-  
-  try {
-    const dataUrl = canvas.toDataURL("image/png");
-    setSignatureDataURL(dataUrl);
-   setSignatureCapturedAt(
-  new Date().toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })
-);
-
-  } catch {
-    // falls etwas schief geht, einfach nichts speichern
-  }
-};
-
 
   const draftCategories = [...CATEGORIES, ...GENERAL_EXTRA_CATEGORIES, ...MOBILKRAN_CATEGORIES, ...BAU_CATEGORIES, ...MONTAGE_CATEGORIES];
   const draftValues = { form, inspectionAreas, checklist, images, coords, ccEmail, logoChoice, logoSrc, signatureDataURL, signatureCapturedAt, openCats, showOnlyOpen };
@@ -2244,8 +2088,6 @@ Offene Mängel (noch zu beheben):
  <canvas
   ref={sigCanvasRef}
   className="border rounded bg-white w-full h-40 block"
-  onPointerUp={saveSignature}
-  onPointerLeave={saveSignature}
 />
 
 

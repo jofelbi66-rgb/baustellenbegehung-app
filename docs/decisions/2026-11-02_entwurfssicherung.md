@@ -89,3 +89,15 @@ Zusätzlicher Test: `node tests/preference-browser.mjs` (gleicher lokaler Vite-S
 Für die ersten drei Fehlerfälle wurden Bearbeitung, Auswahl „Eigenes Logo“ und Wiederherstellung von Projekt, CC und Logo aus IndexedDB nach Neuladen geprüft. Keine unbehandelten Browserfehler. Alle fünf Fehlerfall-/Kompatibilitätsszenarien erfolgreich. Auch die fünf Datenbanktests, die gesamte bisherige Browser-Regressionssuite einschließlich echtem PDF mit abgefangenem Versand und vollständigem Browserneustart sowie der Produktionsbuild sind erneut erfolgreich. Die Vite-Bundlegrößenwarnung bleibt bestehen.
 
 PDF-, Versand- und Checklistenlogik bleiben durch diese Nachbesserung unverändert. Die weiterhin ausstehenden Tests auf echten Smartphones und die oben beschriebenen Grenzen gelten unverändert. Aktualisierung ausschließlich im bestehenden Entwicklungszweig; kein Merge und keine Veröffentlichung.
+
+## Unterschriftskorrektur nach Benutzertest, 06.11.2026
+
+Der Benutzer meldete am Computer: Strich sichtbar, verschwindet beim Loslassen. Ein neuer visueller Test gegen das bisherige statische Testpaket reproduziert den Fehler: Nach Loslassen/Verlassen des Canvas fehlen die sichtbaren Pixel. Der zuvor verwendete Test prüfte nur gespeicherte PNG-Zeichenfolgen und konnte eine leere gespeicherte Grafik nicht erkennen.
+
+Die Unterschriftsbedienung liegt nun in `useSignatureCanvas`: genau eine Ereignisfamilie (Pointer Events oder Fallback), kein Canvas-Reset bei jedem neuen Strich, keine zusätzliche Speicherung bei React-Pointerleave. Ein beendeter Strich aktualisiert PNG und Erfassungszeitpunkt gemeinsam. Nur eine Wiederherstellung zeichnet unter neutraler Transformation; veraltete asynchrone Bildladevorgänge werden verworfen. Bei Größenänderung wird die bestehende Grafik synchron übernommen. Mehrere Striche bleiben erhalten. Absichtliches Löschen und neue Begehungen entfernen die Unterschrift weiterhin. Layout und aktive PDF-/Versandfunktionen unverändert.
+
+`node tests/signature-browser.mjs` prüft sichtbare dunkle Canvas-Pixel auf beiden Hälften, nicht nur das Vorhandensein einer Data-URL: Maus mit DPR 1 sowie simulierte Touch-Eingabe mit DPR 3, Sichtbarkeit nach Loslassen/Verlassen, Erhalt früherer Striche, Neuladen, Größenänderung und absichtliches Löschen inklusive erneutem Laden. Beide Szenarien bestanden. Gegenprobe mit `SIGNATURE_TEST_URL` auf das alte Testpaket schlägt wie erwartet beim ersten erhaltenen Strich fehl.
+
+Produktionsbuild und die fünf Datenbanktests bestanden. Die bestehenden Browser-Regressionsprüfungen für Entwürfe, Fotos, Archivierung, Tabkonflikte, Speicherfehler und PDF-Erzeugung mit abgefangenem Versand wurden erneut ausgeführt. Echte Safari-/iPhone-Tests bleiben vom simulierten Touch-Test getrennt und sind noch vom Benutzer zu bestätigen.
+
+Das separate Testpaket enthält zudem die Fotoimport-Korrektur: `connect-src` erlaubt lokale `blob:`- und `data:`-Quellen. Der externe E-Mail-Endpunkt bleibt gesperrt. Keine produktive Veröffentlichung oder Zusammenführung.
