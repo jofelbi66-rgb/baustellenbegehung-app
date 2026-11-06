@@ -1,5 +1,7 @@
 # Architektur – Baustellenbegehung-App
 
+> Aktueller Entwicklungsstand: [Entwurfssicherung mit Pilot-Registerintegration vom 06.11.2026](decisions/2026-11-06_registerintegration.md). Kein produktiver Rollout; ältere Abschnitte beschreiben den bisherigen Stand.
+
 Stand: 22.10.2026
 
 ## 1. Projektübersicht

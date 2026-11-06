@@ -1,5 +1,7 @@
 # Automatische Entwurfssicherung – Entwicklung und Teststand
 
+> **Ergänzung:** Der aktuelle Stand integriert die vorhandene Pilot-Register-Anbindung, dauerhafte Begehungs-IDs und einen gesicherten Versandablauf. Maßgeblich ist [Registerintegration vom 06.11.2026](2026-11-06_registerintegration.md). Frühere Aussagen über unveränderte Alt-main-Versandfunktionen beschreiben historische Zwischenstände. Der bewährte Bericht wird aus dem Pilotstand übernommen.
+
 > **Aktuelle Regel ab 06.11.2026 nach ausdrücklicher Benutzerfreigabe:** Die persönliche Unterschrift und ihr ursprünglicher Erfassungszeitpunkt bleiben bei „Neue Begehung“ erhalten. Sie werden nur durch bewusstes Löschen oder neues Zeichnen geändert. Das allgemeine Foto-Uploadfeld ist entfernt; nur prüfpunktbezogene Fotos können neu hinzugefügt werden. Frühere Aussagen über das Leeren der Unterschrift und den allgemeinen Foto-Upload dokumentieren den historischen Stand und sind durch diese Regel ersetzt.
 
 Stand: 02.11.2026. Lokaler Entwicklungszweig: `feature/indexeddb-entwurfssicherung`.

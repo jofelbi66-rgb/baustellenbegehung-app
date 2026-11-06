@@ -1,5 +1,7 @@
 # Aktueller Stand
 
+> Aktueller Entwicklungsstand: [Entwurfssicherung mit Pilot-Registerintegration vom 06.11.2026](../decisions/2026-11-06_registerintegration.md). Kein produktiver Rollout; ältere Abschnitte beschreiben den bisherigen Stand.
+
 ## Kurzfassung
 - PDF-Export: Checkliste + Unterschrift + Foto-Seiten funktionieren.
 - Fotos: nicht mehr verzerrt/gestretcht.

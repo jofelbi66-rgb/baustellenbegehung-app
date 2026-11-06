@@ -1,6 +1,7 @@
 import { useSignatureCanvas } from "./hooks/useSignatureCanvas";
 import { readPreference, usePreferenceState } from "./hooks/usePreferenceState";
 import { useInspectionDraft } from "./hooks/useInspectionDraft";
+import { postInspection } from "./mailTransport";
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useLocalStorageState } from "./hooks/useLocalStorageState";
 
@@ -33,7 +34,7 @@ const FIRM_MATCH = [
 
 /* ===================== Konfiguration ===================== */
 
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQ4iCoCwQIqLfOFzkq8QHfZfgORdCrag4myM-S8G59zfnH4UeLijBQQsuhLwrmmFLR/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoJIX3kq3vkb2P0Rja9jiFrqfrZecG8EPa4XuSRyTlNO7xE0kBYTSjIl3zKUKiw7IX/exec";
 const APPS_SCRIPT_TOKEN = ""; // nur falls du im Apps Script einen TOKEN gesetzt hast
 
 // Logo für PDF (nur Seite 1). GitHub RAW-URL, z. B. https://raw.githubusercontent.com/<user>/<repo>/main/felbermayr_logo.png
@@ -337,7 +338,7 @@ async function resizeImageFromFile(file, maxSize = 1280, quality = 0.8) {
     });
 
     // Wichtig: objectUrl weitergeben (nicht dataURL)
-    return recompressImage(objectUrl, maxSize, quality);
+    return await recompressImage(objectUrl, maxSize, quality);
   } finally {
     URL.revokeObjectURL(objectUrl);
   }
@@ -427,7 +428,9 @@ const [inspectionAreas, setInspectionAreas] = useState(["allgemein"]);
   const [inspectorName, setInspectorName] =
   useLocalStorageState("app.inspectorName", "");
 
-
+const [begehungsId, setBegehungsId] = useState(() => crypto.randomUUID());
+const [dispatch, setDispatch] = useState({ state: "draft" });
+const sendInFlight = useRef(false);
   const [form, setForm] = useState({
     project: "",
     location: "",
@@ -471,19 +474,27 @@ for (const cat of [...ALL_CATEGORIES, ...MOBILKRAN_CATEGORIES, ...BAU_CATEGORIES
 
   return init;
 });
-
-const [checklist, setChecklist] = useState(() => {
+const createEmptyChecklist = () => {
   const init = {};
-  
 
-
-for (const cat of [...ALL_CATEGORIES, ...MOBILKRAN_CATEGORIES, ...BAU_CATEGORIES, ...MONTAGE_CATEGORIES]) {
-
-
-    init[cat.key] = cat.items.map(() => ({ rating: "", note: "", photos: [] }));
+  for (const cat of [
+    ...ALL_CATEGORIES,
+    ...MOBILKRAN_CATEGORIES,
+    ...BAU_CATEGORIES,
+    ...MONTAGE_CATEGORIES
+  ]) {
+    init[cat.key] = cat.items.map(() => ({
+      rating: "",
+      note: "",
+      photos: []
+    }));
   }
+
   return init;
-});
+};
+const [checklist, setChecklist] = useState(createEmptyChecklist);
+
+
 
 
 
@@ -491,7 +502,6 @@ for (const cat of [...ALL_CATEGORIES, ...MOBILKRAN_CATEGORIES, ...BAU_CATEGORIES
   const [msg, setMsg] = useState(null);
   const [busy, setBusy] = useState(false);
   const [pendingMedia, setPendingMedia] = useState(0);
-  
   // Kamera-Funktion pro Checkpunkt (Foto aufnehmen)
 const onCapturePhoto = (catKey, itemIndex) => async (e) => {
   const file = e.target.files?.[0];
@@ -540,6 +550,12 @@ function autoPickLogoByCompany(companyName) {
 }
 
   
+// persistieren
+
+
+
+
+
   // Geoposition & Reverse Geocoding
   const [coords, setCoords] = useState(null); // {lat, lon, accuracy}
   const [locating, setLocating] = useState(false);
@@ -621,8 +637,10 @@ const clearSignature = () => {
 };
 
   const draftCategories = [...CATEGORIES, ...GENERAL_EXTRA_CATEGORIES, ...MOBILKRAN_CATEGORIES, ...BAU_CATEGORIES, ...MONTAGE_CATEGORIES];
-  const draftValues = { form, inspectionAreas, checklist, images, coords, ccEmail, logoChoice, logoSrc, signatureDataURL, signatureCapturedAt, openCats, showOnlyOpen };
+  const draftValues = { begehungsId, dispatch, form, inspectionAreas, checklist, images, coords, ccEmail, logoChoice, logoSrc, signatureDataURL, signatureCapturedAt, openCats, showOnlyOpen };
   const restoreDraft = (data) => {
+    setBegehungsId(data.begehungsId);
+    setDispatch(data.dispatch);
     setForm(data.form);
     setInspectionAreas(data.inspectionAreas);
     setChecklist(data.checklist);
@@ -639,6 +657,7 @@ const clearSignature = () => {
   };
   const freshDraft = () => ({
     ...draftValues,
+    begehungsId: crypto.randomUUID(), dispatch: { state: "draft" },
     form: { project: "", location: "", company: "", date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), inspector: inspectorName, weather: "", remarks: "" },
     inspectionAreas: ["allgemein"],
     checklist: Object.fromEntries(draftCategories.map(cat => [cat.key, cat.items.map(() => ({ rating: "", note: "", photos: [] }))])),
@@ -675,6 +694,46 @@ const clearSignature = () => {
         <tbody>${rows.join("")}</tbody>
       </table>`;
   };
+
+  // Strukturierte Kennzahlen und Feststellungen für das HSE-Register
+    const countBewertetePruefpunkte = () => {
+  let anzahl = 0;
+
+  for (const cat of VISIBLE_CATEGORIES) {
+    cat.items.forEach((_, index) => {
+      const rating = checklist?.[cat.key]?.[index]?.rating;
+
+      if (["ok", "defect", "note"].includes(rating)) {
+        anzahl++;
+      }
+    });
+  }
+
+  return anzahl;
+};
+    const buildFeststellungen = () => {
+  const feststellungen = [];
+
+  for (const cat of VISIBLE_CATEGORIES) {
+    cat.items.forEach((itemText, index) => {
+      const entry = checklist?.[cat.key]?.[index];
+
+      if (!entry || !["defect", "note"].includes(entry.rating)) {
+        return;
+      }
+
+      feststellungen.push({
+        pruefpunktId: `${cat.key}-${index + 1}`,
+        kategorie: cat.title,
+        pruefpunkt: itemText,
+        bewertung: entry.rating === "defect" ? "Mangel" : "Notiz",
+        beschreibung: entry.note || ""
+      });
+    });
+  }
+
+  return feststellungen;
+};
 
   const buildImagesHTML = () => {
     if (!images.length) return "";
@@ -1155,22 +1214,60 @@ const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
 
   /* ---------- Versand per EmailJS ---------- */
   const validate = () => {
-    if (!form.project || !form.location || !form.inspector) return "Bitte Projekt, Ort und Begehende Person ausfüllen.";
+    if (!form.project.trim() || !form.location.trim() || !form.inspector.trim()) return "Bitte Projekt, Ort und Begehende Person ausfüllen.";
     return null;
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    if (sendInFlight.current || busy || !draft.ready || draft.error || dispatch.state !== "draft" || pendingMedia || locating) return;
     const err = validate();
     if (err) { setMsg({ type: "error", text: err }); return; }
+    sendInFlight.current = true;
     setBusy(true); setMsg(null);
+    let prepared = false;
+    let serverConfirmed = false;
     try {
-await sendPdfToMail();
+      const payload = await buildMailPayload();
+      const pending = { state: "pending", preparedAt: new Date().toISOString(), endpoint: APPS_SCRIPT_URL, payload };
+      await draft.checkpointDispatch(pending);
+      prepared = true;
+      await postInspection(APPS_SCRIPT_URL, payload);
+      serverConfirmed = true;
+      await draft.checkpointDispatch({ ...pending, state: "sent", confirmedAt: new Date().toISOString() });
+      setMsg({ type: "ok", text: "Versand vom Server bestätigt." });
+    } catch (error) {
+      console.error("Versand nicht bestätigt:", error);
+      setMsg({ type: "error", text: serverConfirmed
+        ? "Google hat den Versand bestätigt, aber die lokale Bestätigung konnte nicht gespeichert werden. Bitte keinen neuen Versand unter neuer ID starten."
+        : prepared
+          ? "Versand nicht vollständig bestätigt. Bitte den Status im Google-Register prüfen. Gesicherte Versanddaten bleiben erhalten."
+          : "Versand wurde nicht gestartet. Bitte Speicherstatus und Eingaben prüfen; der Entwurf bleibt erhalten." });
+    } finally { sendInFlight.current = false; setBusy(false); }
+  };
 
-setMsg({ type: "ok", text: "E-Mail mit PDF-Anhang wurde versendet." });
+  const retryDispatch = async () => {
+    if (sendInFlight.current || busy || draft.error || dispatch.state !== "pending") return;
+    if (!window.confirm("Den unveränderten Versand mit derselben Begehungs-ID erneut anfragen? Bei unklarem Status im Google-Register zuerst manuell prüfen.")) return;
+    sendInFlight.current = true; setBusy(true); setMsg(null);
+    try {
+      // Also verifies the local revision before a retry from another tab can reach Google.
+      await draft.checkpointDispatch(dispatch);
+      await postInspection(dispatch.endpoint, dispatch.payload);
+      await draft.checkpointDispatch({ ...dispatch, state: "sent", confirmedAt: new Date().toISOString() });
+      setMsg({ type: "ok", text: "Versand vom Server bestätigt." });
+    } catch (error) {
+      setMsg({ type: "error", text: "Versandstatus bleibt unklar. Bitte im Google-Register prüfen; ID und Versanddaten bleiben unverändert." });
+    } finally { sendInFlight.current = false; setBusy(false); }
+  };
 
-    
-    } finally { setBusy(false); }
+  const confirmUnsentLegacy = async () => {
+    if (busy || draft.error || dispatch.state !== "unverified") return;
+    if (!window.confirm("Dieser ältere Entwurf hat keine bekannte Begehungs-ID. Bitte zuvor im Google-Register prüfen: Wurde er sicher noch nicht versendet? Nur dann bestätigen.")) return;
+    setBusy(true);
+    try { await draft.checkpointDispatch({ state: "draft" }); }
+    catch { setMsg({ type: "error", text: "Bestätigung konnte nicht gespeichert werden. Kein Versand erfolgt." }); }
+    finally { setBusy(false); }
   };
 
   /* ===================== UI ===================== */
@@ -1287,7 +1384,7 @@ const drawSignatureBlockOnFirstPage = (doc, margin = 15) => {
 };
  
 
- const sendPdfToMail = async () => {
+ const createReportPdf = async () => {
   // PDF erzeugen (Report)
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
   const pageW = doc.internal.pageSize.getWidth();
@@ -1408,8 +1505,11 @@ for (let p = 1; p <= total; p++) {
   doc.setPage(p);
   drawFooter(doc, p, total, margin);
 }
+  return doc;
+};
 
-
+const buildMailPayload = async () => {
+  const doc = await createReportPdf();
   const dataUri = doc.output("datauristring");
   const pdfBase64 = dataUri.split(",")[1];
 
@@ -1425,11 +1525,17 @@ const areaFileName = inspectionAreas
   .join("_");
 
 const filename = `Begehung_${areaFileName}_${safeName}.pdf`;
-
+const feststellungen = buildFeststellungen();
+const feststellungenJSON = JSON.stringify(feststellungen);
+ const anzahlBewertet = countBewertetePruefpunkte();
   const params = new URLSearchParams({
     token: APPS_SCRIPT_TOKEN || "",
     filename,
     pdfBase64,
+    begehungsId,
+    feststellungen: feststellungenJSON,
+    anzahlBewertet: String(anzahlBewertet),
+    gesellschaft: logoChoice === "custom" ? "" : logoChoice,
     cc: ccEmail || "",
  
    
@@ -1444,16 +1550,25 @@ inspectionArea: inspectionAreas.map(key => INSPECTION_AREAS.find(area => area.ke
     date: form.date || "",
   });
 
-  const res = await fetch(APPS_SCRIPT_URL, { method: "POST", body: params });
-  const txt = await res.text();
-  console.log("AppsScript Antwort:", txt);
+  return Object.fromEntries(params);
+};
 
-  if (!res.ok || /^ERROR/i.test(txt) || /^Unauthorized/i.test(txt)) {
-    throw new Error(txt || `HTTP ${res.status}`);
+// Derselbe vollständige Bericht wie beim E-Mail-Versand – ohne Versand.
+const downloadPdf = async () => {
+  if (busy) return;
+  setBusy(true);
+  setMsg(null);
+  try {
+    const doc = await createReportPdf();
+    const safeName = (form.project || "Projekt").replace(/[^\w-]+/g, "_");
+    doc.save(`Begehung_${safeName}.pdf`);
+  } catch (err) {
+    console.error("PDF-Download fehlgeschlagen:", err);
+    setMsg({ type: "error", text: "PDF konnte nicht erstellt werden." });
+  } finally {
+    setBusy(false);
   }
 };
- 
-// ... deine bisherigen States und Funktionen (z. B. onCapturePhoto, resizeImageFromFile usw.)
 
 // === einfache PDF-Erzeugung ===
 const sharePdf = async () => {
@@ -1688,12 +1803,21 @@ return (
       <div className="max-w-5xl mx-auto">
     <div className="mb-3 flex flex-wrap items-center gap-3" aria-live="polite">
       <span role={draft.error ? "alert" : "status"} className={draft.error ? "text-red-700" : "text-gray-600 text-sm"}>{draft.error || draft.status}</span>
-      {(ccStorageError || logoChoiceStorageError || logoSrcStorageError) && (
-        <span role="alert" className="text-amber-700 text-sm">{ccStorageError || logoChoiceStorageError || logoSrcStorageError}</span>
-      )}
-      <button type="button" className="px-3 py-2 rounded-xl border" disabled={!draft.ready || !!draft.error || busy || locating || pendingMedia > 0 || draft.resetting} onClick={draft.newInspection}>Neue Begehung</button>
+      {(ccStorageError || logoChoiceStorageError || logoSrcStorageError) && <span role="alert" className="text-amber-700 text-sm">{ccStorageError || logoChoiceStorageError || logoSrcStorageError}</span>}
+      <span className="text-sm break-all">Begehungs-ID: {begehungsId}</span>
+      {dispatch.state === "sent" && <span className="text-green-700">Bereits versendet – von Google bestätigt. Für eine weitere Begehung „Neue Begehung“ wählen.</span>}
+      {dispatch.state === "pending" && <>
+        <span className="text-amber-700">{busy ? "Versand wird verarbeitet …" : "Versandstatus unklar. Bitte Google-Register prüfen. Eingaben bleiben zum Schutz vor widersprüchlichen Daten gesperrt."}</span>
+        <button type="button" className="px-3 py-2 rounded-xl border" disabled={busy || !!draft.error} onClick={retryDispatch}>Unveränderten Versand prüfen / erneut anfragen</button>
+      </>}
+      {dispatch.state === "unverified" && <>
+        <span className="text-amber-700">Älterer Entwurf: bisheriger Versandstatus unbekannt. Vor Versand im Register prüfen.</span>
+        <button type="button" className="px-3 py-2 rounded-xl border" disabled={busy || !!draft.error} onClick={confirmUnsentLegacy}>Noch nicht versendet – bestätigen</button>
+      </>}
+      {dispatch.state !== "draft" && <button type="button" className="px-3 py-2 rounded-xl border" disabled={!draft.ready || busy} onClick={downloadPdf}>PDF herunterladen (ohne Versand)</button>}
+      <button type="button" className="px-3 py-2 rounded-xl border" disabled={!draft.ready || !!draft.error || busy || locating || pendingMedia > 0 || draft.resetting || dispatch.state === "pending"} onClick={draft.newInspection}>Neue Begehung</button>
     </div>
-    <fieldset disabled={!draft.ready || draft.resetting} className="min-w-0" style={{ pointerEvents: !draft.ready || draft.resetting ? "none" : undefined }}>
+    <fieldset disabled={!draft.ready || draft.resetting || busy || ["pending", "sent"].includes(dispatch.state)} className="min-w-0" style={{ pointerEvents: !draft.ready || draft.resetting || busy || ["pending", "sent"].includes(dispatch.state) ? "none" : undefined }}>
     <header className="mb-6">
   <div className="flex items-start justify-between gap-4">
     <div>
@@ -1717,7 +1841,6 @@ return (
   <h2 className="font-semibold mb-3">
     Begehungsbereich auswählen
   </h2>
-
   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
     {INSPECTION_AREAS.map((area) => (
       <button
@@ -2058,7 +2181,9 @@ Offene Mängel (noch zu beheben):
  <span className="text-gray-500 text-sm">
   Persönliche Unterschrift: Bleibt auf diesem Gerät auch für neue Begehungen gespeichert. Zum Ersetzen zuerst „Löschen“ wählen und neu unterschreiben.
 </span>
-
+  <span className="text-sm font-medium" aria-live="polite">
+    {signatureDataURL ? `Unterschrift gespeichert${signatureCapturedAt ? ` (${signatureCapturedAt})` : ""}` : "Noch keine Unterschrift gespeichert"}
+  </span>
 </div>
 
   </div>
@@ -2071,8 +2196,11 @@ Offene Mängel (noch zu beheben):
           )}
 
           <div className="flex items-center gap-3 flex-wrap">
-            <button type="submit" disabled={busy} className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60">
+            <button type="submit" disabled={busy || !!draft.error || dispatch.state !== "draft" || pendingMedia > 0 || locating} className="px-5 py-3 rounded-2xl bg-black text-white disabled:opacity-60">
               {busy ? "Sende…" : "Begehung per E-Mail senden"}
+            </button>
+            <button type="button" disabled={busy} onClick={downloadPdf} className="px-5 py-3 rounded-2xl border bg-white disabled:opacity-60">
+              PDF herunterladen (ohne Versand)
             </button>
 
 

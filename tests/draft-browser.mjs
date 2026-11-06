@@ -46,10 +46,14 @@ try {
     await route.fulfill({ status: 200, contentType: 'text/plain', body: 'OK' });
   });
   await page.getByRole('button', { name: 'Begehung per E-Mail senden', exact: true }).click();
-  await page.getByText('E-Mail mit PDF-Anhang wurde versendet.', { exact: true }).waitFor();
+  await page.getByText('Versand vom Server bestätigt.', { exact: true }).waitFor();
   assert.equal(mailBody.get('project'), 'QA Projekt');
   assert.ok(Buffer.from(mailBody.get('pdfBase64'), 'base64').toString('latin1').startsWith('%PDF-'));
   assert.ok(mailBody.get('filename').includes('Mobilkran'));
+  const sentBefore=(await record(page)).find(r=>r.id==='active').data;
+  assert.equal(sentBefore.dispatch.state,'sent');
+  assert.equal(mailBody.get('begehungsId'),before.begehungsId);
+  assert.ok(mailBody.has('feststellungen'));
   console.log('PASS: real PDF generation and POST payload; mail endpoint stubbed, no email sent');
   await page.close();
   const reopened=await context.newPage();await reopened.goto(url);await saved(reopened);
@@ -61,13 +65,15 @@ try {
   const records=await record(reopened);const active=records.find(r=>r.id==='active');
   assert.equal(active.data.signatureDataURL,before.signatureDataURL);assert.equal(active.data.signatureCapturedAt,before.signatureCapturedAt);
   assert.equal(active.data.form.project,'');
+  assert.notEqual(active.data.begehungsId,before.begehungsId);
+  assert.equal(active.data.dispatch.state,'draft');
   assert.ok(Object.values(active.data.checklist).every(row => !row.rating && !row.note && row.photos.length === 0));
   await reopened.reload();await saved(reopened);
   const resetReloaded=(await record(reopened)).find(r=>r.id==='active').data;
   assert.equal(resetReloaded.signatureDataURL,before.signatureDataURL);
   assert.equal(resetReloaded.signatureCapturedAt,before.signatureCapturedAt);
   assert.equal(resetReloaded.form.project,'');
-  assert.deepEqual(records.find(r=>r.id.startsWith('archive:')).data,before);
+  assert.deepEqual(records.find(r=>r.id.startsWith('archive:')).data,sentBefore);
   console.log('PASS: close/reopen, cancellation, confirmed reset, archived original, personal signature retained across reset and reload');
   const other=await context.newPage();await other.goto(url);await saved(other);
   await reopened.getByPlaceholder('z.B. Schleusenmodernisierung XY').fill('First tab');await saved(reopened);
@@ -75,7 +81,11 @@ try {
   await other.getByRole('alert').filter({hasText:'anderer Tab'}).waitFor();
   assert.equal((await record(reopened)).find(r=>r.id==='active').data.form.project,'First tab');
   console.log('PASS: stale tab cannot overwrite newer revision; visible error');
-  await reopened.getByRole('button', { name: 'Löschen', exact: true }).click();await saved(reopened);
+  await reopened.getByRole('button', { name: 'Löschen', exact: true }).click();
+  await reopened.waitForFunction(async () => {
+    const db=await new Promise(resolve=>{const r=indexedDB.open('baustellenbegehung-drafts',1);r.onsuccess=()=>resolve(r.result);});
+    return new Promise(resolve=>{const r=db.transaction('drafts').objectStore('drafts').get('active');r.onsuccess=()=>{db.close();resolve(r.result.data.signatureDataURL === '');};});
+  });await saved(reopened);
   await reopened.reload();await saved(reopened);
   assert.equal((await record(reopened)).find(r=>r.id==='active').data.signatureDataURL,'');
   const replacementCanvas=reopened.locator('canvas');await replacementCanvas.scrollIntoViewIfNeeded();

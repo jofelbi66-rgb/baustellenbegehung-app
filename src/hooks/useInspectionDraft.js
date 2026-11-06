@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { readDraft, writeDraft, packChecklist, unpackChecklist, checkSchema } from '../draftStore';
+import { readDraft, writeDraft, packChecklist, unpackChecklist, checkSchema, migrateDraft } from '../draftStore';
 
 export function useInspectionDraft(categories, values, restore, fresh) {
   const [ready, setReady] = useState(false);
@@ -16,7 +16,7 @@ export function useInspectionDraft(categories, values, restore, fresh) {
   const mounted = useRef(true);
   const initialRestore = useRef(restore);
   const schema = useRef(categories);
-  const snapshot = { version: 1, ...values, checklist: packChecklist(categories, values.checklist) };
+  const snapshot = { version: 2, ...values, checklist: packChecklist(categories, values.checklist) };
   latest.current = snapshot;
   const fail = (e) => {
     stopped.current = true;
@@ -29,14 +29,20 @@ export function useInspectionDraft(categories, values, restore, fresh) {
   useEffect(() => {
     mounted.current = true;
     let cancelled = false;
-    readDraft().then(record => {
+    readDraft().then(async record => {
       if (cancelled) return;
       if (record) {
         checkSchema(record.data, schema.current);
         if (!Number.isSafeInteger(record.revision) || record.revision < 1) throw new Error('Ungültige Entwurfsrevision. Gespeicherte Daten bleiben erhalten.');
         skipRestoredWrite.current = true;
         revision.current = record.revision;
-        initialRestore.current({ ...record.data, checklist: unpackChecklist(schema.current, record.data.checklist) });
+        const data = migrateDraft(record.data, () => crypto.randomUUID());
+        if (data !== record.data) {
+          revision.current = await writeDraft(data, revision.current);
+        }
+        if (cancelled) return;
+        latest.current = data;
+        initialRestore.current({ ...data, checklist: unpackChecklist(schema.current, data.checklist) });
       }
       setReady(true);
       setStatus(record ? 'Auf diesem Gerät gespeichert – Entwurf wiederhergestellt' : 'Automatische Sicherung aktiv');
@@ -63,17 +69,28 @@ export function useInspectionDraft(categories, values, restore, fresh) {
   }, [ready, ...Object.values(values)]);
 
   async function newInspection() {
-    if (!ready || stopped.current || resetting.current) return;
+    if (!ready || stopped.current || resetting.current || latest.current.dispatch.state === 'pending') return;
     if (!window.confirm('Neue Begehung beginnen? Der aktuelle Entwurf wird auf diesem Gerät archiviert. Die persönliche Unterschrift bleibt erhalten.')) return;
     resetting.current = true;
     setResettingState(true);
     try {
       await persist(latest.current);
       const next = fresh();
-      await persist({ version: 1, ...next, checklist: packChecklist(categories, next.checklist) }, true);
+      await persist({ version: 2, ...next, checklist: packChecklist(categories, next.checklist) }, true);
       restore(next);
     } catch (e) { fail(e); }
     finally { resetting.current = false; setResettingState(false); }
   }
-  return { ready, status, error, newInspection, resetting: resettingState };
+  async function checkpointDispatch(dispatch) {
+    if (!ready || stopped.current || resetting.current) throw new Error('Entwurfsspeicherung ist nicht verfügbar.');
+    resetting.current = true;
+    try {
+      const data = { ...latest.current, dispatch };
+      await persist(data);
+      latest.current = data;
+      restore({ ...data, checklist: unpackChecklist(categories, data.checklist) });
+      return dispatch;
+    } finally { resetting.current = false; }
+  }
+  return { ready, status, error, newInspection, resetting: resettingState, checkpointDispatch };
 }

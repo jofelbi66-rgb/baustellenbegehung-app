@@ -62,7 +62,7 @@ export function unpackChecklist(categories, saved) {
     saved[itemKey(cat.key, label)] || { rating: '', note: '', photos: [] })]));
 }
 export function checkSchema(data, categories) {
-  if (data?.version !== 1 || !data.checklist || !data.form || !Array.isArray(data.images) || !Array.isArray(data.inspectionAreas)) {
+  if (![1, 2].includes(data?.version) || !data.checklist || !data.form || !Array.isArray(data.images) || !Array.isArray(data.inspectionAreas)) {
     throw new Error('Der gespeicherte Entwurf hat ein unbekanntes Format. Er bleibt unverändert erhalten.');
   }
   if (typeof data.checklist !== 'object' || Array.isArray(data.checklist) ||
@@ -71,8 +71,32 @@ export function checkSchema(data, categories) {
       Object.values(data.checklist).some(row => !row || !['', 'ok', 'defect', 'note'].includes(row.rating) || typeof row.note !== 'string' || !Array.isArray(row.photos) || row.photos.some(photo => typeof photo !== 'string'))) {
     throw new Error('Der gespeicherte Entwurf ist beschädigt. Er bleibt unverändert erhalten.');
   }
+  if (data.version === 2) {
+    const validStates = ['draft', 'unverified', 'pending', 'sent'];
+    if (typeof data.begehungsId !== 'string' || !data.begehungsId.trim() || !validStates.includes(data.dispatch?.state)) {
+      throw new Error('Begehungs-ID oder Versandstatus ungültig. Der gespeicherte Entwurf bleibt erhalten.');
+    }
+    if (['pending', 'sent'].includes(data.dispatch.state)) {
+      const payload = data.dispatch.payload;
+      let validEndpoint = false;
+      try {
+        const endpoint = new URL(data.dispatch.endpoint);
+        validEndpoint = endpoint.origin === 'https://script.google.com' && !endpoint.username && !endpoint.password && !endpoint.search && !endpoint.hash && /^\/macros\/s\/[^/]+\/exec$/.test(endpoint.pathname);
+      } catch { /* Invalid saved endpoint: keep data and block sending. */ }
+      if (!validEndpoint || !payload || payload.begehungsId !== data.begehungsId || Object.values(payload).some(value => typeof value !== 'string') ||
+          !['pdfBase64', 'feststellungen', 'anzahlBewertet', 'project', 'location', 'inspector'].every(key => typeof payload[key] === 'string')) {
+        throw new Error('Gesicherte Versanddaten unvollständig. Bitte vor erneutem Versand prüfen lassen.');
+      }
+    }
+  }
   const keys = new Set(categories.flatMap(cat => cat.items.map(label => itemKey(cat.key, label))));
   if (Object.keys(data.checklist).some(key => !keys.has(key))) {
     throw new Error('Die Checkliste wurde geändert. Der alte Entwurf bleibt erhalten; eine Zuordnung durch die Betreuung ist erforderlich.');
   }
+}
+
+// Older local-only drafts have no reliable register identity or send history.
+export function migrateDraft(data, newId) {
+  if (data.version === 2) return data;
+  return { ...data, version: 2, begehungsId: newId(), dispatch: { state: 'unverified' } };
 }
